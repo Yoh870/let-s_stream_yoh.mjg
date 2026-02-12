@@ -1,0 +1,752 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#e50914">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="StreamFlix">
+    <meta name="description" content="Watch Movies, Series, K-Drama & Anime - StreamFlix App">
+    
+    <title>StreamFlix - Watch Movies & Series</title>
+    
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="manifest.json">
+    
+    <!-- Icons -->
+    <link rel="apple-touch-icon" href="icon-192.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+    <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
+    
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&family=Bebas+Neue&display=swap" rel="stylesheet">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        :root {
+            --bg-primary: #0f0f0f;
+            --bg-secondary: #1a1a1a;
+            --accent-red: #e50914;
+            --text-primary: #ffffff;
+            --text-secondary: #b3b3b3;
+            --card-bg: #181818;
+        }
+
+        body {
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-family: 'Poppins', sans-serif;
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        /* Install Banner */
+        .install-banner {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(to top, var(--accent-red), #ff0a16);
+            padding: 15px 20px;
+            display: none;
+            align-items: center;
+            justify-content: space-between;
+            z-index: 3000;
+            box-shadow: 0 -5px 20px rgba(0,0,0,0.5);
+            animation: slideUp 0.3s ease-out;
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(100%); }
+            to { transform: translateY(0); }
+        }
+
+        .install-banner.show {
+            display: flex;
+        }
+
+        .install-content {
+            flex: 1;
+        }
+
+        .install-title {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .install-text {
+            font-size: 0.85rem;
+            opacity: 0.9;
+        }
+
+        .install-btn {
+            padding: 10px 25px;
+            background: white;
+            color: var(--accent-red);
+            border: none;
+            border-radius: 25px;
+            font-weight: 700;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.3s;
+        }
+
+        .install-btn:hover {
+            transform: scale(1.05);
+        }
+
+        .close-banner {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+            padding: 0 10px;
+            margin-left: 15px;
+        }
+
+        /* Navigation */
+        nav {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 1000;
+            background: linear-gradient(180deg, rgba(0,0,0,0.9) 0%, transparent 100%);
+            transition: background 0.3s;
+        }
+
+        nav.scrolled {
+            background: rgba(15, 15, 15, 0.95);
+            backdrop-filter: blur(10px);
+        }
+
+        .logo {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 2rem;
+            color: var(--accent-red);
+            letter-spacing: 2px;
+            text-shadow: 0 0 20px rgba(229, 9, 20, 0.5);
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 25px;
+            list-style: none;
+        }
+
+        .nav-links a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 400;
+            transition: color 0.3s;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .nav-links a:hover,
+        .nav-links a:active {
+            color: var(--text-primary);
+        }
+
+        .search-container {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        #searchInput {
+            padding: 10px 15px;
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 25px;
+            color: white;
+            font-size: 0.9rem;
+            width: 200px;
+            transition: all 0.3s;
+        }
+
+        #searchInput:focus {
+            outline: none;
+            background: rgba(255,255,255,0.15);
+            border-color: var(--accent-red);
+            width: 250px;
+        }
+
+        .search-btn {
+            padding: 10px 20px;
+            background: var(--accent-red);
+            border: none;
+            border-radius: 25px;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 600;
+            font-size: 0.9rem;
+            user-select: none;
+        }
+
+        .search-btn:active {
+            transform: scale(0.95);
+        }
+
+        /* Hero Banner */
+        .hero {
+            position: relative;
+            height: 70vh;
+            display: flex;
+            align-items: center;
+            padding: 0 30px;
+            margin-bottom: 40px;
+            overflow: hidden;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, rgba(15,15,15,1) 0%, transparent 50%, rgba(15,15,15,0.8) 100%),
+                        linear-gradient(0deg, rgba(15,15,15,1) 0%, transparent 50%);
+            z-index: 1;
+        }
+
+        .hero-bg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 2;
+            max-width: 500px;
+        }
+
+        .hero-badge {
+            display: inline-block;
+            background: var(--accent-red);
+            padding: 5px 15px;
+            border-radius: 3px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 15px;
+        }
+
+        .hero-title {
+            font-size: 3rem;
+            font-weight: 700;
+            margin-bottom: 15px;
+            text-shadow: 0 5px 20px rgba(0,0,0,0.8);
+            line-height: 1.1;
+        }
+
+        .hero-description {
+            font-size: 1rem;
+            color: var(--text-secondary);
+            line-height: 1.6;
+            margin-bottom: 25px;
+        }
+
+        .btn {
+            padding: 12px 30px;
+            font-size: 1rem;
+            font-weight: 600;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            user-select: none;
+        }
+
+        .btn-play {
+            background: var(--accent-red);
+            color: white;
+            box-shadow: 0 5px 20px rgba(229, 9, 20, 0.4);
+        }
+
+        .btn-play:active {
+            transform: translateY(1px);
+        }
+
+        /* Content Sections */
+        .content-section {
+            padding: 0 30px;
+            margin-bottom: 40px;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .content-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 15px;
+        }
+
+        .content-card {
+            position: relative;
+            border-radius: 8px;
+            overflow: hidden;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: var(--card-bg);
+            aspect-ratio: 2/3;
+            user-select: none;
+        }
+
+        .content-card:active {
+            transform: scale(0.95);
+        }
+
+        .card-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .play-overlay {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 2.5rem;
+            color: white;
+            opacity: 0;
+            transition: all 0.3s;
+        }
+
+        .content-card:active .play-overlay {
+            opacity: 1;
+        }
+
+        .card-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 12px;
+            background: linear-gradient(0deg, rgba(0,0,0,0.95) 0%, transparent 100%);
+        }
+
+        .card-title {
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-bottom: 5px;
+            line-height: 1.2;
+        }
+
+        .card-meta {
+            display: flex;
+            gap: 8px;
+            font-size: 0.7rem;
+            color: var(--text-secondary);
+        }
+
+        .type-badge {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            background: var(--accent-red);
+            padding: 3px 6px;
+            border-radius: 3px;
+            font-size: 0.65rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .rating-badge {
+            position: absolute;
+            top: 8px;
+            left: 8px;
+            background: rgba(0,0,0,0.8);
+            padding: 3px 6px;
+            border-radius: 3px;
+            font-size: 0.7rem;
+            font-weight: 600;
+        }
+
+        /* Search Info */
+        .search-info {
+            padding: 0 30px;
+            margin: 80px 0 30px 0;
+            display: none;
+        }
+
+        .search-info.active {
+            display: block;
+        }
+
+        .search-info h2 {
+            font-size: 1.8rem;
+            margin-bottom: 10px;
+        }
+
+        .search-info p {
+            color: var(--text-secondary);
+        }
+
+        /* Pagination */
+        .pagination {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            margin: 25px 0;
+            flex-wrap: wrap;
+            padding: 0 20px;
+        }
+
+        .page-btn {
+            padding: 8px 16px;
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 5px;
+            color: white;
+            cursor: pointer;
+            font-size: 0.85rem;
+            user-select: none;
+        }
+
+        .page-btn.active {
+            background: var(--accent-red);
+            border-color: var(--accent-red);
+        }
+
+        .page-btn:active {
+            transform: scale(0.95);
+        }
+
+        /* Video Player Modal */
+        .player-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.98);
+            z-index: 2000;
+            overflow-y: auto;
+        }
+
+        .player-modal.active {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .player-container {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .player-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 20px;
+            background: var(--bg-primary);
+            border-bottom: 2px solid var(--accent-red);
+        }
+
+        .player-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+
+        .close-player {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 2rem;
+            cursor: pointer;
+            padding: 0 10px;
+            user-select: none;
+        }
+
+        .player-video {
+            flex: 1;
+            background: #000;
+            position: relative;
+        }
+
+        .player-video iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        .server-selector {
+            padding: 15px 20px;
+            background: var(--bg-primary);
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .server-label {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin-bottom: 10px;
+        }
+
+        .server-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            gap: 8px;
+        }
+
+        .server-btn {
+            padding: 10px;
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 5px;
+            color: white;
+            cursor: pointer;
+            font-size: 0.85rem;
+            text-align: center;
+            user-select: none;
+        }
+
+        .server-btn.active {
+            background: var(--accent-red);
+            border-color: var(--accent-red);
+        }
+
+        .server-btn:active {
+            transform: scale(0.95);
+        }
+
+        .loading {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100%;
+            flex-direction: column;
+            gap: 15px;
+            color: var(--text-secondary);
+        }
+
+        .spinner {
+            border: 3px solid rgba(255,255,255,0.1);
+            border-top: 3px solid var(--accent-red);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Mobile Optimizations */
+        @media (max-width: 768px) {
+            nav {
+                padding: 12px 20px;
+                flex-wrap: wrap;
+            }
+
+            .logo {
+                font-size: 1.5rem;
+            }
+
+            .nav-links {
+                display: none;
+            }
+
+            #searchInput {
+                width: 150px;
+                font-size: 0.85rem;
+            }
+
+            .hero {
+                height: 60vh;
+                padding: 0 20px;
+            }
+
+            .hero-title {
+                font-size: 2rem;
+            }
+
+            .content-section {
+                padding: 0 15px;
+            }
+
+            .content-row {
+                grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+                gap: 10px;
+            }
+
+            .section-title {
+                font-size: 1.2rem;
+            }
+
+            .player-title {
+                font-size: 1rem;
+            }
+
+            .server-grid {
+                grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+            }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+    <!-- Install Banner -->
+    <div class="install-banner" id="installBanner">
+        <div class="install-content">
+            <div class="install-title">📱 Install StreamFlix App</div>
+            <div class="install-text">Add to home screen for better experience</div>
+        </div>
+        <button class="install-btn" id="installBtn">Install</button>
+        <button class="close-banner" id="closeBanner">&times;</button>
+    </div>
+
+    <!-- Navigation -->
+    <nav id="navbar">
+        <div class="logo" onclick="goHome()">STREAMFLIX</div>
+        <ul class="nav-links">
+            <li><a onclick="loadCategory('trending')">Trending</a></li>
+            <li><a onclick="loadCategory('movies')">Movies</a></li>
+            <li><a onclick="loadCategory('tv')">TV Series</a></li>
+            <li><a onclick="loadCategory('kdrama')">K-Drama</a></li>
+            <li><a onclick="loadCategory('anime')">Anime</a></li>
+        </ul>
+        <div class="search-container">
+            <input type="text" id="searchInput" placeholder="Search...">
+            <button class="search-btn" onclick="performMainSearch()">🔍</button>
+        </div>
+    </nav>
+
+    <!-- Hero Banner -->
+    <div class="hero" id="heroSection">
+        <img src="https://images.unsplash.com/photo-1536440136628-849c177e76a1?w=1920&h=1080&fit=crop" alt="Hero" class="hero-bg">
+        <div class="hero-content">
+            <div class="hero-badge">TRENDING NOW</div>
+            <h1 class="hero-title">Oppenheimer</h1>
+            <p class="hero-description">The story of J. Robert Oppenheimer and his role in the development of the atomic bomb.</p>
+            <button class="btn btn-play" onclick="playContentById('872585', 'movie', 'Oppenheimer', '2023')">
+                <span>▶</span> Watch Now
+            </button>
+        </div>
+    </div>
+
+    <!-- Search Info -->
+    <div class="search-info" id="searchInfo">
+        <h2 id="searchTitle"></h2>
+        <p id="searchCount"></p>
+    </div>
+
+    <!-- Main Content -->
+    <div id="mainContent">
+        <section class="content-section fade-in" id="section-trending">
+            <div class="section-header">
+                <h2 class="section-title">🔥 Trending Now</h2>
+            </div>
+            <div class="content-row" id="trendingContent"></div>
+        </section>
+
+        <section class="content-section fade-in" id="section-movies">
+            <div class="section-header">
+                <h2 class="section-title">🎬 Popular Movies</h2>
+            </div>
+            <div class="content-row" id="moviesContent"></div>
+        </section>
+
+        <section class="content-section fade-in" id="section-tv">
+            <div class="section-header">
+                <h2 class="section-title">📺 TV Series</h2>
+            </div>
+            <div class="content-row" id="tvContent"></div>
+        </section>
+
+        <section class="content-section fade-in" id="section-kdrama">
+            <div class="section-header">
+                <h2 class="section-title">🇰🇷 K-Drama</h2>
+            </div>
+            <div class="content-row" id="kdramaContent"></div>
+        </section>
+
+        <section class="content-section fade-in" id="section-anime">
+            <div class="section-header">
+                <h2 class="section-title">🎌 Anime</h2>
+            </div>
+            <div class="content-row" id="animeContent"></div>
+        </section>
+    </div>
+
+    <!-- Search Results -->
+    <div id="searchResultsContainer" style="display: none;">
+        <section class="content-section fade-in">
+            <div class="content-row" id="searchResultsContent"></div>
+        </section>
+        <div class="pagination" id="pagination"></div>
+    </div>
+
+    <!-- Video Player -->
+    <div class="player-modal" id="playerModal">
+        <div class="player-container">
+            <div class="player-header">
+                <div class="player-title" id="playerTitle">Now Playing</div>
+                <button class="close-player" onclick="closePlayer()">&times;</button>
+            </div>
+            <div class="player-video" id="playerVideo">
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <span>Loading...</span>
+                </div>
+            </div>
+            <div class="server-selector">
+                <div class="server-label">Select Server:</div>
+                <div class="server-grid" id="serverButtons"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

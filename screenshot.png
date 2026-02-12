@@ -1,0 +1,6 @@
+<svg width="540" height="720" xmlns="http://www.w3.org/2000/svg">
+  <rect width="540" height="720" fill="#0f0f0f"/>
+  <rect x="20" y="20" width="500" height="680" fill="#1a1a1a" rx="10"/>
+  <text x="270" y="360" font-family="Arial" font-size="40" fill="#e50914" text-anchor="middle">StreamFlix</text>
+  <text x="270" y="410" font-family="Arial" font-size="20" fill="#b3b3b3" text-anchor="middle">App Screenshot</text>
+</svg>
