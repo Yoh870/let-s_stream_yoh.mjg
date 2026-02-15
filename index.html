@@ -656,15 +656,15 @@
     <!-- Navigation -->
     <nav id="navbar">
         <div class="logo" onclick="goHome()">STREAMFLIX<br>created by yoh_amari.mjg</div>
+        <button class="watch-together-btn" onclick="showWatchTogetherMenu()">
+            <span>👥</span> Watch Together
+        </button>
         <ul class="nav-links">
             <li><a onclick="loadCategory('trending')">Trending</a></li>
             <li><a onclick="loadCategory('movies')">Movies</a></li>
             <li><a onclick="loadCategory('tv')">TV Series</a></li>
             <li><a onclick="loadCategory('kdrama')">K-Drama</a></li>
             <li><a onclick="loadCategory('anime')">Anime</a></li>
-            <button class="watch-together-btn" onclick="showWatchTogetherMenu()">
-                <span>👥</span> Watch Together
-            </button>
         </ul>
         <div class="search-container">
             <input type="text" id="searchInput" placeholder="Search...">
