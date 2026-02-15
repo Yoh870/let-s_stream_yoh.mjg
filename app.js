@@ -256,6 +256,17 @@ document.addEventListener('keydown', (e) => {
     }
 });
 
+
+// Simple Toast Function
+function showToast(message, type) {
+    console.log(`[${type}] ${message}`);
+    // Optional: Show alert for errors
+    if (type === 'error') {
+        alert(message);
+    }
+}
+
+
 // Initialize on load
 window.addEventListener('load', async () => {
     await Promise.all([
@@ -268,14 +279,6 @@ window.addEventListener('load', async () => {
 
 });
 
-// Simple Toast Function
-function showToast(message, type) {
-    console.log(`[${type}] ${message}`);
-    // Optional: Show alert for errors
-    if (type === 'error') {
-        alert(message);
-    }
-}
 
 
 
