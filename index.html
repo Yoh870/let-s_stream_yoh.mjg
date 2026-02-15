@@ -758,5 +758,89 @@
     </div>
 
     <script src="app.js"></script>
+
+    <!-- Watch Together Modals -->
+    <div class="wt-modal" id="watchTogetherMenu">
+        <div class="wt-modal-content">
+            <div class="wt-modal-header">
+                <h2>👥 Watch Together</h2>
+                <button class="btn-close-modal" onclick="closeWatchTogetherMenu()">✕</button>
+            </div>
+            <div class="wt-modal-body">
+                <div class="wt-menu-options">
+                    <button class="wt-option-btn primary" onclick="initCreateRoom()">
+                        <span class="icon">🎬</span>
+                        <div>
+                            <h3>Create Room</h3>
+                            <p>Start watching with friends</p>
+                        </div>
+                    </button>
+                    <button class="wt-option-btn" onclick="showJoinRoomDialog()">
+                        <span class="icon">🔗</span>
+                        <div>
+                            <h3>Join Room</h3>
+                            <p>Enter room code</p>
+                        </div>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Join Room Modal -->
+    <div class="wt-modal" id="joinRoomModal">
+        <div class="wt-modal-content small">
+            <div class="wt-modal-header">
+                <h2>Join Watch Room</h2>
+                <button class="btn-close-modal" onclick="closeJoinRoomDialog()">✕</button>
+            </div>
+            <div class="wt-modal-body">
+                <input type="text" id="joinRoomCodeInput" class="wt-input" 
+                       placeholder="Enter 6-character code" maxlength="6" 
+                       style="text-transform: uppercase">
+                <button class="wt-btn primary" onclick="handleJoinRoom()">Join Room</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Room Created Modal -->
+    <div class="wt-modal" id="roomCreatedModal">
+        <div class="wt-modal-content">
+            <div class="wt-modal-header">
+                <h2>🎉 Room Created!</h2>
+                <button class="btn-close-modal" onclick="closeRoomCreatedModal()">✕</button>
+            </div>
+            <div class="wt-modal-body">
+                <div class="room-code-display">
+                    <label>Room Code</label>
+                    <div class="code-box" id="roomCodeDisplay">ABC123</div>
+                </div>
+                <div class="invite-link-display">
+                    <label>Invite Link</label>
+                    <div class="link-box">
+                        <input type="text" id="inviteLinkDisplay" readonly>
+                        <button class="btn-copy" onclick="copyInviteLink()">📋 Copy</button>
+                    </div>
+                </div>
+                <div class="share-buttons">
+                    <button class="wt-btn secondary" onclick="shareRoom()">📤 Share</button>
+                    <button class="wt-btn primary" onclick="closeRoomCreatedModal()">Start Watching</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Watch Together Scripts -->
+    <script src="watch-together/firebase-config.js"></script>
+    <script src="watch-together/room-manager.js"></script>
+    <script src="watch-together/sync-engine.js"></script>
+    <script src="watch-together/chat-system.js"></script>
+    <script src="watch-together/ui-components.js"></script>
+    
+    <script>
+    document.addEventListener('DOMContentLoaded', async () => {
+        await initFirebase();
+    });
+    </script>
 </body>
 </html>
