@@ -668,6 +668,18 @@
                 width: 100%;
             }
         }
+
+        /* Watch Together button in player */
+        .player-watch-btn {
+            padding: 8px 16px !important;
+            font-size: 0.85rem !important;
+            margin: 0 10px;
+        }
+        
+        /* Hide when room is active */
+        .room-indicator.active ~ .player-watch-btn {
+            display: none;
+        }
     </style>
 </head>
 <body>
@@ -779,6 +791,9 @@
                     <span>LIVE: <span id="roomCodeBadge">ABC123</span></span>
                 </div>
                 
+                <button class="watch-together-btn player-watch-btn" onclick="showWatchTogetherMenu()" id="playerWatchBtn">
+                    <span>👥</span> Watch Together
+                </button>
                 <!-- Chat Toggle -->
                 <button class="btn-toggle-chat" id="toggleChatBtn" onclick="toggleChatPanel()" style="display: none;">
                     <span>💬</span>
