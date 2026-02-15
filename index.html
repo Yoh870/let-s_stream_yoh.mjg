@@ -707,6 +707,21 @@
         .server-btn:hover .sub-badge {
             background: #059669;
         }
+
+
+        .subtitle-tip {
+            margin-top: 10px;
+            padding: 10px;
+            background: rgba(16, 185, 129, 0.1);
+            border-left: 3px solid #10b981;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+        
+        .subtitle-tip strong {
+            color: #10b981;
+        }
     </style>
 </head>
 <body>
@@ -869,6 +884,11 @@
             <div class="server-selector">
                 <div class="server-label">Select Server:</div>
                 <div class="server-grid" id="serverButtons"></div>
+
+                <div class="subtitle-tip">
+                    💡 <strong>Tip:</strong> Most servers have built-in English subtitles. 
+                    Look for CC button in the video player controls.
+                </div>
             </div>
         </div>
     </div>
