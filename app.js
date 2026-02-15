@@ -2,7 +2,6 @@
 // STREAMFLIX - MAIN APP
 // ===========================
 
-
 const TMDB_API_KEY = '3fd2be6f0c70a2a598f084ddfb75487c';
 const TMDB_IMAGE_BASE = 'https://image.tmdb.org/t/p/w500';
 const TMDB_BASE_URL = 'https://api.themoviedb.org/3';
@@ -19,6 +18,7 @@ const servers = [
     { name: 'VidLink', getUrl: (data) => `https://vidlink.pro/${data.type}/${data.tmdb}` }
 ];
 
+// Global variables - DECLARE ONCE!
 let currentContent = null;
 let currentPage = 1;
 
@@ -122,9 +122,9 @@ async function playContentById(tmdbId, type, title, year) {
             serverIndex: 0
         };
         
-        // IMPORTANT: Set currentContent globally
+        // Set currentContent globally
         currentContent = data;
-        window.currentContent = data;  // Also set on window object
+        window.currentContent = data;
         
         console.log('✅ Content loaded:', currentContent);
         
@@ -137,7 +137,6 @@ async function playContentById(tmdbId, type, title, year) {
         
     } catch (error) {
         console.error('❌ Play content failed:', error);
-        alert('Failed to load content');
     }
 }
 
@@ -239,6 +238,11 @@ function goHome() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
+// Toast notification
+function showToast(message, type = 'info') {
+    console.log(`[${type}] ${message}`);
+}
+
 // Search on Enter
 document.getElementById('searchInput')?.addEventListener('keypress', (e) => {
     if (e.key === 'Enter') performMainSearch();
@@ -256,19 +260,9 @@ document.addEventListener('keydown', (e) => {
     }
 });
 
-
-// Simple Toast Function
-function showToast(message, type) {
-    console.log(`[${type}] ${message}`);
-    // Optional: Show alert for errors
-    if (type === 'error') {
-        alert(message);
-    }
-}
-
-
 // Initialize on load
 window.addEventListener('load', async () => {
+    console.log('🎬 Loading StreamFlix...');
     await Promise.all([
         loadTrending(),
         loadMovies(),
@@ -276,10 +270,5 @@ window.addEventListener('load', async () => {
         loadKDrama(),
         loadAnime()
     ]);
-
+    console.log('✅ StreamFlix loaded!');
 });
-
-
-
-
-
