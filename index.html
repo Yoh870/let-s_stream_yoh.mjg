@@ -737,19 +737,61 @@
         <div class="pagination" id="pagination"></div>
     </div>
 
-    <!-- Video Player -->
+    <!-- Video Player Modal -->
     <div class="player-modal" id="playerModal">
         <div class="player-container">
             <div class="player-header">
                 <div class="player-title" id="playerTitle">Now Playing</div>
-                <button class="close-player" onclick="closePlayer()">&times;</button>
+                
+                <!-- Room Indicator -->
+                <div class="room-indicator" id="roomIndicator" style="display: none;">
+                    <span class="live-dot">🔴</span>
+                    <span>LIVE: <span id="roomCodeBadge">ABC123</span></span>
+                </div>
+                
+                <!-- Chat Toggle -->
+                <button class="btn-toggle-chat" id="toggleChatBtn" onclick="toggleChatPanel()" style="display: none;">
+                    <span>💬</span>
+                    <span class="chat-badge" id="chatBadge">0</span>
+                </button>
+                
+                <button class="close-player" onclick="closePlayer()">✕</button>
             </div>
+            
             <div class="player-video" id="playerVideo">
                 <div class="loading">
                     <div class="spinner"></div>
-                    <span>Loading...</span>
+                    <span>Loading player...</span>
                 </div>
             </div>
+            
+            <!-- Chat Panel -->
+            <div class="chat-panel" id="chatPanel">
+                <div class="chat-header">
+                    <h3>💬 Chat</h3>
+                    <div class="participants-info">
+                        <span id="participantCount">0</span> watching
+                    </div>
+                </div>
+                
+                <div class="participants-list" id="participantsList"></div>
+                <div class="chat-messages" id="chatMessages"></div>
+                
+                <div class="chat-input-container">
+                    <input type="text" id="chatInput" class="chat-input" 
+                           placeholder="Type a message..." maxlength="200">
+                    <span class="char-counter" id="charCounter">200</span>
+                    <button class="btn-send-chat" id="sendChatBtn">📨</button>
+                </div>
+                
+                <div class="room-controls">
+                    <button class="wt-btn danger small" onclick="leaveRoom()">Leave Room</button>
+                </div>
+            </div>
+            
+            <!-- Sync Indicator -->
+            <div class="sync-indicator">Syncing...</div>
+            
             <div class="server-selector">
                 <div class="server-label">Select Server:</div>
                 <div class="server-grid" id="serverButtons"></div>
