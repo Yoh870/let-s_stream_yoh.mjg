@@ -256,4 +256,12 @@ window.addEventListener('load', async () => {
 
 });
 
+// Simple Toast Function
+function showToast(message, type) {
+    console.log(`[${type}] ${message}`);
+    // Optional: Show alert for errors
+    if (type === 'error') {
+        alert(message);
+    }
+}
 
