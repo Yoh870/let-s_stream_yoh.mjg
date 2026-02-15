@@ -680,6 +680,17 @@
         .room-indicator.active ~ .player-watch-btn {
             display: none;
         }
+
+        @media (max-width: 768px) {
+            .player-watch-btn {
+                padding: 6px 12px !important;
+                font-size: 0.75rem !important;
+            }
+            
+            .player-watch-btn span:first-child {
+                font-size: 1rem;
+            }
+        }
     </style>
 </head>
 <body>
@@ -783,18 +794,20 @@
     <div class="player-modal" id="playerModal">
         <div class="player-container">
             <div class="player-header">
-                <div class="player-title" id="playerTitle">Now Playing</div>
+                <div class="player-title" id="playerTitle">Greenland 2: Migration (2026)</div>
                 
-                <!-- Room Indicator -->
+                <!-- Room Indicator (hidden by default) -->
                 <div class="room-indicator" id="roomIndicator" style="display: none;">
                     <span class="live-dot">🔴</span>
                     <span>LIVE: <span id="roomCodeBadge">ABC123</span></span>
                 </div>
                 
+                <!-- Watch Together Button (visible by default) -->
                 <button class="watch-together-btn player-watch-btn" onclick="showWatchTogetherMenu()" id="playerWatchBtn">
                     <span>👥</span> Watch Together
                 </button>
-                <!-- Chat Toggle -->
+                
+                <!-- Chat Toggle (hidden by default) -->
                 <button class="btn-toggle-chat" id="toggleChatBtn" onclick="toggleChatPanel()" style="display: none;">
                     <span>💬</span>
                     <span class="chat-badge" id="chatBadge">0</span>
