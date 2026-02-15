@@ -263,18 +263,6 @@ document.addEventListener('keydown', (e) => {
     }
 });
 
-// Initialize on load
-window.addEventListener('load', async () => {
-    console.log('🎬 Loading StreamFlix...');
-    await Promise.all([
-        loadTrending(),
-        loadMovies(),
-        loadTV(),
-        loadKDrama(),
-        loadAnime()
-    ]);
-    console.log('✅ StreamFlix loaded!');
-});
 
 // Streaming servers with subtitle info
 const servers = [
@@ -327,3 +315,20 @@ const servers = [
         subtitleNote: '✓ Subs'
     }
 ];
+
+
+// Initialize on load
+window.addEventListener('load', async () => {
+    console.log('🎬 Loading StreamFlix...');
+    await Promise.all([
+        loadTrending(),
+        loadMovies(),
+        loadTV(),
+        loadKDrama(),
+        loadAnime()
+    ]);
+    console.log('✅ StreamFlix loaded!');
+});
+
+
+
