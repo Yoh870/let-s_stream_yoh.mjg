@@ -27,32 +27,25 @@ function closeWatchTogetherMenu() {
  */
 async function initCreateRoom() {
     try {
-        // Close menu
         closeWatchTogetherMenu();
         
-        // Check if content is loaded
-        if (!state.currentMovie && !currentContent) {
-            showToast('Please select a movie first', 'info');
+        if (!currentContent) {
+            alert('Please select a movie first');
             return;
         }
         
-        // Get current content
-        const content = state.currentMovie || currentContent || {
-            tmdbId: '872585',
-            type: 'movie',
-            title: 'Sample Movie',
-            year: '2024'
-        };
+        const roomCode = await createRoom({
+            tmdbId: currentContent.tmdb,
+            type: currentContent.type,
+            title: currentContent.title,
+            year: currentContent.year
+        });
         
-        // Create room
-        const roomCode = await createRoom(content);
-        
-        // Show room created modal
         showRoomCreatedModal(roomCode);
         
     } catch (error) {
         console.error('❌ Init create room failed:', error);
-        showToast('Failed to create room', 'error');
+        alert('Failed to create room');
     }
 }
 
@@ -66,7 +59,6 @@ function showJoinRoomDialog() {
     if (modal) {
         modal.classList.add('active');
         
-        // Focus input
         const input = document.getElementById('joinRoomCodeInput');
         if (input) {
             setTimeout(() => input.focus(), 300);
@@ -82,7 +74,6 @@ function closeJoinRoomDialog() {
     if (modal) {
         modal.classList.remove('active');
         
-        // Clear input
         const input = document.getElementById('joinRoomCodeInput');
         if (input) input.value = '';
     }
@@ -98,12 +89,12 @@ async function handleJoinRoom() {
     const roomCode = input.value.trim().toUpperCase();
     
     if (!roomCode) {
-        showToast('Please enter a room code', 'error');
+        alert('Please enter a room code');
         return;
     }
     
     if (!isValidRoomCode(roomCode)) {
-        showToast('Invalid room code format', 'error');
+        alert('Invalid room code format');
         return;
     }
     
@@ -112,32 +103,28 @@ async function handleJoinRoom() {
     const success = await joinRoom(roomCode);
     
     if (success) {
-        showToast(`Joined room ${roomCode}!`, 'success');
+        alert(`Joined room ${roomCode}!`);
     }
 }
 
 /**
  * Show room created modal
- * @param {string} roomCode - Room code
  */
 function showRoomCreatedModal(roomCode) {
     const modal = document.getElementById('roomCreatedModal');
     if (!modal) return;
     
-    // Set room code
     const codeDisplay = document.getElementById('roomCodeDisplay');
     if (codeDisplay) {
         codeDisplay.textContent = roomCode;
     }
     
-    // Set invite link
     const inviteLink = `${window.location.origin}${window.location.pathname}?room=${roomCode}`;
     const linkDisplay = document.getElementById('inviteLinkDisplay');
     if (linkDisplay) {
         linkDisplay.value = inviteLink;
     }
     
-    // Show modal
     modal.classList.add('active');
 }
 
@@ -161,7 +148,7 @@ function copyInviteLink() {
     linkDisplay.select();
     document.execCommand('copy');
     
-    showToast('Link copied to clipboard!', 'success');
+    alert('Link copied to clipboard!');
 }
 
 /**
@@ -193,22 +180,18 @@ async function shareRoom() {
 
 /**
  * Show room UI
- * @param {string} roomCode - Room code
  */
 function showRoomUI(roomCode) {
-    // Show room indicator
     const indicator = document.getElementById('roomIndicator');
     if (indicator) {
         indicator.style.display = 'flex';
     }
     
-    // Set room code
     const badge = document.getElementById('roomCodeBadge');
     if (badge) {
         badge.textContent = roomCode;
     }
     
-    // Show chat button
     const chatBtn = document.getElementById('toggleChatBtn');
     if (chatBtn) {
         chatBtn.style.display = 'flex';
@@ -219,40 +202,22 @@ function showRoomUI(roomCode) {
  * Hide room UI
  */
 function hideRoomUI() {
-    // Hide room indicator
     const indicator = document.getElementById('roomIndicator');
     if (indicator) {
         indicator.style.display = 'none';
     }
     
-    // Hide chat button
     const chatBtn = document.getElementById('toggleChatBtn');
     if (chatBtn) {
         chatBtn.style.display = 'none';
     }
     
-    // Close chat panel
     const chatPanel = document.getElementById('chatPanel');
     if (chatPanel) {
         chatPanel.classList.remove('open');
     }
     
-    // Clear chat
     clearChat();
 }
 
-// Export functions
-if (typeof module !== 'undefined' && module.exports) {
-    module.exports = {
-        showWatchTogetherMenu,
-        closeWatchTogetherMenu,
-        initCreateRoom,
-        showJoinRoomDialog,
-        handleJoinRoom,
-        showRoomCreatedModal,
-        copyInviteLink,
-        shareRoom,
-        showRoomUI,
-        hideRoomUI
-    };
-}
+console.log('✅ UI Components loaded');
