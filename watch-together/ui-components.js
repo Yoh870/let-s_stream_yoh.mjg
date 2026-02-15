@@ -196,6 +196,12 @@ function showRoomUI(roomCode) {
     if (chatBtn) {
         chatBtn.style.display = 'flex';
     }
+    
+    // Hide Watch Together button when room is active
+    const watchBtn = document.getElementById('playerWatchBtn');
+    if (watchBtn) {
+        watchBtn.style.display = 'none';
+    }
 }
 
 /**
@@ -212,12 +218,21 @@ function hideRoomUI() {
         chatBtn.style.display = 'none';
     }
     
+    // Show Watch Together button when no room
+    const watchBtn = document.getElementById('playerWatchBtn');
+    if (watchBtn) {
+        watchBtn.style.display = 'flex';
+    }
+    
     const chatPanel = document.getElementById('chatPanel');
     if (chatPanel) {
         chatPanel.classList.remove('open');
     }
     
-    clearChat();
+    if (typeof clearChat === 'function') {
+        clearChat();
+    }
 }
 
 console.log('✅ UI Components loaded');
+
