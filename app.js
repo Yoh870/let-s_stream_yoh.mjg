@@ -140,12 +140,15 @@ async function playContentById(tmdbId, type, title, year) {
     }
 }
 
-// Load server buttons
+// Load server buttons with subtitle badges
 function loadServerButtons(data) {
     const container = document.getElementById('serverButtons');
-    container.innerHTML = servers.map((server, index) => 
-        `<button class="server-btn ${index === 0 ? 'active' : ''}" onclick='loadServer(${index}, ${JSON.stringify(data)})'>${server.name}</button>`
-    ).join('');
+    container.innerHTML = servers.map((server, index) => `
+        <button class="server-btn ${index === 0 ? 'active' : ''}" onclick='loadServer(${index}, ${JSON.stringify(data)})'>
+            ${server.name}
+            ${server.hasSubtitles ? '<span class="sub-badge">CC</span>' : ''}
+        </button>
+    `).join('');
 }
 
 // Load server
@@ -272,3 +275,55 @@ window.addEventListener('load', async () => {
     ]);
     console.log('✅ StreamFlix loaded!');
 });
+
+// Streaming servers with subtitle info
+const servers = [
+    { 
+        name: 'VidSrc.to', 
+        getUrl: (data) => `https://vidsrc.to/embed/${data.type}/${data.tmdb}`,
+        hasSubtitles: true,
+        subtitleNote: '✓ English subs'
+    },
+    { 
+        name: 'VidSrc.xyz', 
+        getUrl: (data) => `https://vidsrc.xyz/embed/${data.type}?tmdb=${data.tmdb}`,
+        hasSubtitles: true,
+        subtitleNote: '✓ Multi-lang subs'
+    },
+    { 
+        name: 'VidSrc.me', 
+        getUrl: (data) => `https://vidsrc.me/embed/${data.type}?tmdb=${data.tmdb}`,
+        hasSubtitles: true,
+        subtitleNote: '✓ Auto subs'
+    },
+    { 
+        name: 'Embed.su', 
+        getUrl: (data) => `https://embed.su/embed/${data.type}/${data.tmdb}`,
+        hasSubtitles: true,
+        subtitleNote: '✓ English subs'
+    },
+    { 
+        name: '2Embed', 
+        getUrl: (data) => `https://www.2embed.cc/embed/${data.imdb || 'tt' + data.tmdb}`,
+        hasSubtitles: true,
+        subtitleNote: '✓ Subs available'
+    },
+    { 
+        name: 'SuperEmbed', 
+        getUrl: (data) => `https://multiembed.mov/?video_id=${data.imdb || 'tt' + data.tmdb}&tmdb=1`,
+        hasSubtitles: true,
+        subtitleNote: '✓ Multi subs'
+    },
+    { 
+        name: 'AutoEmbed', 
+        getUrl: (data) => `https://autoembed.cc/${data.type}/tmdb/${data.tmdb}`,
+        hasSubtitles: false,
+        subtitleNote: ''
+    },
+    { 
+        name: 'VidLink', 
+        getUrl: (data) => `https://vidlink.pro/${data.type}/${data.tmdb}`,
+        hasSubtitles: true,
+        subtitleNote: '✓ Subs'
+    }
+];
