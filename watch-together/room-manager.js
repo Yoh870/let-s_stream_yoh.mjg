@@ -13,8 +13,10 @@ async function createRoom(content) {
             throw new Error('User not authenticated');
         }
         
-        if (!content || !content.tmdb) {  // ← Changed tmdbId to tmdb
-            throw new Error('Invalid content data');
+        // Validate content - CHECK FOR 'tmdb' not 'tmdbId'
+        if (!content || !content.tmdb || !content.type || !content.title) {
+            console.error('Invalid content:', content);
+            throw new Error('Invalid content data: missing required fields');
         }
         
         // Generate unique room code
@@ -36,15 +38,15 @@ async function createRoom(content) {
             throw new Error('Failed to generate unique room code');
         }
         
-        // Create room data
+        // Create room data - USE 'tmdb' not 'tmdbId'
         const roomData = {
             hostId: currentUser.uid,
             createdAt: firebase.database.ServerValue.TIMESTAMP,
             content: {
-                tmdbId: content.tmdbId,
+                tmdb: content.tmdb,  // ← Changed from tmdbId
                 type: content.type || 'movie',
                 title: content.title,
-                year: content.year,
+                year: content.year || '2024',
                 serverIndex: content.serverIndex || 0
             },
             playback: {
@@ -54,7 +56,7 @@ async function createRoom(content) {
             },
             participants: {
                 [currentUser.uid]: {
-                    name: content.userName || 'Host',
+                    name: 'Host',
                     joinedAt: firebase.database.ServerValue.TIMESTAMP,
                     isHost: true
                 }
@@ -84,13 +86,11 @@ async function createRoom(content) {
         showRoomUI(roomCode);
         
         console.log('✅ Room created:', roomCode);
-        showToast('Room created successfully!', 'success');
         
         return roomCode;
         
     } catch (error) {
         console.error('❌ Create room failed:', error);
-        showToast('Failed to create room', 'error');
         throw error;
     }
 }
