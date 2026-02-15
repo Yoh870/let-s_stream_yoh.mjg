@@ -2,8 +2,6 @@
 // STREAMFLIX - MAIN APP
 // ===========================
 
-let currentContent = null;
-let currentPage = 1;
 
 const TMDB_API_KEY = '3fd2be6f0c70a2a598f084ddfb75487c';
 const TMDB_IMAGE_BASE = 'https://image.tmdb.org/t/p/w500';
@@ -278,6 +276,7 @@ function showToast(message, type) {
         alert(message);
     }
 }
+
 
 
 
