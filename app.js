@@ -6,56 +6,16 @@ const TMDB_API_KEY = '3fd2be6f0c70a2a598f084ddfb75487c';
 const TMDB_IMAGE_BASE = 'https://image.tmdb.org/t/p/w500';
 const TMDB_BASE_URL = 'https://api.themoviedb.org/3';
 
-// Streaming servers with subtitle info
+// Streaming servers
 const servers = [
-    { 
-        name: 'VidSrc.to', 
-        getUrl: (data) => `https://vidsrc.to/embed/${data.type}/${data.tmdb}`,
-        hasSubtitles: true,
-        subtitleNote: '✓ English subs'
-    },
-    { 
-        name: 'VidSrc.xyz', 
-        getUrl: (data) => `https://vidsrc.xyz/embed/${data.type}?tmdb=${data.tmdb}`,
-        hasSubtitles: true,
-        subtitleNote: '✓ Multi-lang subs'
-    },
-    { 
-        name: 'VidSrc.me', 
-        getUrl: (data) => `https://vidsrc.me/embed/${data.type}?tmdb=${data.tmdb}`,
-        hasSubtitles: true,
-        subtitleNote: '✓ Auto subs'
-    },
-    { 
-        name: 'Embed.su', 
-        getUrl: (data) => `https://embed.su/embed/${data.type}/${data.tmdb}`,
-        hasSubtitles: true,
-        subtitleNote: '✓ English subs'
-    },
-    { 
-        name: '2Embed', 
-        getUrl: (data) => `https://www.2embed.cc/embed/${data.imdb || 'tt' + data.tmdb}`,
-        hasSubtitles: true,
-        subtitleNote: '✓ Subs available'
-    },
-    { 
-        name: 'SuperEmbed', 
-        getUrl: (data) => `https://multiembed.mov/?video_id=${data.imdb || 'tt' + data.tmdb}&tmdb=1`,
-        hasSubtitles: true,
-        subtitleNote: '✓ Multi subs'
-    },
-    { 
-        name: 'AutoEmbed', 
-        getUrl: (data) => `https://autoembed.cc/${data.type}/tmdb/${data.tmdb}`,
-        hasSubtitles: false,
-        subtitleNote: ''
-    },
-    { 
-        name: 'VidLink', 
-        getUrl: (data) => `https://vidlink.pro/${data.type}/${data.tmdb}`,
-        hasSubtitles: true,
-        subtitleNote: '✓ Subs'
-    }
+    { name: 'VidSrc.to', getUrl: (data) => `https://vidsrc.to/embed/${data.type}/${data.tmdb}` },
+    { name: 'VidSrc.xyz', getUrl: (data) => `https://vidsrc.xyz/embed/${data.type}?tmdb=${data.tmdb}` },
+    { name: 'VidSrc.me', getUrl: (data) => `https://vidsrc.me/embed/${data.type}?tmdb=${data.tmdb}` },
+    { name: 'Embed.su', getUrl: (data) => `https://embed.su/embed/${data.type}/${data.tmdb}` },
+    { name: '2Embed', getUrl: (data) => `https://www.2embed.cc/embed/${data.imdb || 'tt' + data.tmdb}` },
+    { name: 'SuperEmbed', getUrl: (data) => `https://multiembed.mov/?video_id=${data.imdb || 'tt' + data.tmdb}&tmdb=1` },
+    { name: 'AutoEmbed', getUrl: (data) => `https://autoembed.cc/${data.type}/tmdb/${data.tmdb}` },
+    { name: 'VidLink', getUrl: (data) => `https://vidlink.pro/${data.type}/${data.tmdb}` }
 ];
 
 // Global variables - DECLARE ONCE!
@@ -180,15 +140,12 @@ async function playContentById(tmdbId, type, title, year) {
     }
 }
 
-// Load server buttons with subtitle badges
+// Load server buttons
 function loadServerButtons(data) {
     const container = document.getElementById('serverButtons');
-    container.innerHTML = servers.map((server, index) => `
-        <button class="server-btn ${index === 0 ? 'active' : ''}" onclick='loadServer(${index}, ${JSON.stringify(data)})'>
-            ${server.name}
-            ${server.hasSubtitles ? '<span class="sub-badge">CC</span>' : ''}
-        </button>
-    `).join('');
+    container.innerHTML = servers.map((server, index) => 
+        `<button class="server-btn ${index === 0 ? 'active' : ''}" onclick='loadServer(${index}, ${JSON.stringify(data)})'>${server.name}</button>`
+    ).join('');
 }
 
 // Load server
