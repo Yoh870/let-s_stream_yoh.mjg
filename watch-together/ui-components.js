@@ -50,7 +50,7 @@ async function initCreateRoom() {
         }
         
     } catch (error) {
-        console.error('❌ Init create room failed:', error);
+        console.error('Failed to create room:', error);
         alert('Failed to create room: ' + error.message);
     }
 }
@@ -241,6 +241,7 @@ function hideRoomUI() {
 }
 
 console.log('✅ UI Components loaded');
+
 
 
 
