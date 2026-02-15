@@ -29,8 +29,17 @@ async function initCreateRoom() {
     try {
         closeWatchTogetherMenu();
         
-        // Get current playing content
-        const content = currentContent || {
+        // Check if currentContent exists
+        console.log('Current content:', currentContent);
+        console.log('Window content:', window.currentContent);
+        
+        if (!currentContent && !window.currentContent) {
+            alert('Please play a movie first!');
+            return;
+        }
+        
+        // Use whichever is available
+        const content = currentContent || window.currentContent || {
             tmdb: '872585',
             type: 'movie',
             title: 'Sample Movie',
@@ -38,19 +47,24 @@ async function initCreateRoom() {
             serverIndex: 0
         };
         
-        console.log('Creating room with content:', content);
+        // Validate content has required fields
+        if (!content.tmdb || !content.type || !content.title) {
+            throw new Error('Invalid content data: missing required fields');
+        }
         
-        // Create room
+        console.log('✅ Creating room with:', content);
+        
         const roomCode = await createRoom(content);
         
         if (roomCode) {
+            console.log('✅ Room created:', roomCode);
             showRoomCreatedModal(roomCode);
         } else {
             throw new Error('Room code not generated');
         }
         
     } catch (error) {
-        console.error('Failed to create room:', error);
+        console.error('❌ Create room error:', error);
         alert('Failed to create room: ' + error.message);
     }
 }
@@ -241,6 +255,7 @@ function hideRoomUI() {
 }
 
 console.log('✅ UI Components loaded');
+
 
 
 
