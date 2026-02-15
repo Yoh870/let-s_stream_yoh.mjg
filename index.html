@@ -640,6 +640,34 @@
             from { opacity: 0; transform: translateY(20px); }
             to { opacity: 1; transform: translateY(0); }
         }
+
+
+        .watch-together-btn {
+            padding: 10px 20px;
+            background: var(--accent-red);
+            border: none;
+            border-radius: 25px;
+            color: white;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.3s;
+        }
+        
+        .watch-together-btn:hover {
+            background: #ff0a16;
+            transform: scale(1.05);
+        }
+        
+        @media (max-width: 768px) {
+            .watch-together-btn {
+                margin: 10px 0;
+                width: 100%;
+            }
+        }
     </style>
 </head>
 <body>
