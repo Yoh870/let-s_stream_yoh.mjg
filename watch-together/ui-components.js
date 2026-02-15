@@ -1,4 +1,34 @@
-// ===========================
+// TEST FUNCTION - Remove after testing
+async function testFirebase() {
+    console.log('Testing Firebase...');
+    
+    try {
+        // Check if Firebase is loaded
+        if (typeof firebase === 'undefined') {
+            alert('❌ Firebase not loaded!');
+            return;
+        }
+        
+        // Check if authenticated
+        if (!currentUser) {
+            alert('❌ Not authenticated!');
+            return;
+        }
+        
+        // Try to write to database
+        const testRef = database.ref('test/123');
+        await testRef.set({
+            message: 'Hello from ' + currentUser.uid,
+            timestamp: Date.now()
+        });
+        
+        alert('✅ Firebase working! User: ' + currentUser.uid);
+        
+    } catch (error) {
+        alert('❌ Firebase error: ' + error.message);
+        console.error(error);
+    }
+}// ===========================
 // STREAMFLIX WATCH TOGETHER - UI COMPONENTS
 // ===========================
 
@@ -241,5 +271,6 @@ function hideRoomUI() {
 }
 
 console.log('✅ UI Components loaded');
+
 
 
