@@ -13,7 +13,7 @@ async function createRoom(content) {
             throw new Error('User not authenticated');
         }
         
-        if (!content || !content.tmdbId) {
+        if (!content || !content.tmdb) {  // ← Changed tmdbId to tmdb
             throw new Error('Invalid content data');
         }
         
