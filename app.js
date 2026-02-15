@@ -110,23 +110,34 @@ function displayContent(containerId, items) {
 
 // Play content
 async function playContentById(tmdbId, type, title, year) {
-    const imdb = await getExternalIds(tmdbId, type);
-    const data = {
-        tmdb: tmdbId.toString(),
-        imdb: imdb,
-        type: type,
-        title: title,
-        year: year
-    };
-    
-    currentContent = data;
-    
-    document.getElementById('playerTitle').textContent = `${title} (${year})`;
-    document.getElementById('playerModal').classList.add('active');
-    document.body.style.overflow = 'hidden';
-    
-    loadServerButtons(data);
-    loadServer(0, data);
+    try {
+        const imdb = await getExternalIds(tmdbId, type);
+        const data = {
+            tmdb: tmdbId.toString(),
+            imdb: imdb,
+            type: type,
+            title: title,
+            year: year,
+            serverIndex: 0
+        };
+        
+        // IMPORTANT: Set currentContent globally
+        currentContent = data;
+        window.currentContent = data;  // Also set on window object
+        
+        console.log('✅ Content loaded:', currentContent);
+        
+        document.getElementById('playerTitle').textContent = `${title} (${year})`;
+        document.getElementById('playerModal').classList.add('active');
+        document.body.style.overflow = 'hidden';
+        
+        loadServerButtons(data);
+        loadServer(0, data);
+        
+    } catch (error) {
+        console.error('❌ Play content failed:', error);
+        alert('Failed to load content');
+    }
 }
 
 // Load server buttons
@@ -264,4 +275,5 @@ function showToast(message, type) {
         alert(message);
     }
 }
+
 
