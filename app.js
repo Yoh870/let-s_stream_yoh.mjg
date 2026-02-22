@@ -1,902 +1,867 @@
-/* ═══════════════════════════════════════════════════════════════════
-   STREAMFLIX — app.js  (Updated v3.0)
-   Fixes: genre chips, search, hero, latest content, App namespace
-═══════════════════════════════════════════════════════════════════ */
+/* ═══════════════════════════════════════════════════════════
+   STREAMFLIX app.js — Refactored v3.1
+   Fixes: trending load, genre chips, search, nav, player
+═══════════════════════════════════════════════════════════ */
 
-/* ─── TMDB CONFIG ──────────────────────────────────────────────── */
-const TMDB_API_KEY    = '3fd2be6f0c70a2a598f084ddfb75487c';
-const TMDB_BASE_URL   = 'https://api.themoviedb.org/3';
-const TMDB_IMAGE_BASE = 'https://image.tmdb.org/t/p/w500';
-const TMDB_IMAGE_ORIG = 'https://image.tmdb.org/t/p/original';
+/* ── TINY DOM UTILS (declared first so everything below can use them) ── */
+const qs   = (sel)     => document.querySelector(sel);
+const qsa  = (sel)     => [...document.querySelectorAll(sel)];
+const elc  = (tag, cls)=> { const e = document.createElement(tag); e.className = cls; return e; };
+const esc  = (s)       => String(s).replace(/'/g, "\\'").replace(/"/g, '&quot;');
+const hide = (...sels) => sels.forEach(s => { const e = qs(s); if (e) e.style.display = 'none'; });
+const show = (...sels) => sels.forEach(s => { const e = qs(s); if (e) e.style.display = '';   });
+const safeJSON = (obj) => JSON.stringify(obj).replace(/"/g, '&quot;');
 
-/* ─── STREAMING SERVERS (ordered: fewest ads first) ────────────── */
-/*
-   These are the cleanest available free embed servers.
-   Ads are controlled by the server operators, not us.
-   BEST way to block them: use Firefox/Kiwi Browser with uBlock Origin.
-   Servers are constantly changing — if one breaks, try the next.
-*/
-const servers = [
-    {
-        name: 'VidSrc.xyz ★★★',
-        hasSubtitles: true,
-        getUrl: (d) => d.type === 'movie'
-            ? `https://vidsrc.xyz/embed/movie?tmdb=${d.tmdb}`
-            : `https://vidsrc.xyz/embed/tv?tmdb=${d.tmdb}&season=${d.season||1}&episode=${d.episode||1}`
-    },
-    {
-        name: 'Embed.su ★★★',
-        hasSubtitles: true,
-        getUrl: (d) => d.type === 'movie'
-            ? `https://embed.su/embed/movie/${d.tmdb}`
-            : `https://embed.su/embed/tv/${d.tmdb}/${d.season||1}/${d.episode||1}`
-    },
-    {
-        name: 'VidSrc.to ★★',
-        hasSubtitles: true,
-        getUrl: (d) => `https://vidsrc.to/embed/${d.type}/${d.tmdb}`
-    },
-    {
-        name: 'VidSrc.me ★★',
-        hasSubtitles: true,
-        getUrl: (d) => d.type === 'movie'
-            ? `https://vidsrc.me/embed/movie?tmdb=${d.tmdb}`
-            : `https://vidsrc.me/embed/tv?tmdb=${d.tmdb}&season=${d.season||1}&episode=${d.episode||1}`
-    },
-    {
-        name: 'AutoEmbed ★★',
-        hasSubtitles: true,
-        getUrl: (d) => d.type === 'movie'
-            ? `https://autoembed.cc/movie/tmdb/${d.tmdb}`
-            : `https://autoembed.cc/tv/tmdb/${d.tmdb}-${d.season||1}-${d.episode||1}`
-    },
-    {
-        name: 'VidLink ★★',
-        hasSubtitles: true,
-        getUrl: (d) => d.type === 'movie'
-            ? `https://vidlink.pro/movie/${d.tmdb}`
-            : `https://vidlink.pro/tv/${d.tmdb}/${d.season||1}/${d.episode||1}`
-    },
-    {
-        name: '2Embed ★',
-        hasSubtitles: true,
-        getUrl: (d) => `https://www.2embed.cc/embed/${d.imdb || 'tt'+d.tmdb}`
-    },
-    {
-        name: 'SuperEmbed ★',
-        hasSubtitles: true,
-        getUrl: (d) => `https://multiembed.mov/?video_id=${d.imdb || 'tt'+d.tmdb}&tmdb=1`
-    },
+/* ── CONFIG ─────────────────────────────────────────────── */
+const TMDB_KEY = '3fd2be6f0c70a2a598f084ddfb75487c';
+const TMDB_URL = 'https://api.themoviedb.org/3';
+const IMG_W500 = 'https://image.tmdb.org/t/p/w500';
+
+/* ── STREAMING SERVERS ──────────────────────────────────────
+   Ordered by fewest ads. ★★★ = cleanest.
+   Best ad blocker tip: Firefox/Kiwi Browser + uBlock Origin (free)
+────────────────────────────────────────────────────────── */
+const SERVERS = [
+  { name: 'Server 1 ★★★', sub: true,
+    url: d => d.type === 'movie'
+      ? `https://vidsrc.xyz/embed/movie?tmdb=${d.tmdb}`
+      : `https://vidsrc.xyz/embed/tv?tmdb=${d.tmdb}&season=${d.season}&episode=${d.episode}` },
+  { name: 'Server 2 ★★★', sub: true,
+    url: d => d.type === 'movie'
+      ? `https://embed.su/embed/movie/${d.tmdb}`
+      : `https://embed.su/embed/tv/${d.tmdb}/${d.season}/${d.episode}` },
+  { name: 'Server 3 ★★', sub: true,
+    url: d => `https://vidsrc.to/embed/${d.type}/${d.tmdb}` },
+  { name: 'Server 4 ★★', sub: true,
+    url: d => d.type === 'movie'
+      ? `https://vidsrc.me/embed/movie?tmdb=${d.tmdb}`
+      : `https://vidsrc.me/embed/tv?tmdb=${d.tmdb}&season=${d.season}&episode=${d.episode}` },
+  { name: 'Server 5 ★★', sub: true,
+    url: d => d.type === 'movie'
+      ? `https://autoembed.cc/movie/tmdb/${d.tmdb}`
+      : `https://autoembed.cc/tv/tmdb/${d.tmdb}-${d.season}-${d.episode}` },
+  { name: 'Server 6 ★★', sub: true,
+    url: d => d.type === 'movie'
+      ? `https://vidlink.pro/movie/${d.tmdb}`
+      : `https://vidlink.pro/tv/${d.tmdb}/${d.season}/${d.episode}` },
+  { name: 'Server 7 ★', sub: true,
+    url: d => `https://www.2embed.cc/embed/${d.imdb || 'tt' + d.tmdb}` },
+  { name: 'Server 8 ★', sub: true,
+    url: d => `https://multiembed.mov/?video_id=${d.imdb || 'tt' + d.tmdb}&tmdb=1` },
 ];
 
-/* ─── STATE ────────────────────────────────────────────────────── */
-let currentContent   = null;
-let currentPage      = 1;
-let currentCategory  = 'home';
-let currentGenreId   = 'all';
-let currentSearchQ   = '';
-let matureUnlocked   = false;
-let matureExpiry     = 0;
-let pinFailCount     = 0;
-let pinLockUntil     = 0;
-const MATURE_TTL     = 15 * 60 * 1000;
-const PIN_MAX        = 5;
-const PIN_LOCKOUT    = 5 * 60 * 1000;
+/* ── GENRE MAP ──────────────────────────────────────────── */
+const GENRES = {
+  '28':'Action','18':'Drama','35':'Comedy','53':'Thriller',
+  '10749':'Romance','878':'Sci-Fi','27':'Horror','14':'Fantasy',
+  '16':'Animation','99':'Documentary','10751':'Family',
+  '36':'History','80':'Crime','10402':'Music','9648':'Mystery','37':'Western',
+};
 
-/* ─── HERO SLIDES ──────────────────────────────────────────────── */
-const HERO_ITEMS = [
-    { id:'872585',  type:'movie', title:'Oppenheimer',        year:'2023', badge:'🔥 Trending',   img:'https://images.unsplash.com/photo-1534131707746-25d604851a1f?w=1920&h=1080&fit=crop', desc:'The story of J. Robert Oppenheimer and the creation of the atomic bomb that changed the world forever.' },
-    { id:'1396',    type:'tv',    title:'Breaking Bad',        year:'2008', badge:'⭐ All-Time Best',img:'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=1920&h=1080&fit=crop', desc:'A high school chemistry teacher turned meth manufacturer partners with a former student in the criminal world.' },
-    { id:'519182',  type:'movie', title:'Despicable Me 4',     year:'2024', badge:'🆕 Latest',      img:'https://images.unsplash.com/photo-1440404653325-ab127d49abc1?w=1920&h=1080&fit=crop', desc:'Gru and his family face a new villain — and a new chapter — in the latest adventure.' },
-    { id:'94997',   type:'tv',    title:'House of the Dragon', year:'2022', badge:'🐉 Epic Fantasy', img:'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1920&h=1080&fit=crop', desc:'The prequel to Game of Thrones — the story of House Targaryen before the fall.' },
+/* ── HERO SLIDES ────────────────────────────────────────── */
+const HERO_DATA = [
+  { id:'872585', type:'movie', title:'Oppenheimer',        year:'2023', badge:'🔥 Trending',
+    img:'https://images.unsplash.com/photo-1534131707746-25d604851a1f?w=1920&h=1080&fit=crop',
+    desc:'The story of J. Robert Oppenheimer and his role in the development of the atomic bomb.' },
+  { id:'1396',   type:'tv',   title:'Breaking Bad',        year:'2008', badge:'⭐ All-Time Best',
+    img:'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=1920&h=1080&fit=crop',
+    desc:'A chemistry teacher turned meth manufacturer navigates the criminal underworld.' },
+  { id:'94997',  type:'tv',   title:'House of the Dragon', year:'2022', badge:'🐉 Epic Fantasy',
+    img:'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1920&h=1080&fit=crop',
+    desc:'The prequel to Game of Thrones — the story of House Targaryen before the fall.' },
+  { id:'519182', type:'movie',title:'Despicable Me 4',     year:'2024', badge:'🆕 Latest 2024',
+    img:'https://images.unsplash.com/photo-1440404653325-ab127d49abc1?w=1920&h=1080&fit=crop',
+    desc:'Gru and his family face a brand-new villain in the latest Minions adventure.' },
 ];
 
-let heroIndex  = 0;
-let heroTimer  = null;
-const HERO_MS  = 7000;
+/* ── STATE ──────────────────────────────────────────────── */
+const S = {
+  heroIdx: 0, heroTimer: null, HERO_MS: 7000,
+  content: null, searchQ: '',
+  matureOk: false, matureExpiry: 0,
+  pinFails: 0, pinLockUntil: 0,
+};
+const MATURE_TTL    = 15 * 60 * 1000;
+const PIN_MAX_TRIES = 5;
+const PIN_LOCKOUT   = 5  * 60 * 1000;
 
-/* ─── TMDB FETCH ────────────────────────────────────────────────── */
-async function fetchTMDB(endpoint) {
-    try {
-        const sep = endpoint.includes('?') ? '&' : '?';
-        const res = await fetch(`${TMDB_BASE_URL}${endpoint}${sep}api_key=${TMDB_API_KEY}`);
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        return await res.json();
-    } catch (err) {
-        console.error('TMDB Error:', err);
-        return null;
-    }
+/* ═══════════════════════════════════════════════════════════
+   TMDB API
+═══════════════════════════════════════════════════════════ */
+async function tmdb(endpoint, params = {}) {
+  try {
+    const p   = new URLSearchParams({ api_key: TMDB_KEY, ...params }).toString();
+    const sep = endpoint.includes('?') ? '&' : '?';
+    const res = await fetch(`${TMDB_URL}${endpoint}${sep}${p}`);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    return await res.json();
+  } catch (e) {
+    console.error('[TMDB]', e.message, endpoint);
+    return null;
+  }
 }
 
-async function getExternalIds(id, type) {
-    const data = await fetchTMDB(`/${type}/${id}/external_ids`);
-    return data?.imdb_id || null;
+async function getImdbId(tmdbId, type) {
+  const d = await tmdb(`/${type}/${tmdbId}/external_ids`);
+  return d?.imdb_id || null;
 }
 
-/* ─── HERO ENGINE ────────────────────────────────────────────────
-   Works with the new HTML (#hero) and old HTML (#heroSection)
-──────────────────────────────────────────────────────────────── */
+/* ═══════════════════════════════════════════════════════════
+   HERO ENGINE
+═══════════════════════════════════════════════════════════ */
 function buildHero() {
-    const hero = document.getElementById('hero') || document.getElementById('heroSection');
-    if (!hero) return;
+  /* Supports both old id="heroSection" and new id="hero" */
+  const hero = qs('#hero') || qs('#heroSection');
+  if (!hero) return;
 
-    // Clear old static content, inject slides
-    // Keep children that are #heroBar and #heroDots if they exist
-    [...hero.children].forEach(c => {
-        if (!['heroBar','heroDots'].includes(c.id)) c.remove();
-    });
+  const bar  = qs('#heroBar')  || qs('#heroProgress');
+  const dots = qs('#heroDots');
 
-    const bar  = document.getElementById('heroBar');
-    const dots = document.getElementById('heroDots');
+  /* Remove old slides, keep bar + dots elements */
+  hero.querySelectorAll('.hero-slide').forEach(s => s.remove());
+  if (dots) dots.innerHTML = '';
 
-    HERO_ITEMS.forEach((d, i) => {
-        const slide = document.createElement('div');
-        slide.className = 'hero-slide' + (i === 0 ? ' active' : '');
-        slide.innerHTML = `
-            <img class="hero-bg" src="${d.img}" alt="${d.title}" loading="${i===0?'eager':'lazy'}">
-            <div class="hero-ov"></div>
-            <div class="hero-content">
-                <div class="hero-badge">${d.badge}</div>
-                <h1 class="hero-title">${d.title}</h1>
-                <div class="hero-meta">
-                    <span class="hero-score">TMDB ★</span>
-                    <span style="background:rgba(255,255,255,.15);color:#fff;font-size:.74rem;padding:2px 8px;border-radius:3px">${d.year}</span>
-                </div>
-                <p class="hero-desc">${d.desc}</p>
-                <div class="hero-acts">
-                    <button class="btn-play" onclick="playContentById(${d.id},'${d.type}','${d.title.replace(/'/g,"\\'")}','${d.year}')">▶ Watch Now</button>
-                    <button class="btn-more">ℹ More Info</button>
-                </div>
-            </div>`;
-        if (bar)  hero.insertBefore(slide, bar);
-        else if (dots) hero.insertBefore(slide, dots);
-        else hero.appendChild(slide);
+  HERO_DATA.forEach((d, i) => {
+    const slide = document.createElement('div');
+    slide.className = 'hero-slide' + (i === 0 ? ' active' : '');
+    slide.innerHTML = `
+      <img class="hero-bg hero-bg-img"
+           src="${d.img}" alt="${d.title}"
+           loading="${i === 0 ? 'eager' : 'lazy'}">
+      <div class="hero-ov hero-overlay"></div>
+      <div class="hero-content">
+        <div class="hero-badge">${d.badge}</div>
+        <h1 class="hero-title">${d.title}</h1>
+        <div class="hero-meta">
+          <span class="hero-score" style="background:#f5c518;color:#000;padding:2px 9px;border-radius:3px;font-size:.76rem;font-weight:700">TMDB ★</span>
+          <span style="background:rgba(255,255,255,.14);padding:2px 9px;border-radius:3px;font-size:.8rem">${d.year}</span>
+        </div>
+        <p class="hero-desc hero-description">${d.desc}</p>
+        <div class="hero-acts hero-actions">
+          <button class="btn-play btn btn-play"
+                  onclick="playById(${d.id},'${d.type}','${esc(d.title)}','${d.year}')">▶ Watch Now</button>
+          <button class="btn-more"
+                  style="display:inline-flex;align-items:center;gap:8px;padding:11px 22px;background:rgba(255,255,255,.12);color:#fff;border:1px solid rgba(255,255,255,.25);border-radius:5px;font-family:inherit;font-size:.9rem;cursor:pointer;backdrop-filter:blur(8px)">
+            ℹ More Info
+          </button>
+        </div>
+      </div>`;
 
-        if (dots) {
-            const dot = document.createElement('div');
-            dot.className = 'hdot' + (i === 0 ? ' active' : '');
-            dot.onclick = () => goToSlide(i);
-            dots.appendChild(dot);
-        }
-    });
+    if (bar)       hero.insertBefore(slide, bar);
+    else if (dots) hero.insertBefore(slide, dots);
+    else           hero.appendChild(slide);
 
-    startHeroAuto();
-}
-
-function goToSlide(idx) {
-    const slides = document.querySelectorAll('.hero-slide');
-    const dotEls = document.querySelectorAll('.hdot');
-    slides[heroIndex]?.classList.remove('active');
-    dotEls[heroIndex]?.classList.remove('active');
-    heroIndex = idx;
-    slides[idx]?.classList.add('active');
-    dotEls[idx]?.classList.add('active');
-    resetHeroBar();
-}
-
-function startHeroAuto() {
-    clearInterval(heroTimer);
-    heroTimer = setInterval(() => {
-        goToSlide((heroIndex + 1) % HERO_ITEMS.length);
-    }, HERO_MS);
-    resetHeroBar();
-}
-
-function resetHeroBar() {
-    const bar = document.getElementById('heroBar');
-    if (!bar) return;
-    bar.style.transition = 'none';
-    bar.style.width = '0%';
-    requestAnimationFrame(() => {
-        bar.style.transition = `width ${HERO_MS}ms linear`;
-        bar.style.width = '100%';
-    });
-}
-
-/* ─── SECTION REVEAL ─────────────────────────────────────────────── */
-function observeSections() {
-    if (!('IntersectionObserver' in window)) {
-        document.querySelectorAll('.content-section').forEach(s => s.classList.add('visible'));
-        return;
+    if (dots) {
+      const dot = document.createElement('div');
+      dot.className = 'hdot hero-dot' + (i === 0 ? ' active' : '');
+      dot.onclick   = () => heroGoto(i);
+      dots.appendChild(dot);
     }
-    const io = new IntersectionObserver(entries => {
-        entries.forEach(e => {
-            if (e.isIntersecting) { e.target.classList.add('visible'); io.unobserve(e.target); }
-        });
-    }, { threshold: 0.06 });
-    document.querySelectorAll('.content-section').forEach(s => io.observe(s));
+  });
+
+  heroStart();
 }
 
-/* ─── CARD FACTORY ───────────────────────────────────────────────── */
-function makeCard(item, type, opts = {}) {
-    const title   = item.title || item.name || 'Unknown';
-    const year    = (item.release_date || item.first_air_date || '').slice(0, 4);
-    const score   = item.vote_average ? item.vote_average.toFixed(1) : '—';
-    const poster  = item.poster_path
-        ? `${TMDB_IMAGE_BASE}${item.poster_path}`
-        : `https://via.placeholder.com/300x450/161616/555?text=${encodeURIComponent(title)}`;
-    const isLock  = opts.locked || false;
-    const delay   = opts.idx ? opts.idx * 50 : 0;
-
-    return `
-        <div class="card content-card" style="animation-delay:${delay}ms"
-             onclick="${isLock ? 'App.openMature()' : `playContentById(${item.id},'${type}','${title.replace(/'/g,"\\'").replace(/"/g,"&quot;")}','${year}')`}">
-            <div class="card-img-wrap">
-                <img class="card-img card-image"
-                     src="${poster}"
-                     alt="${title}"
-                     loading="lazy"
-                     onerror="this.src='https://via.placeholder.com/300x450/161616/555?text=No+Poster'">
-                <div class="card-play card-play-icon">▶</div>
-                <div class="card-type type-badge">${type === 'movie' ? 'FILM' : 'TV'}</div>
-                <div class="rating-badge" style="position:absolute;top:7px;left:7px;background:rgba(0,0,0,.75);padding:2px 6px;border-radius:3px;font-size:.65rem;font-weight:600">⭐ ${score}</div>
-                ${isLock ? `<div class="card-lock"><div class="lico">🔒</div><div class="ltxt">18+<br>Tap to unlock</div></div>` : ''}
-            </div>
-            <div class="card-ov card-overlay">
-                <div class="card-ttl card-title">${title}</div>
-                <div class="card-meta card-meta-row">
-                    <span class="star">★</span><span>${score}</span>${year ? `<span>${year}</span>` : ''}
-                </div>
-            </div>
-        </div>`;
+function heroGoto(idx) {
+  qsa('.hero-slide').forEach((s, i) => s.classList.toggle('active', i === idx));
+  qsa('.hdot, .hero-dot').forEach((d, i) => d.classList.toggle('active', i === idx));
+  S.heroIdx = idx;
+  heroBarReset();
 }
 
-/* ─── DISPLAY CONTENT ────────────────────────────────────────────── */
-function displayContent(containerId, items, opts = {}) {
-    const el = document.getElementById(containerId);
-    if (!el) return;
-    if (!items || items.length === 0) {
-        el.innerHTML = '<div style="color:#888;padding:20px;font-size:.9rem">No results found.</div>';
-        return;
-    }
-    el.innerHTML = items.map((item, i) => {
-        const type = item.media_type || (item.title ? 'movie' : 'tv');
-        return makeCard(item, type, { ...opts, idx: i });
-    }).join('');
+function heroStart() {
+  clearInterval(S.heroTimer);
+  S.heroTimer = setInterval(() => heroGoto((S.heroIdx + 1) % HERO_DATA.length), S.HERO_MS);
+  heroBarReset();
 }
 
-/* ─── HOME SECTION LOADERS ───────────────────────────────────────── */
+function heroBarReset() {
+  const bar = qs('#heroBar') || qs('#heroProgress');
+  if (!bar) return;
+  bar.style.transition = 'none';
+  bar.style.width = '0%';
+  requestAnimationFrame(() => {
+    bar.style.transition = `width ${S.HERO_MS}ms linear`;
+    bar.style.width = '100%';
+  });
+}
+
+/* ═══════════════════════════════════════════════════════════
+   CARD FACTORY
+═══════════════════════════════════════════════════════════ */
+function makeCard(item, overrideType, idx = 0, locked = false) {
+  const type   = overrideType || item.media_type || (item.title ? 'movie' : 'tv');
+  const title  = item.title || item.name || 'Unknown';
+  const year   = (item.release_date || item.first_air_date || '').slice(0, 4);
+  const score  = item.vote_average ? item.vote_average.toFixed(1) : '—';
+  const poster = item.poster_path
+    ? `${IMG_W500}${item.poster_path}`
+    : `https://via.placeholder.com/300x450/161616/555?text=${encodeURIComponent(title)}`;
+
+  const clickFn = locked
+    ? `App.openMature()`
+    : `playById(${item.id},'${type}','${esc(title)}','${year}')`;
+
+  return `
+    <div class="card content-card" style="animation-delay:${idx * 45}ms" onclick="${clickFn}">
+      <div class="card-img-wrap" style="aspect-ratio:2/3;overflow:hidden;position:relative;background:#1e1e1e">
+        <img class="card-img card-image" src="${poster}" alt="${esc(title)}" loading="lazy"
+             onerror="this.src='https://via.placeholder.com/300x450/161616/555?text=No+Poster'">
+        <div class="card-play card-play-icon"
+             style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:2.2rem;opacity:0;transition:opacity .3s;background:rgba(0,0,0,.22)">▶</div>
+        <div class="card-type type-badge"
+             style="position:absolute;top:7px;right:7px;background:#e50914;color:#fff;font-size:.58rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;padding:2px 6px;border-radius:3px">
+          ${type === 'movie' ? 'FILM' : 'TV'}
+        </div>
+        <div class="rating-badge"
+             style="position:absolute;top:7px;left:7px;background:rgba(0,0,0,.78);color:#fff;padding:2px 6px;border-radius:3px;font-size:.65rem;font-weight:600">
+          ⭐ ${score}
+        </div>
+        ${locked ? `
+          <div class="card-lock" style="position:absolute;inset:0;background:rgba(0,0,0,.55);backdrop-filter:blur(14px);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px">
+            <div style="font-size:1.9rem">🔒</div>
+            <div style="font-size:.68rem;font-weight:600;color:#c8c8c8;text-align:center">18+<br>Tap to unlock</div>
+          </div>` : ''}
+      </div>
+      <div class="card-ov card-overlay"
+           style="padding:9px;background:linear-gradient(0deg,rgba(0,0,0,.95),transparent);position:absolute;bottom:0;left:0;right:0">
+        <div class="card-ttl card-title"
+             style="font-size:.77rem;font-weight:600;line-height:1.2;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${title}</div>
+        <div class="card-meta card-meta-row" style="display:flex;gap:7px;font-size:.65rem;color:#888">
+          <span style="color:#f5c518">★</span><span>${score}</span>${year ? `<span>${year}</span>` : ''}
+        </div>
+      </div>
+    </div>`;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   RENDER HELPERS
+═══════════════════════════════════════════════════════════ */
+function renderRow(id, items, type = null, locked = false) {
+  const el = qs(`#${id}`);
+  if (!el) return;
+  if (!items?.length) {
+    el.innerHTML = '<div style="color:#666;padding:20px;font-size:.88rem">No content available.</div>';
+    return;
+  }
+  el.innerHTML = items.map((item, i) => makeCard(item, type, i, locked)).join('');
+}
+
+function renderGrid(id, items) {
+  const el = qs(`#${id}`);
+  if (!el) return;
+  if (!items?.length) {
+    el.innerHTML = '<div style="color:#666;padding:30px;font-size:.9rem;text-align:center">No results found.</div>';
+    return;
+  }
+  el.innerHTML = items.map((item, i) =>
+    makeCard(item, item.media_type || (item.title ? 'movie' : 'tv'), i)).join('');
+}
+
+/* ═══════════════════════════════════════════════════════════
+   HOME ROW LOADERS
+═══════════════════════════════════════════════════════════ */
 async function loadTrending() {
-    const data = await fetchTMDB('/trending/all/week');
-    if (data?.results) displayContent('trendingContent', data.results.slice(0, 20));
+  const d = await tmdb('/trending/all/week');
+  renderRow('trendingContent', d?.results?.slice(0, 20));
 }
-
 async function loadMovies() {
-    const data = await fetchTMDB('/movie/popular?region=PH');
-    if (data?.results) displayContent('moviesContent', data.results.slice(0, 20));
+  const d = await tmdb('/movie/popular', { region: 'PH' });
+  renderRow('moviesContent', d?.results?.slice(0, 20), 'movie');
 }
-
 async function loadTV() {
-    const data = await fetchTMDB('/tv/popular?region=PH');
-    if (data?.results) displayContent('tvContent', data.results.slice(0, 20));
+  const d = await tmdb('/tv/popular', { region: 'PH' });
+  renderRow('tvContent', d?.results?.slice(0, 20), 'tv');
 }
-
 async function loadKDrama() {
-    const data = await fetchTMDB('/discover/tv?with_origin_country=KR&sort_by=popularity.desc&with_type=2|4');
-    if (data?.results) displayContent('kdramaContent', data.results.slice(0, 20));
+  const d = await tmdb('/discover/tv', { with_origin_country: 'KR', sort_by: 'popularity.desc' });
+  renderRow('kdramaContent', d?.results?.slice(0, 20), 'tv');
 }
-
 async function loadAnime() {
-    const data = await fetchTMDB('/discover/tv?with_genres=16&with_origin_country=JP&sort_by=popularity.desc');
-    if (data?.results) displayContent('animeContent', data.results.slice(0, 20));
+  const d = await tmdb('/discover/tv', { with_genres: '16', with_origin_country: 'JP', sort_by: 'popularity.desc' });
+  renderRow('animeContent', d?.results?.slice(0, 20), 'tv');
 }
-
 async function loadMatureContent() {
-    const data = await fetchTMDB('/movie/popular?certification_country=US&certification=R&sort_by=popularity.desc');
-    if (data?.results) {
-        displayContent('matureContent', data.results.slice(0, 20));
-    }
+  const d = await tmdb('/discover/movie', {
+    certification_country: 'US', 'certification.gte': 'R', sort_by: 'popularity.desc',
+  });
+  renderRow('matureContent', d?.results?.slice(0, 20), 'movie');
 }
 
-/* ─── GENRE FILTER ───────────────────────────────────────────────
-   Called by genre chips. Fetches TMDB by genre ID.
-──────────────────────────────────────────────────────────────── */
-async function filterByGenre(genreId) {
-    currentGenreId = genreId;
-    if (genreId === 'all') {
-        goHome();
-        return;
-    }
+/* ═══════════════════════════════════════════════════════════
+   CATEGORY PAGE  (nav links, See All, bottom nav)
+═══════════════════════════════════════════════════════════ */
+const CAT_MAP = {
+  trending:  { ep: '/trending/all/week',  params: {},                                                                   label: '🔥 Trending Now'    },
+  movies:    { ep: '/discover/movie',     params: { sort_by: 'popularity.desc' },                                       label: '🎬 Popular Movies'  },
+  tv:        { ep: '/discover/tv',        params: { sort_by: 'popularity.desc' },                                       label: '📺 TV Series'       },
+  kdrama:    { ep: '/discover/tv',        params: { with_origin_country: 'KR', sort_by: 'popularity.desc' },            label: '🇰🇷 K-Drama'         },
+  anime:     { ep: '/discover/tv',        params: { with_genres: '16', with_origin_country: 'JP', sort_by: 'popularity.desc' }, label: '🎌 Anime'   },
+  top_rated: { ep: '/movie/top_rated',    params: {},                                                                   label: '⭐ Top Rated'       },
+  now:       { ep: '/movie/now_playing',  params: {},                                                                   label: '🆕 Now In Cinemas' },
+};
 
-    showResultsView();
+async function loadCategory(cat, page = 1) {
+  if (cat === 'mature') { App.openMature(); return; }
+  const def = CAT_MAP[cat];
+  if (!def) return;
 
-    const genreName = document.querySelector(`.gchip[data-g="${genreId}"], .genre-chip[data-genre="${genreId}"]`)?.textContent?.trim() || 'Genre';
-    setSearchInfo(`${genreName}`, 'Fetching...');
+  setNavActive(cat);
+  showResultsView();
+  setInfo(def.label, 'Loading…');
 
-    // Fetch both movies and TV for that genre
-    const [movies, tv] = await Promise.all([
-        fetchTMDB(`/discover/movie?with_genres=${genreId}&sort_by=popularity.desc&page=1`),
-        fetchTMDB(`/discover/tv?with_genres=${genreId}&sort_by=popularity.desc&page=1`),
-    ]);
+  const d = await tmdb(def.ep, { ...def.params, page });
 
-    const results = [
-        ...(movies?.results || []).map(r => ({ ...r, media_type: 'movie' })),
-        ...(tv?.results || []).map(r => ({ ...r, media_type: 'tv' })),
-    ].sort((a, b) => (b.popularity || 0) - (a.popularity || 0));
+  if (!d?.results?.length) {
+    setInfo(def.label, 'Failed to load. Check internet connection.');
+    return;
+  }
 
-    const total = (movies?.total_results || 0) + (tv?.total_results || 0);
-    setSearchInfo(genreName, `${total.toLocaleString()} titles found`);
-    displayContent('searchResultsContent', results);
-    document.getElementById('pagination').innerHTML = '';
+  /* Normalize media_type for endpoints that don't return it */
+  const isMovieCat = ['movies', 'top_rated', 'now'].includes(cat);
+  const items = d.results.map(r => ({
+    ...r,
+    media_type: r.media_type || (isMovieCat ? 'movie' : 'tv'),
+  }));
+
+  setInfo(def.label, `${(d.total_results || items.length).toLocaleString()} titles — Page ${page}`);
+  renderGrid('searchResultsContent', items);
+  makePagination(d.total_pages || 1, page, p => loadCategory(cat, p));
 }
 
-/* ─── CATEGORY LOADER ────────────────────────────────────────────
-   Called by nav links and bottom nav
-──────────────────────────────────────────────────────────────── */
-async function loadCategory(category) {
-    currentCategory = category;
-    updateNavActive(category);
+/* ═══════════════════════════════════════════════════════════
+   GENRE FILTER  (chip buttons)
+═══════════════════════════════════════════════════════════ */
+async function filterGenre(chip) {
+  qsa('.gchip, .genre-chip').forEach(c => c.classList.remove('active'));
+  chip.classList.add('active');
 
-    if (category === 'mature') {
-        App.openMature();
-        return;
-    }
+  const gid = chip.dataset.g || chip.dataset.genre || 'all';
+  if (gid === 'all') { goHome(); return; }
 
-    showResultsView();
+  const label = GENRES[gid] || chip.textContent.trim();
+  showResultsView();
+  setInfo(label, 'Loading…');
 
-    const categoryMap = {
-        trending: { ep: '/trending/all/week',                                                    title: '🔥 Trending Now'     },
-        movies:   { ep: '/discover/movie?sort_by=popularity.desc',                               title: '🎬 Popular Movies'   },
-        tv:       { ep: '/discover/tv?sort_by=popularity.desc',                                  title: '📺 TV Series'        },
-        kdrama:   { ep: '/discover/tv?with_origin_country=KR&sort_by=popularity.desc',           title: '🇰🇷 K-Drama'          },
-        anime:    { ep: '/discover/tv?with_genres=16&with_origin_country=JP&sort_by=popularity.desc', title: '🎌 Anime'       },
-        latest_movies: { ep: '/movie/now_playing',                                               title: '🆕 Now In Cinemas'   },
-        top_rated:{ ep: '/movie/top_rated',                                                      title: '⭐ Top Rated Movies'  },
-    };
+  const [mv, tv] = await Promise.all([
+    tmdb('/discover/movie', { with_genres: gid, sort_by: 'popularity.desc', page: 1 }),
+    tmdb('/discover/tv',    { with_genres: gid, sort_by: 'popularity.desc', page: 1 }),
+  ]);
 
-    const cat = categoryMap[category];
-    if (!cat) return;
+  const results = [
+    ...(mv?.results || []).map(r => ({ ...r, media_type: 'movie' })),
+    ...(tv?.results || []).map(r => ({ ...r, media_type: 'tv'    })),
+  ].sort((a, b) => (b.popularity || 0) - (a.popularity || 0));
 
-    setSearchInfo(cat.title, 'Loading...');
-
-    const data = await fetchTMDB(`${cat.ep}&page=1`);
-    if (!data?.results) { setSearchInfo(cat.title, 'Failed to load.'); return; }
-
-    const total = data.total_results || data.results.length;
-    setSearchInfo(cat.title, `${total.toLocaleString()} titles`);
-
-    const items = data.results.map(r => ({
-        ...r,
-        media_type: r.media_type || (r.title ? 'movie' : 'tv'),
-    }));
-    displayContent('searchResultsContent', items);
-
-    // Pagination
-    buildPagination(data.total_pages || 1, 1, (page) => loadCategoryPage(cat.ep, cat.title, page));
+  const total = (mv?.total_results || 0) + (tv?.total_results || 0);
+  setInfo(label, `${total.toLocaleString()} titles`);
+  renderGrid('searchResultsContent', results);
+  const pg = qs('#pagination');
+  if (pg) pg.innerHTML = '';
 }
 
-async function loadCategoryPage(ep, title, page) {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-    setSearchInfo(title, 'Loading...');
-    const data = await fetchTMDB(`${ep}&page=${page}`);
-    if (!data?.results) return;
-    setSearchInfo(title, `${(data.total_results||0).toLocaleString()} titles — Page ${page}`);
-    const items = data.results.map(r => ({
-        ...r,
-        media_type: r.media_type || (r.title ? 'movie' : 'tv'),
-    }));
-    displayContent('searchResultsContent', items);
-    buildPagination(data.total_pages || 1, page, (p) => loadCategoryPage(ep, title, p));
+/* ═══════════════════════════════════════════════════════════
+   SEARCH
+═══════════════════════════════════════════════════════════ */
+async function doSearch(page = 1) {
+  const q = (qs('#searchInput')?.value || qs('#msearchInp')?.value || S.searchQ).trim();
+  if (!q) return;
+  S.searchQ = q;
+
+  closeMSearch();
+  showResultsView();
+  setInfo(`Results for "<span style="color:#e50914">${q}</span>"`, 'Searching…');
+
+  const d = await tmdb('/search/multi', { query: q, page, include_adult: false });
+
+  if (!d?.results) {
+    setInfo('Search', 'Search failed. Check your connection.');
+    return;
+  }
+
+  const items = d.results.filter(r => r.media_type !== 'person' && r.poster_path);
+  setInfo(
+    `Results for "<span style="color:#e50914">${q}</span>"`,
+    `${(d.total_results || 0).toLocaleString()} results`
+  );
+  renderGrid('searchResultsContent', items);
+  makePagination(Math.min(d.total_pages || 1, 500), page, p => doSearch(p));
 }
 
-/* ─── SEARCH ─────────────────────────────────────────────────────
-   Works from desktop input, mobile overlay, or Enter key
-──────────────────────────────────────────────────────────────── */
-async function performMainSearch(page = 1) {
-    const desktopQ = document.getElementById('searchInput')?.value.trim();
-    const mobileQ  = document.getElementById('msearchInp')?.value.trim();
-    const query    = desktopQ || mobileQ || currentSearchQ;
-    if (!query) return;
+/* ═══════════════════════════════════════════════════════════
+   PAGINATION
+═══════════════════════════════════════════════════════════ */
+function makePagination(totalPages, current, onPage) {
+  const el = qs('#pagination');
+  if (!el) return;
+  if (totalPages <= 1) { el.innerHTML = ''; return; }
 
-    currentSearchQ = query;
-    showResultsView();
-    setSearchInfo(`Results for "${query}"`, 'Searching...');
+  const max = Math.min(totalPages, 500);
+  let pages = [];
 
-    const data = await fetchTMDB(`/search/multi?query=${encodeURIComponent(query)}&page=${page}&include_adult=false`);
+  if (max <= 7) {
+    pages = Array.from({ length: max }, (_, i) => i + 1);
+  } else {
+    pages = [1];
+    if (current > 3) pages.push('…');
+    for (let i = Math.max(2, current - 2); i <= Math.min(max - 1, current + 2); i++) pages.push(i);
+    if (current < max - 2) pages.push('…');
+    pages.push(max);
+  }
 
-    if (!data?.results) {
-        setSearchInfo(`Results for "${query}"`, 'Search failed. Check connection.');
-        return;
-    }
-
-    const filtered = data.results.filter(r => r.media_type !== 'person' && r.poster_path);
-    const total    = data.total_results || filtered.length;
-
-    setSearchInfo(
-        `Results for "<span style="color:var(--red)">${query}</span>"`,
-        `${total.toLocaleString()} results found`
-    );
-    displayContent('searchResultsContent', filtered);
-    buildPagination(data.total_pages || 1, page, (p) => performMainSearch(p));
+  el.innerHTML = pages.map(p =>
+    p === '…'
+      ? `<span class="pag-btn page-btn" style="cursor:default;opacity:.4">…</span>`
+      : `<button class="pag-btn page-btn ${p === current ? 'active' : ''}"
+               onclick="(${onPage.toString()})(${p})">${p}</button>`
+  ).join('');
 }
 
-/* ─── PAGINATION ─────────────────────────────────────────────────── */
-function buildPagination(totalPages, currentPg, onPage) {
-    const el = document.getElementById('pagination');
-    if (!el || totalPages <= 1) { if (el) el.innerHTML = ''; return; }
-
-    const max   = Math.min(totalPages, 500); // TMDB caps at 500
-    let pages   = [];
-
-    if (max <= 7) {
-        pages = Array.from({ length: max }, (_, i) => i + 1);
-    } else {
-        pages = [1];
-        if (currentPg > 3) pages.push('…');
-        for (let i = Math.max(2, currentPg - 2); i <= Math.min(max - 1, currentPg + 2); i++) pages.push(i);
-        if (currentPg < max - 2) pages.push('…');
-        pages.push(max);
-    }
-
-    el.innerHTML = pages.map(p =>
-        p === '…'
-            ? `<span class="pag-btn page-btn" style="cursor:default;opacity:.4">…</span>`
-            : `<button class="pag-btn page-btn ${p === currentPg ? 'active' : ''}" onclick="(${onPage.toString()})(${p})">${p}</button>`
-    ).join('');
-}
-
-/* ─── VIEW HELPERS ───────────────────────────────────────────────── */
+/* ═══════════════════════════════════════════════════════════
+   VIEW HELPERS
+═══════════════════════════════════════════════════════════ */
 function showResultsView() {
-    // Hide hero + main rows
-    const hero    = document.getElementById('hero') || document.getElementById('heroSection');
-    const main    = document.getElementById('mainContent');
-    const results = document.getElementById('searchResultsContainer');
-    const info    = document.getElementById('searchInfo');
-    const genreEl = document.getElementById('genreBar');
-
-    if (hero)    hero.style.display    = 'none';
-    if (main)    main.style.display    = 'none';
-    if (results) results.style.display = 'block';
-    if (info)    info.classList.add('active', 'on');
-    // Keep genre bar visible so user can re-filter
+  /* Hide hero (supports both old + new IDs) */
+  const hero = qs('#hero') || qs('#heroSection');
+  if (hero) hero.style.display = 'none';
+  hide('#mainContent');
+  show('#searchResultsContainer');
+  const info = qs('#searchInfo');
+  if (info) info.classList.add('active', 'on');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 function showHomeView() {
-    const hero    = document.getElementById('hero') || document.getElementById('heroSection');
-    const main    = document.getElementById('mainContent');
-    const results = document.getElementById('searchResultsContainer');
-    const info    = document.getElementById('searchInfo');
-
-    if (hero)    hero.style.display    = '';
-    if (main)    main.style.display    = '';
-    if (results) results.style.display = 'none';
-    if (info)    info.classList.remove('active', 'on');
-
-    // Reset genre chips to "All"
-    document.querySelectorAll('.gchip, .genre-chip').forEach(c => {
-        c.classList.toggle('active', (c.dataset.g || c.dataset.genre) === 'all');
-    });
+  const hero = qs('#hero') || qs('#heroSection');
+  if (hero) hero.style.display = '';
+  show('#mainContent');
+  hide('#searchResultsContainer');
+  const info = qs('#searchInfo');
+  if (info) info.classList.remove('active', 'on');
+  qsa('.gchip, .genre-chip').forEach(c =>
+    c.classList.toggle('active', (c.dataset.g || c.dataset.genre) === 'all'));
 }
 
-function setSearchInfo(title, count) {
-    const t = document.getElementById('searchTitle');
-    const c = document.getElementById('searchCount');
-    if (t) t.innerHTML = title;
-    if (c) c.textContent = count;
+function setInfo(title, count) {
+  const t = qs('#searchTitle'), c = qs('#searchCount');
+  if (t) t.innerHTML = title;
+  if (c) c.textContent = count;
 }
 
-/* ─── GO HOME ────────────────────────────────────────────────────── */
+function setNavActive(cat) {
+  qsa('.nav-links a, .nav-links li a').forEach(a =>
+    a.classList.toggle('active', a.dataset.cat === cat));
+}
+
+/* ═══════════════════════════════════════════════════════════
+   GO HOME
+═══════════════════════════════════════════════════════════ */
 function goHome() {
-    currentCategory = 'home';
-    currentGenreId  = 'all';
-    currentSearchQ  = '';
-    const si = document.getElementById('searchInput');
-    if (si) si.value = '';
-    const mi = document.getElementById('msearchInp');
-    if (mi) mi.value = '';
-    showHomeView();
-    updateNavActive('home');
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+  S.searchQ = '';
+  const si = qs('#searchInput'), mi = qs('#msearchInp, #mobileSearchInput');
+  if (si) si.value = '';
+  if (mi) mi.value = '';
+  showHomeView();
+  setNavActive('home');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-/* ─── NAV ACTIVE STATE ───────────────────────────────────────────── */
-function updateNavActive(cat) {
-    document.querySelectorAll('.nav-links a, .nav-links li a').forEach(a => {
-        a.classList.toggle('active', a.dataset.cat === cat);
-    });
+/* ═══════════════════════════════════════════════════════════
+   PLAYER
+═══════════════════════════════════════════════════════════ */
+async function playById(tmdbId, type, title, year) {
+  qs('#playerTitle').textContent = `${title}${year ? ' (' + year + ')' : ''}`;
+  qs('#playerModal').classList.add('active');
+  document.body.style.overflow = 'hidden';
+  qs('#playerVideo').innerHTML =
+    '<div class="loading loading-state" style="display:flex;align-items:center;justify-content:center;height:100%;flex-direction:column;gap:14px;color:#888">' +
+    '<div class="spinner spin" style="width:40px;height:40px;border:3px solid rgba(255,255,255,.08);border-top-color:#e50914;border-radius:50%;animation:sp .9s linear infinite"></div>' +
+    '<span>Loading player…</span></div>';
+
+  let imdb = null;
+  try { imdb = await getImdbId(tmdbId, type); } catch (_) {}
+
+  const data = { tmdb: String(tmdbId), imdb, type, title, year, season: 1, episode: 1 };
+  S.content = data;
+  window.currentContent = data;
+
+  buildServerBtns(data);
+  setServer(0, data);
 }
 
-/* ─── PLAYER ─────────────────────────────────────────────────────── */
-async function playContentById(tmdbId, type, title, year) {
-    document.getElementById('playerTitle').textContent = `${title}${year ? ' ('+year+')' : ''}`;
-    document.getElementById('playerModal').classList.add('active');
-    document.body.style.overflow = 'hidden';
-    document.getElementById('playerVideo').innerHTML =
-        '<div class="loading loading-state"><div class="spinner spin"></div><span>Loading player...</span></div>';
+/* Legacy alias — old onclick="playContentById(...)" still works */
+const playContentById = playById;
 
-    let imdb = null;
-    try { imdb = await getExternalIds(tmdbId, type); } catch (e) {}
-
-    const data = {
-        tmdb:    String(tmdbId),
-        imdb:    imdb,
-        type:    type,
-        title:   title,
-        year:    year,
-        season:  1,
-        episode: 1,
-    };
-
-    currentContent        = data;
-    window.currentContent = data;
-
-    loadServerButtons(data);
-    loadServer(0, data);
+function buildServerBtns(data) {
+  const el = qs('#serverButtons');
+  if (!el) return;
+  el.innerHTML = SERVERS.map((s, i) => `
+    <button class="srv-btn server-btn ${i === 0 ? 'active' : ''}"
+            onclick="setServer(${i}, ${safeJSON(data)})">
+      ${s.name}
+      ${s.sub ? '<span class="sub-b sub-badge" style="background:#10b981;color:#fff;padding:1px 4px;border-radius:3px;font-size:.56rem;margin-left:3px;font-weight:700">CC</span>' : ''}
+    </button>`).join('');
 }
 
-function loadServerButtons(data) {
-    const el = document.getElementById('serverButtons');
-    if (!el) return;
-    el.innerHTML = servers.map((s, i) => `
-        <button class="srv-btn server-btn ${i === 0 ? 'active' : ''}"
-                onclick="loadServer(${i}, ${JSON.stringify(data).replace(/"/g,'&quot;')})">
-            ${s.name}
-            ${s.hasSubtitles ? '<span class="sub-b sub-badge">CC</span>' : ''}
-        </button>`).join('');
+function setServer(idx, data) {
+  const url = SERVERS[idx].url(data);
+  qs('#playerVideo').innerHTML =
+    `<iframe src="${url}" allowfullscreen
+       allow="autoplay; fullscreen; picture-in-picture; encrypted-media"
+       referrerpolicy="no-referrer-when-downgrade"></iframe>`;
+  qsa('.srv-btn, .server-btn').forEach((b, i) => b.classList.toggle('active', i === idx));
+  S.content = { ...(S.content || {}), ...data };
+  window.currentContent = S.content;
 }
 
-function loadServer(index, data) {
-    const el  = document.getElementById('playerVideo');
-    const url = servers[index].getUrl(data);
-    el.innerHTML = `<iframe src="${url}"
-        allowfullscreen
-        allow="autoplay; fullscreen; picture-in-picture; encrypted-media"
-        referrerpolicy="no-referrer-when-downgrade"
-        sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-presentation">
-    </iframe>`;
-    document.querySelectorAll('.srv-btn, .server-btn').forEach((b, i) =>
-        b.classList.toggle('active', i === index));
-    currentContent = { ...currentContent, ...data };
-    window.currentContent = currentContent;
-}
+/* Legacy alias */
+const loadServer = setServer;
+const loadServerButtons = buildServerBtns;
 
 function closePlayer() {
-    document.getElementById('playerModal').classList.remove('active');
-    document.body.style.overflow = '';
-    document.getElementById('playerVideo').innerHTML =
-        '<div class="loading loading-state"><div class="spinner spin"></div><span>Loading player...</span></div>';
-    document.getElementById('chatPanel')?.classList.remove('show');
+  qs('#playerModal').classList.remove('active');
+  document.body.style.overflow = '';
+  qs('#playerVideo').innerHTML =
+    '<div class="loading loading-state" style="display:flex;align-items:center;justify-content:center;height:100%;flex-direction:column;gap:14px;color:#888">' +
+    '<div class="spinner spin" style="width:40px;height:40px;border:3px solid rgba(255,255,255,.08);border-top-color:#e50914;border-radius:50%;animation:sp .9s linear infinite"></div>' +
+    '<span>Loading player…</span></div>';
+  qs('#chatPanel')?.classList.remove('show');
 }
 
-/* ─── 18+ SYSTEM ─────────────────────────────────────────────────── */
-function isMatureOk() {
-    return matureUnlocked && Date.now() < matureExpiry;
-}
-
+/* ═══════════════════════════════════════════════════════════
+   18+ MATURE SYSTEM
+═══════════════════════════════════════════════════════════ */
 function openMature() {
-    if (isMatureOk()) { revealMature(); return; }
-    document.getElementById('verifyModal').style.display = 'flex';
-    showAge();
+  if (S.matureOk && Date.now() < S.matureExpiry) { revealMature(); return; }
+  qs('#verifyModal').style.display = 'flex';
+  showAgeStep();
 }
 
-function showAge() {
-    document.getElementById('vs1')?.classList.add('on');
-    document.getElementById('vs2')?.classList.remove('on');
-    document.getElementById('verifyStep1')?.classList.add('active');
-    document.getElementById('verifyStep2')?.classList.remove('active');
+function showAgeStep() {
+  qs('#vs1')?.classList.add('on');    qs('#vs1')?.classList.add('active');
+  qs('#vs2')?.classList.remove('on'); qs('#vs2')?.classList.remove('active');
+  qs('#verifyStep1')?.classList.add('active');
+  qs('#verifyStep2')?.classList.remove('active');
 }
 
-function showPin() {
-    document.getElementById('vs1')?.classList.remove('on');
-    document.getElementById('vs2')?.classList.add('on');
-    document.getElementById('verifyStep1')?.classList.remove('active');
-    document.getElementById('verifyStep2')?.classList.add('active');
-    setTimeout(() => document.querySelector('.pin-d, .pin-digit')?.focus(), 100);
+function showPinStep() {
+  qs('#vs1')?.classList.remove('on'); qs('#vs1')?.classList.remove('active');
+  qs('#vs2')?.classList.add('on');    qs('#vs2')?.classList.add('active');
+  qs('#verifyStep1')?.classList.remove('active');
+  qs('#verifyStep2')?.classList.add('active');
+  setTimeout(() => qsa('.pin-d, .pin-digit')[0]?.focus(), 80);
 }
 
 function closeVerify() {
-    document.getElementById('verifyModal').style.display = 'none';
-    clearPins();
-    const pe = document.getElementById('pinErr') || document.getElementById('pinError');
-    if (pe) pe.textContent = '';
+  qs('#verifyModal').style.display = 'none';
+  clearPins();
+  setPinErr('');
 }
 
 function verifyAge() {
-    grantMature();
-    closeVerify();
-    revealMature();
+  grantMature();
+  closeVerify();
+  revealMature();
 }
 
 async function verifyPin() {
-    const now = Date.now();
-    if (now < pinLockUntil) {
-        const secs = Math.ceil((pinLockUntil - now) / 1000);
-        const pl = document.getElementById('pinLock') || document.getElementById('lockoutTimer');
-        if (pl) pl.textContent = `Locked. Try again in ${secs}s.`;
-        return;
-    }
-    const digits = [...document.querySelectorAll('.pin-d, .pin-digit')].map(i => i.value);
-    const pin    = digits.join('');
-    if (pin.length < 4) {
-        showPinError('Enter all 4 digits.');
-        return;
-    }
-    const hash   = await sha256(pin);
-    const stored = localStorage.getItem('sf_pin');
-    if (!stored) {
-        // First time: save PIN
-        localStorage.setItem('sf_pin', hash);
-        pinFailCount = 0;
-        grantMature();
-        closeVerify();
-        revealMature();
-    } else if (hash === stored) {
-        pinFailCount = 0;
-        grantMature();
-        closeVerify();
-        revealMature();
-    } else {
-        pinFailCount++;
-        if (pinFailCount >= PIN_MAX) {
-            pinLockUntil = Date.now() + PIN_LOCKOUT;
-            pinFailCount = 0;
-            showPinError('Too many attempts. Locked for 5 minutes.');
-        } else {
-            showPinError(`Wrong PIN. ${PIN_MAX - pinFailCount} attempts left.`);
-        }
-        clearPins();
-    }
-}
+  const now = Date.now();
+  if (now < S.pinLockUntil) {
+    setPinErr(`Locked. Try again in ${Math.ceil((S.pinLockUntil - now) / 1000)}s.`);
+    return;
+  }
+  const pin = qsa('.pin-d, .pin-digit').map(i => i.value).join('');
+  if (pin.length < 4) { setPinErr('Enter all 4 digits.'); return; }
 
-function showPinError(msg) {
-    const el = document.getElementById('pinErr') || document.getElementById('pinError');
-    if (el) el.textContent = msg;
+  const hash   = await sha256(pin);
+  const stored = localStorage.getItem('sf_pin');
+
+  if (!stored) {
+    /* First time — save PIN automatically */
+    localStorage.setItem('sf_pin', hash);
+    S.pinFails = 0;
+    grantMature(); closeVerify(); revealMature();
+  } else if (hash === stored) {
+    S.pinFails = 0;
+    grantMature(); closeVerify(); revealMature();
+  } else {
+    S.pinFails++;
+    if (S.pinFails >= PIN_MAX_TRIES) {
+      S.pinLockUntil = Date.now() + PIN_LOCKOUT;
+      S.pinFails = 0;
+      setPinErr('Too many attempts — locked 5 minutes.');
+    } else {
+      setPinErr(`Wrong PIN — ${PIN_MAX_TRIES - S.pinFails} tries left.`);
+    }
+    clearPins();
+  }
 }
 
 function grantMature() {
-    matureUnlocked = true;
-    matureExpiry   = Date.now() + MATURE_TTL;
-    setTimeout(() => {
-        matureUnlocked = false;
-        const s = document.getElementById('section-mature');
-        if (s) s.style.display = 'none';
-    }, MATURE_TTL);
+  S.matureOk = true;
+  S.matureExpiry = Date.now() + MATURE_TTL;
+  setTimeout(() => {
+    S.matureOk = false;
+    const sec = qs('#section-mature');
+    if (sec) sec.style.display = 'none';
+  }, MATURE_TTL);
 }
 
 function revealMature() {
-    const s = document.getElementById('section-mature');
-    if (!s) return;
-    s.style.display = '';
-    s.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    const c = document.getElementById('matureContent');
-    if (c && c.children.length === 0) loadMatureContent();
+  const sec = qs('#section-mature');
+  if (!sec) return;
+  sec.style.display = '';
+  sec.classList.add('visible');
+  sec.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  const c = qs('#matureContent');
+  if (c && !c.children.length) loadMatureContent();
 }
 
-function clearPins() {
-    document.querySelectorAll('.pin-d, .pin-digit').forEach(i => i.value = '');
-    document.querySelector('.pin-d, .pin-digit')?.focus();
+function clearPins() { qsa('.pin-d, .pin-digit').forEach(i => i.value = ''); }
+function setPinErr(msg) {
+  const el = qs('#pinErr') || qs('#pinError') || qs('#lockoutTimer');
+  if (el) el.textContent = msg;
+}
+
+function initPinInputs() {
+  const digits = qsa('.pin-d, .pin-digit');
+  digits.forEach((inp, i) => {
+    inp.addEventListener('input', () => {
+      inp.value = inp.value.replace(/\D/g, '').slice(-1);
+      if (inp.value && i < digits.length - 1) digits[i + 1].focus();
+    });
+    inp.addEventListener('keydown', e => {
+      if (e.key === 'Backspace' && !inp.value && i > 0) digits[i - 1].focus();
+      if (e.key === 'Enter') verifyPin();
+    });
+  });
 }
 
 async function sha256(str) {
-    const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
-    return [...new Uint8Array(buf)].map(b => b.toString(16).padStart(2,'0')).join('');
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+  return [...new Uint8Array(buf)].map(b => b.toString(16).padStart(2, '0')).join('');
 }
 
-/* ─── PIN AUTO-FOCUS ─────────────────────────────────────────────── */
-function initPinInputs() {
-    const digits = document.querySelectorAll('.pin-d, .pin-digit');
-    digits.forEach((inp, i) => {
-        inp.addEventListener('input', () => {
-            inp.value = inp.value.replace(/\D/g,'').slice(-1);
-            if (inp.value && i < digits.length - 1) digits[i+1].focus();
-        });
-        inp.addEventListener('keydown', e => {
-            if (e.key === 'Backspace' && !inp.value && i > 0) digits[i-1].focus();
-            if (e.key === 'Enter') verifyPin();
-        });
-    });
-}
-
-/* ─── MOBILE SEARCH ──────────────────────────────────────────────── */
+/* ═══════════════════════════════════════════════════════════
+   MOBILE SEARCH
+═══════════════════════════════════════════════════════════ */
 function openMSearch() {
-    const el = document.getElementById('msearch') || document.getElementById('mobileSearchOverlay');
-    el?.classList.add('on', 'open');
-    document.getElementById('msearchInp')?.focus();
+  qs('#msearch, #mobileSearchOverlay')?.classList.add('on', 'open');
+  (qs('#msearchInp') || qs('#mobileSearchInput'))?.focus();
 }
-
 function closeMSearch() {
-    const el = document.getElementById('msearch') || document.getElementById('mobileSearchOverlay');
-    el?.classList.remove('on', 'open');
+  qs('#msearch, #mobileSearchOverlay')?.classList.remove('on', 'open');
 }
 
 function initMobileSearch() {
-    const inp = document.getElementById('msearchInp');
-    if (!inp) return;
-    let t;
-    inp.addEventListener('input', () => {
-        clearTimeout(t);
-        t = setTimeout(() => {
-            const q = inp.value.trim();
-            if (q.length > 1) {
-                const si = document.getElementById('searchInput');
-                if (si) si.value = q;
-                closeMSearch();
-                performMainSearch(1);
-            }
-        }, 500);
-    });
-    inp.addEventListener('keydown', e => {
-        if (e.key === 'Enter') {
-            const q = inp.value.trim();
-            if (q) {
-                const si = document.getElementById('searchInput');
-                if (si) si.value = q;
-                closeMSearch();
-                performMainSearch(1);
-            }
-        }
-    });
+  const inp = qs('#msearchInp') || qs('#mobileSearchInput');
+  if (!inp) return;
+  let t;
+  inp.addEventListener('input', () => {
+    clearTimeout(t);
+    t = setTimeout(() => {
+      if (inp.value.trim().length > 1) {
+        const si = qs('#searchInput');
+        if (si) si.value = inp.value.trim();
+        doSearch(1);
+      }
+    }, 500);
+  });
+  inp.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && inp.value.trim()) {
+      const si = qs('#searchInput');
+      if (si) si.value = inp.value.trim();
+      doSearch(1);
+    }
+  });
 }
 
-/* ─── SCROLL ROW ─────────────────────────────────────────────────── */
-function scrollR(containerId, dir) {
-    const el = document.getElementById(containerId);
-    if (!el) return;
-    el.scrollBy({ left: dir * 650, behavior: 'smooth' });
+/* ═══════════════════════════════════════════════════════════
+   MISC HELPERS
+═══════════════════════════════════════════════════════════ */
+function scrollRow(containerId, dir) {
+  qs(`#${containerId}`)?.scrollBy({ left: dir * 650, behavior: 'smooth' });
 }
 
-/* ─── SEE ALL ────────────────────────────────────────────────────── */
 function seeAll(cat) {
-    loadCategory(cat);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+  loadCategory(cat);
+  window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-/* ─── BOTTOM NAV ─────────────────────────────────────────────────── */
-function setNav(id) {
-    document.querySelectorAll('.bni').forEach(b => b.classList.remove('active'));
-    document.getElementById('bn-' + id)?.classList.add('active');
+function setNavItem(id) {
+  qsa('.bni').forEach(b => b.classList.remove('active'));
+  qs(`#bn-${id}`)?.classList.add('active');
 }
 
 function openSettings() {
-    alert('⚙️ Settings\n\nParental PIN: First 4-digit PIN you enter becomes your PIN.\n\nTo reset PIN: Clear your browser data / site data.\n\nAd-blocking tip: Use Firefox or Kiwi Browser with the free uBlock Origin extension for the best ad-free experience.');
+  alert(
+    '⚙️ StreamFlix Settings\n\n' +
+    '🔐 Parental PIN:\n' +
+    'First 4-digit PIN you enter becomes your PIN.\n' +
+    'To reset: clear site data in browser settings.\n\n' +
+    '🚫 Ad-Blocking Tips:\n' +
+    '• Mobile: Use Firefox → install uBlock Origin extension\n' +
+    '• Mobile alt: Kiwi Browser (Chrome-based) → install uBlock Origin\n' +
+    '• Desktop: Chrome/Edge/Firefox → install uBlock Origin from extension store\n' +
+    '• Try Server 1 or 2 first — they have the fewest ads'
+  );
 }
 
-/* ─── NAV SCROLL ─────────────────────────────────────────────────── */
 function initNavScroll() {
-    window.addEventListener('scroll', () => {
-        const nav = document.getElementById('navbar');
-        if (nav) nav.classList.toggle('solid', window.scrollY > 50);
-        // Legacy class
-        nav?.classList.toggle('scrolled', window.scrollY > 50);
-    }, { passive: true });
+  window.addEventListener('scroll', () => {
+    const nav = qs('#navbar');
+    if (!nav) return;
+    const scrolled = window.scrollY > 50;
+    nav.classList.toggle('solid', scrolled);
+    nav.classList.toggle('scrolled', scrolled); /* legacy class */
+  }, { passive: true });
 }
 
-/* ─── WHEEL → HORIZONTAL SCROLL ─────────────────────────────────── */
 function initWheelScroll() {
-    document.querySelectorAll('.row-scroll').forEach(row => {
-        row.addEventListener('wheel', e => {
-            if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) return;
-            e.preventDefault();
-            row.scrollBy({ left: e.deltaY * 3 });
-        }, { passive: false });
-    });
+  qsa('.row-scroll').forEach(row => {
+    row.addEventListener('wheel', e => {
+      if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) return;
+      e.preventDefault();
+      row.scrollBy({ left: e.deltaY * 3 });
+    }, { passive: false });
+  });
 }
 
-/* ─── INSTALL PWA ────────────────────────────────────────────────── */
+function initSectionReveal() {
+  if (!('IntersectionObserver' in window)) {
+    qsa('.content-section').forEach(s => s.classList.add('visible'));
+    return;
+  }
+  const io = new IntersectionObserver(entries =>
+    entries.forEach(e => {
+      if (e.isIntersecting) { e.target.classList.add('visible'); io.unobserve(e.target); }
+    }), { threshold: 0.06 });
+  qsa('.content-section').forEach(s => io.observe(s));
+}
+
 function initInstall() {
-    let prompt;
-    window.addEventListener('beforeinstallprompt', e => {
-        e.preventDefault();
-        prompt = e;
-        const b = document.getElementById('installBanner');
-        if (b && !localStorage.getItem('sf_install_ok')) b.classList.add('show');
-    });
-    document.getElementById('installBtn')?.addEventListener('click', async () => {
-        if (!prompt) return;
-        prompt.prompt();
-        const r = await prompt.userChoice;
-        if (r.outcome === 'accepted') document.getElementById('installBanner').classList.remove('show');
-        prompt = null;
-    });
-    document.getElementById('closeBanner')?.addEventListener('click', () => {
-        document.getElementById('installBanner').classList.remove('show');
-        localStorage.setItem('sf_install_ok', '1');
-    });
+  let dp;
+  window.addEventListener('beforeinstallprompt', e => {
+    e.preventDefault(); dp = e;
+    const b = qs('#installBanner');
+    if (b && !localStorage.getItem('sf_installed')) b.classList.add('show');
+  });
+  qs('#installBtn')?.addEventListener('click', async () => {
+    if (!dp) return;
+    dp.prompt();
+    const { outcome } = await dp.userChoice;
+    if (outcome === 'accepted') qs('#installBanner').classList.remove('show');
+    dp = null;
+  });
+  qs('#closeBanner')?.addEventListener('click', () => {
+    qs('#installBanner').classList.remove('show');
+    localStorage.setItem('sf_installed', '1');
+  });
 }
 
-/* ─── KEYBOARD ───────────────────────────────────────────────────── */
 function initKeys() {
-    document.addEventListener('keydown', e => {
-        if (e.key === 'Escape') {
-            if (document.getElementById('playerModal')?.classList.contains('active')) closePlayer();
-            if (document.getElementById('verifyModal')?.style.display === 'flex') closeVerify();
-            closeMSearch();
-        }
-    });
-    // Desktop search — Enter key
-    document.getElementById('searchInput')?.addEventListener('keydown', e => {
-        if (e.key === 'Enter') performMainSearch(1);
-    });
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') {
+      if (qs('#playerModal')?.classList.contains('active')) closePlayer();
+      if (qs('#verifyModal')?.style.display === 'flex')    closeVerify();
+      closeMSearch();
+    }
+  });
+  qs('#searchInput')?.addEventListener('keydown', e => {
+    if (e.key === 'Enter') doSearch(1);
+  });
 }
 
-/* ─── CONTEXT MENU DETER ─────────────────────────────────────────── */
 function initContextDeter() {
-    document.addEventListener('contextmenu', e => {
-        if (e.target.closest('#playerVideo, .card-img-wrap')) e.preventDefault();
-    });
+  document.addEventListener('contextmenu', e => {
+    if (e.target.closest('#playerVideo, .card-img-wrap')) e.preventDefault();
+  });
 }
 
 /* ═══════════════════════════════════════════════════════════
-   App NAMESPACE — used by new HTML onclick="App.xxx()"
-   Maps every App.* call to the matching function above
+   App NAMESPACE — used by onclick="App.xxx()" in HTML
 ═══════════════════════════════════════════════════════════ */
 const App = {
-    goHome,
-    loadCat:       loadCategory,
-    doSearch:      () => performMainSearch(1),
-    genreFilter:   (chip) => {
-        document.querySelectorAll('.gchip, .genre-chip').forEach(c => c.classList.remove('active'));
-        chip.classList.add('active');
-        const gid = chip.dataset.g || chip.dataset.genre || 'all';
-        filterByGenre(gid);
-    },
-    scrollR,
-    seeAll,
-    closePlayer,
-    openMSearch,
-    closeMSearch,
-    setNav,
-    openSettings,
-    openMature:    openMature,
-    verifyAge,
-    showPin,
-    showAge,
-    closeVerify,
-    verifyPin,
-    toggleMobileSearch: openMSearch,
+  goHome,
+  loadCat:            loadCategory,
+  doSearch:           () => doSearch(1),
+  genreFilter:        filterGenre,
+  scrollR:            scrollRow,
+  seeAll,
+  closePlayer,
+  openMSearch,
+  closeMSearch,
+  setNav:             setNavItem,
+  openSettings,
+  openMature,
+  verifyAge,
+  showPin:            showPinStep,
+  showAge:            showAgeStep,
+  closeVerify,
+  verifyPin,
+  toggleMobileSearch: openMSearch,
 };
-
 window.App = App;
 
-/* ─── ALSO EXPOSE GLOBALS (for old HTML onclick="xxx()") ────────── */
-window.playContentById    = playContentById;
-window.loadServer         = loadServer;
-window.loadCategory       = loadCategory;
-window.goHome             = goHome;
-window.closePlayer        = closePlayer;
-window.performMainSearch  = () => performMainSearch(1);
-window.filterByGenre      = filterByGenre;
-window.seeAll             = seeAll;
-window.scrollR            = scrollR;
-window.loadServerButtons  = loadServerButtons;
-window.openMature         = openMature;
-window.verifyAge          = verifyAge;
-window.verifyPin          = verifyPin;
-window.showPinStep        = showPin;
-window.showAgeStep        = showAge;
-window.closeVerify        = closeVerify;
-window.setNav             = setNav;
-window.openMSearch        = openMSearch;
-window.closeMSearch       = closeMSearch;
+/* ═══════════════════════════════════════════════════════════
+   GLOBAL ALIASES — keeps any old onclick="xxx()" working
+═══════════════════════════════════════════════════════════ */
+Object.assign(window, {
+  /* Player */
+  playContentById, playById,
+  loadServer, setServer, loadServerButtons, buildServerBtns,
+  closePlayer,
+  /* Navigation */
+  loadCategory, goHome, seeAll,
+  performMainSearch: () => doSearch(1),
+  /* Genre + search */
+  filterByGenre: id => {
+    const chip = qs(`.gchip[data-g="${id}"], .genre-chip[data-genre="${id}"]`);
+    if (chip) filterGenre(chip);
+  },
+  scrollRow, scrollR: scrollRow,
+  /* 18+ */
+  openMature, verifyAge, verifyPin,
+  showPinStep, showAgeStep, closeVerify,
+  /* Misc */
+  openSettings, openMSearch, closeMSearch, setNavItem,
+  /* Watch Together stubs (real logic is in watch-together/*.js) */
+  showWatchTogetherMenu:  () => qs('#watchTogetherMenu')?.classList.add('open'),
+  closeWatchTogetherMenu: () => qs('#watchTogetherMenu')?.classList.remove('open'),
+  showJoinRoomDialog:     () => qs('#joinRoomModal')?.classList.add('open'),
+  closeJoinRoomDialog:    () => qs('#joinRoomModal')?.classList.remove('open'),
+  closeRoomCreatedModal:  () => qs('#roomCreatedModal')?.classList.remove('open'),
+  toggleChatPanel:        () => qs('#chatPanel')?.classList.toggle('show'),
+});
 
 /* ═══════════════════════════════════════════════════════════
-   INIT
+   BOOT
 ═══════════════════════════════════════════════════════════ */
-document.addEventListener('DOMContentLoaded', () => {
-    buildHero();
-    observeSections();
-    initNavScroll();
-    initPinInputs();
-    initKeys();
-    initInstall();
-    initMobileSearch();
-    initContextDeter();
-    setTimeout(initWheelScroll, 1500);
+document.addEventListener('DOMContentLoaded', async () => {
+  buildHero();
+  initSectionReveal();
+  initNavScroll();
+  initPinInputs();
+  initKeys();
+  initInstall();
+  initMobileSearch();
+  initContextDeter();
 
-    // Load all home rows
-    Promise.all([
-        loadTrending(),
-        loadMovies(),
-        loadTV(),
-        loadKDrama(),
-        loadAnime(),
-    ]).then(() => {
-        console.log('✅ StreamFlix 3.0 ready');
-        setTimeout(initWheelScroll, 200);
-    });
+  /* Load all home rows in parallel */
+  await Promise.all([
+    loadTrending(),
+    loadMovies(),
+    loadTV(),
+    loadKDrama(),
+    loadAnime(),
+  ]);
 
-    // Firebase Watch Together init (if available)
-    if (typeof initFirebase === 'function') {
-        initFirebase().catch(err => console.warn('Firebase:', err));
-    }
+  initWheelScroll();
+  console.log('✅ StreamFlix 3.1 ready');
+
+  /* Firebase Watch Together — safe init */
+  if (typeof initFirebase === 'function') {
+    try { await initFirebase(); }
+    catch (e) { console.warn('[Firebase]', e.message); }
+  }
 });
