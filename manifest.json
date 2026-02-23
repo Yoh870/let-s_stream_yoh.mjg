@@ -1,21 +1,24 @@
 {
-  "name": "StreamFlix - Movies & Series",
+  "name": "StreamFlix — Watch Movies & Series",
   "short_name": "StreamFlix",
-  "description": "Watch Movies, TV Series, K-Drama & Anime",
-  "start_url": "/index.html",
+  "description": "Watch movies, series, K-Drama, Anime and more — by Mr.Yoh_Amari",
+  "start_url": "/let-s_stream_yoh.mjg/",
+  "scope": "/let-s_stream_yoh.mjg/",
   "display": "standalone",
-  "background_color": "#0f0f0f",
+  "orientation": "portrait",
+  "background_color": "#0a0a0a",
   "theme_color": "#e50914",
-  "orientation": "any",
+  "lang": "en",
+  "categories": ["entertainment", "video"],
   "icons": [
     {
-      "src": "icon-192.png",
+      "src": "https://img.icons8.com/color/192/netflix--v2.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "icon-512.png",
+      "src": "https://img.icons8.com/color/512/netflix--v2.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
@@ -23,26 +26,27 @@
   ],
   "screenshots": [
     {
-      "src": "screenshot.png",
+      "src": "https://images.unsplash.com/photo-1534131707746-25d604851a1f?w=540&h=720&fit=crop",
       "sizes": "540x720",
-      "type": "image/png"
+      "type": "image/jpeg",
+      "form_factor": "narrow",
+      "label": "StreamFlix Home Screen"
     }
   ],
-  "categories": ["entertainment", "lifestyle"],
   "shortcuts": [
-    {
-      "name": "Search Movies",
-      "short_name": "Search",
-      "description": "Search for movies and series",
-      "url": "/index.html?action=search",
-      "icons": [{ "src": "icon-192.png", "sizes": "192x192" }]
-    },
     {
       "name": "Trending",
       "short_name": "Trending",
-      "description": "View trending content",
-      "url": "/index.html?action=trending",
-      "icons": [{ "src": "icon-192.png", "sizes": "192x192" }]
+      "description": "See what's trending now",
+      "url": "/let-s_stream_yoh.mjg/?cat=trending",
+      "icons": [{ "src": "https://img.icons8.com/color/96/fire-element--v1.png", "sizes": "96x96" }]
+    },
+    {
+      "name": "Movies",
+      "short_name": "Movies",
+      "description": "Browse popular movies",
+      "url": "/let-s_stream_yoh.mjg/?cat=movies",
+      "icons": [{ "src": "https://img.icons8.com/color/96/movie.png", "sizes": "96x96" }]
     }
   ]
 }
