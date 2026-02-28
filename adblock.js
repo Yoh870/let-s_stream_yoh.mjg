@@ -1,331 +1,179 @@
 /* ═══════════════════════════════════════════════════════════
-   STREAMFLIX — Universal Ad Blocker v2.0
-   Works on ALL devices: phone, tablet, PC
-   No setup needed by users — automatic!
-
-   HOW TO USE:
-   Add this ONE line at the bottom of your index.html
-   (just before </body>):
+   STREAMFLIX — Anti Click-Hijack v3.0
+   Specifically targets the "click video → new tab ecommerce" trick
+   
+   Add BEFORE </body> in index.html:
    <script src="adblock.js"></script>
 ═══════════════════════════════════════════════════════════ */
 
-(function() {
+(function () {
   'use strict';
 
-  /* ══════════════════════════════════════════
-     1. BLOCK window.open() — kills ALL popups
-        when tapping/clicking the player
-  ══════════════════════════════════════════ */
-  const _open = window.open.bind(window);
-  window.open = function(url, name, specs) {
-    if (!url || url === 'about:blank') return null;
-    try {
-      const host = new URL(url, location.href).hostname;
-      // Only allow opens from same origin
-      if (host === location.hostname) {
-        return _open(url, name, specs);
-      }
-      console.log('[🛡️ AdBlock] Blocked popup →', host);
+  const _nativeOpen = Window.prototype.open;
+  Object.defineProperty(Window.prototype, 'open', {
+    value: function (url) {
+      if (!url || url === '' || url === 'about:blank') return null;
+      try {
+        const dest = new URL(url, location.href);
+        if (dest.hostname === location.hostname) {
+          return _nativeOpen.apply(window, arguments);
+        }
+      } catch (_) {}
+      console.log('[Shield] Blocked window.open:', url);
       return null;
-    } catch(_) { return null; }
-  };
-
-  /* ══════════════════════════════════════════
-     2. BLOCK navigation hijacking
-        (ads that redirect your whole page)
-  ══════════════════════════════════════════ */
-  // Prevent location change from iframes
-  Object.defineProperty(window, 'location', {
-    get() { return location; },
-    set(v) {
-      // Only allow if it's from user action, not iframe
-      console.log('[🛡️ AdBlock] Blocked location hijack →', v);
     },
-    configurable: true
+    writable: false,
+    configurable: false,
   });
 
-  // Block beforeunload tricks
-  window.addEventListener('beforeunload', function(e) {
-    e.stopImmediatePropagation();
+  window.addEventListener('message', function (e) {
+    try {
+      const data = typeof e.data === 'string' ? JSON.parse(e.data) : e.data;
+      if (data && (data.type === 'redirect' || data.url || data.href || data.navigate)) {
+        e.stopImmediatePropagation();
+      }
+    } catch (_) {}
   }, true);
 
-  /* ══════════════════════════════════════════
-     3. SANDBOX ALL player iframes automatically
-        — blocks popups from inside video player
-  ══════════════════════════════════════════ */
-  function sandboxIframe(iframe) {
-    if (iframe._sf_patched) return;
-    iframe._sf_patched = true;
+  let overlay = null;
+  let clickPassTimer = null;
 
-    // These permissions let video play but BLOCK ads/popups
-    iframe.sandbox.value = [
-      'allow-scripts',
-      'allow-same-origin',
-      'allow-presentation',
-      'allow-forms',
-      'allow-pointer-lock',
-      // NO: allow-popups
-      // NO: allow-top-navigation
-      // NO: allow-popups-to-escape-sandbox
-    ].join(' ');
+  function createOverlay(playerDiv) {
+    const old = document.getElementById('sf-click-guard');
+    if (old) old.remove();
 
-    iframe.setAttribute('allow',
-      'autoplay; fullscreen; picture-in-picture; encrypted-media; gyroscope; accelerometer'
-    );
-    iframe.setAttribute('referrerpolicy', 'no-referrer-when-downgrade');
-    console.log('[🛡️ AdBlock] ✅ Iframe sandboxed');
+    overlay = document.createElement('div');
+    overlay.id = 'sf-click-guard';
+    overlay.style.cssText = 'position:absolute;inset:0;z-index:2147483647;background:transparent;cursor:pointer;';
+
+    if (getComputedStyle(playerDiv).position === 'static') {
+      playerDiv.style.position = 'relative';
+    }
+    playerDiv.appendChild(overlay);
+
+    overlay.addEventListener('click', function (e) {
+      e.stopImmediatePropagation();
+      e.preventDefault();
+      overlay.style.pointerEvents = 'none';
+      clearTimeout(clickPassTimer);
+      clickPassTimer = setTimeout(() => { if (overlay) overlay.style.pointerEvents = 'auto'; }, 800);
+    }, true);
+
+    overlay.addEventListener('touchend', function () {
+      overlay.style.pointerEvents = 'none';
+      clearTimeout(clickPassTimer);
+      clickPassTimer = setTimeout(() => { if (overlay) overlay.style.pointerEvents = 'auto'; }, 800);
+    }, { passive: true });
+
+    console.log('[Shield] Click guard installed');
   }
 
-  // Watch for iframes being added to the player
-  const playerObserver = new MutationObserver(mutations => {
+  function watchPlayer() {
+    const playerDiv = document.getElementById('playerVideo');
+    if (!playerDiv) { setTimeout(watchPlayer, 500); return; }
+    createOverlay(playerDiv);
+    new MutationObserver(() => {
+      if (playerDiv.querySelector('iframe') && !document.getElementById('sf-click-guard')) {
+        setTimeout(() => createOverlay(playerDiv), 100);
+      }
+    }).observe(playerDiv, { childList: true, subtree: true });
+  }
+
+  function hardSandbox(iframe) {
+    if (iframe._hs) return; iframe._hs = true;
+    try {
+      iframe.setAttribute('sandbox', 'allow-scripts allow-same-origin allow-presentation allow-forms allow-pointer-lock');
+    } catch (_) {}
+    console.log('[Shield] Iframe sandboxed');
+  }
+
+  new MutationObserver(mutations => {
     mutations.forEach(m => {
       m.addedNodes.forEach(node => {
-        if (node.nodeName === 'IFRAME') sandboxIframe(node);
-        if (node.querySelectorAll) {
-          node.querySelectorAll('iframe').forEach(sandboxIframe);
-        }
+        if (node.nodeName === 'IFRAME') hardSandbox(node);
+        node.querySelectorAll && node.querySelectorAll('iframe').forEach(hardSandbox);
       });
     });
-  });
+  }).observe(document.documentElement, { childList: true, subtree: true });
 
-  // Observe the whole document for any iframe
-  playerObserver.observe(document.documentElement, {
-    childList: true,
-    subtree: true
-  });
-
-  // Patch existing iframes too
-  document.querySelectorAll('#playerVideo iframe, #player iframe').forEach(sandboxIframe);
-
-  /* ══════════════════════════════════════════
-     4. INTERCEPT fetch() and XHR
-        — blocks ads calling their ad servers
-  ══════════════════════════════════════════ */
-  const AD_HOSTS = new Set([
-    'doubleclick.net','googlesyndication.com','googleadservices.com',
-    'pagead2.googlesyndication.com','adservice.google.com',
-    'adnxs.com','adsrvr.org','advertising.com','ads.yahoo.com',
-    'outbrain.com','taboola.com','revcontent.com',
-    'mgid.com','adcolony.com','applovin.com','ironsrc.com',
-    'pubmatic.com','rubiconproject.com','openx.net',
-    'appnexus.com','criteo.com','media.net','bidswitch.net',
-    'smartadserver.com','yieldmo.com','triplelift.com',
-    'primis.tech','vidazoo.com','connatix.com','adplayer.pro',
-    'amazon-adsystem.com','moatads.com','scorecardresearch.com',
-    'quantserve.com','chartbeat.com','hotjar.com',
-  ]);
-
-  function isAdHost(url) {
+  document.addEventListener('click', function (e) {
+    const a = e.target.closest('a[href]');
+    if (!a) return;
     try {
-      const host = new URL(url, location.href).hostname;
-      return [...AD_HOSTS].some(d => host === d || host.endsWith('.' + d));
-    } catch(_) { return false; }
-  }
+      const dest = new URL(a.href, location.href);
+      if (dest.hostname !== location.hostname) {
+        e.preventDefault(); e.stopImmediatePropagation();
+        console.log('[Shield] Blocked external link:', dest.hostname);
+      }
+    } catch (_) {}
+  }, true);
 
-  // Block fetch
+  setInterval(() => {
+    document.querySelectorAll('div[style*="position: fixed"], div[style*="position:fixed"]').forEach(el => {
+      const z = parseInt(el.style.zIndex || 0);
+      const r = el.getBoundingClientRect();
+      const big = r.width > window.innerWidth * 0.7 && r.height > window.innerHeight * 0.7;
+      const notOurs = !el.id.startsWith('sf-') && !el.id.includes('player') && !el.id.includes('modal') && !el.id.includes('verify') && !el.id.includes('banner') && el.id !== 'navbar';
+      if (big && z > 5000 && notOurs) {
+        el.style.pointerEvents = 'none';
+        el.style.display = 'none';
+        console.log('[Shield] Removed suspicious overlay');
+      }
+    });
+  }, 1000);
+
   const _fetch = window.fetch;
-  window.fetch = function(input, init) {
-    const url = typeof input === 'string' ? input : (input?.url || '');
-    if (isAdHost(url)) {
-      console.log('[🛡️ AdBlock] Blocked fetch →', url.split('/')[2]);
-      return Promise.resolve(new Response('{}', {
-        status: 200, headers: { 'Content-Type': 'application/json' }
-      }));
-    }
+  const AD_HOSTS = ['doubleclick.net','googlesyndication.com','adnxs.com','taboola.com','outbrain.com','pubmatic.com','rubiconproject.com','openx.net','appnexus.com','criteo.com','media.net'];
+  window.fetch = function(input) {
+    const url = typeof input === 'string' ? input : (input && input.url) || '';
+    try {
+      const h = new URL(url, location.href).hostname;
+      if (AD_HOSTS.some(d => h === d || h.endsWith('.' + d))) {
+        return Promise.resolve(new Response('{}', { status: 200 }));
+      }
+    } catch (_) {}
     return _fetch.apply(this, arguments);
   };
 
-  // Block XHR
-  const _xhrOpen = XMLHttpRequest.prototype.open;
-  XMLHttpRequest.prototype.open = function(method, url) {
-    if (isAdHost(url)) {
-      console.log('[🛡️ AdBlock] Blocked XHR →', url.split('/')[2]);
-      // Redirect to blank so it silently fails
-      return _xhrOpen.call(this, method, 'about:blank');
-    }
-    return _xhrOpen.apply(this, arguments);
-  };
-
-  /* ══════════════════════════════════════════
-     5. REMOVE ad DOM elements automatically
-        — cleans up any ads that still load
-  ══════════════════════════════════════════ */
-  const AD_SELECTORS = [
-    'ins.adsbygoogle',
-    '[id^="google_ads"]',
-    '[id^="div-gpt-ad"]',
-    '[class*="adsbygoogle"]',
-    'iframe[src*="doubleclick"]',
-    'iframe[src*="googlesyndication"]',
-    'iframe[src*="adnxs"]',
-    'iframe[src*="amazon-adsystem"]',
-    '[id*="ad-container"]',
-    '[class*="ad-overlay"]',
-    '[class*="video-ad"]',
-    'div[id^="aswift"]',
-  ];
-
-  function nukeAds() {
-    AD_SELECTORS.forEach(sel => {
-      document.querySelectorAll(sel).forEach(el => {
-        el.style.cssText = 'display:none!important;visibility:hidden!important';
-        el.remove();
-      });
-    });
-  }
-
-  // Run immediately + periodically
-  nukeAds();
-  setInterval(nukeAds, 1500);
-
-  // Also run on any DOM change
-  const adObserver = new MutationObserver(nukeAds);
-  adObserver.observe(document.documentElement, {
-    childList: true, subtree: true
-  });
-
-  /* ══════════════════════════════════════════
-     6. BLOCK tab-switching ad tricks
-        (ads that open when you switch tabs)
-  ══════════════════════════════════════════ */
-  let lastActiveTime = Date.now();
-  document.addEventListener('visibilitychange', () => {
-    if (document.visibilityState === 'visible') {
-      const away = Date.now() - lastActiveTime;
-      if (away > 500) {
-        // Came back from another tab — kill any new popups
-        nukeAds();
-        // Close any window that may have opened
-        console.log('[🛡️ AdBlock] Tab refocus — cleaning ads');
-      }
-    } else {
-      lastActiveTime = Date.now();
-    }
-  });
-
-  /* ══════════════════════════════════════════
-     7. BLOCK touch/click redirect on player
-        (the #1 cause of ads on mobile!)
-        — intercepts the tap-to-redirect trick
-  ══════════════════════════════════════════ */
-  let lastPlayerTap = 0;
-
-  function guardPlayerTap(e) {
-    const player = document.getElementById('playerVideo');
-    if (!player || !player.contains(e.target)) return;
-
-    const now = Date.now();
-    // If two taps very close together, it's likely an ad tap
-    if (now - lastPlayerTap < 300) {
-      e.stopImmediatePropagation();
-    }
-    lastPlayerTap = now;
-  }
-
-  document.addEventListener('touchstart', guardPlayerTap, { passive: true, capture: true });
-  document.addEventListener('click', (e) => {
-    // If a click would navigate away from the page, block it
-    const a = e.target.closest('a');
-    if (a && a.href) {
-      try {
-        const dest = new URL(a.href);
-        if (dest.hostname !== location.hostname && a.target === '_blank') {
-          const player = document.getElementById('playerVideo');
-          if (player && player.contains(a)) {
-            e.preventDefault();
-            e.stopImmediatePropagation();
-            console.log('[🛡️ AdBlock] Blocked redirect link →', dest.hostname);
-          }
-        }
-      } catch(_) {}
-    }
-  }, true);
-
-  /* ══════════════════════════════════════════
-     8. SHOW shield indicator in the UI
-        — so users know protection is active
-  ══════════════════════════════════════════ */
-  function showShieldBadge() {
-    if (document.getElementById('sf-shield-badge')) return;
-
-    const badge = document.createElement('div');
-    badge.id = 'sf-shield-badge';
-    badge.innerHTML = '🛡️ Protected';
-    badge.style.cssText = `
-      position: fixed;
-      bottom: 70px;
-      right: 14px;
-      background: rgba(16,185,129,.15);
-      border: 1px solid rgba(16,185,129,.4);
-      color: #10b981;
-      font-size: .65rem;
-      font-weight: 700;
-      padding: 4px 10px;
-      border-radius: 20px;
-      z-index: 9999;
-      pointer-events: none;
-      letter-spacing: .5px;
-      backdrop-filter: blur(4px);
-      opacity: 0;
-      transition: opacity .5s;
-    `;
-    document.body.appendChild(badge);
-
-    // Fade in then fade out after 3 seconds
-    setTimeout(() => badge.style.opacity = '1', 100);
-    setTimeout(() => badge.style.opacity = '0', 3500);
-    setTimeout(() => badge.remove(), 4500);
-  }
-
-  /* ══════════════════════════════════════════
-     9. PATCH setServer() — re-sandbox after
-        every server switch
-  ══════════════════════════════════════════ */
-  const _setServer = window.setServer;
-  if (_setServer) {
-    window.setServer = function(idx, data) {
-      _setServer(idx, data);
-      // Re-apply sandbox after iframe is replaced
+  function patchSetServer() {
+    const _orig = window.setServer;
+    if (!_orig || _orig._patched) return;
+    window.setServer = function (idx, data) {
+      _orig(idx, data);
       setTimeout(() => {
-        const player = document.getElementById('playerVideo');
-        if (player) player.querySelectorAll('iframe').forEach(sandboxIframe);
-      }, 200);
+        document.querySelectorAll('#playerVideo iframe').forEach(hardSandbox);
+        watchPlayer();
+      }, 300);
     };
-  }
-
-  // Also patch loadServer alias
-  const _loadServer = window.loadServer;
-  if (_loadServer) {
+    window.setServer._patched = true;
     window.loadServer = window.setServer;
   }
 
-  /* ══════════════════════════════════════════
-     BOOT
-  ══════════════════════════════════════════ */
-  document.addEventListener('DOMContentLoaded', () => {
-    nukeAds();
-    showShieldBadge();
+  function showShield() {
+    if (document.getElementById('sf-shield')) return;
+    const s = document.createElement('div');
+    s.id = 'sf-shield';
+    s.innerHTML = '🛡️ <span style="font-size:.65rem;font-weight:700">AD BLOCKED</span>';
+    s.style.cssText = 'position:fixed;bottom:72px;right:12px;display:flex;align-items:center;gap:5px;background:rgba(16,185,129,.12);border:1px solid rgba(16,185,129,.35);color:#10b981;padding:5px 11px;border-radius:20px;z-index:99999;pointer-events:none;backdrop-filter:blur(6px);font-family:sans-serif;opacity:0;transition:opacity .4s;';
+    document.body.appendChild(s);
+    setTimeout(() => s.style.opacity = '1', 100);
+    setTimeout(() => s.style.opacity = '0', 4000);
+    setTimeout(() => s.remove(), 5000);
+  }
 
-    // Patch setServer again after DOM ready (in case it loaded after)
-    const _ss = window.setServer;
-    if (_ss && !_ss._adPatched) {
-      window.setServer = function(idx, data) {
-        _ss(idx, data);
-        setTimeout(() => {
-          document.querySelectorAll('#playerVideo iframe').forEach(sandboxIframe);
-        }, 200);
-      };
-      window.setServer._adPatched = true;
-    }
+  function boot() {
+    watchPlayer();
+    patchSetServer();
+    showShield();
+    setTimeout(patchSetServer, 1000);
+    setTimeout(patchSetServer, 3000);
+    console.log('%c🛡️ StreamFlix Anti Click-Hijack v3.0 ACTIVE', 'color:#10b981;font-weight:bold');
+  }
 
-    console.log('%c🛡️ StreamFlix Ad Blocker v2.0 — ACTIVE on all devices!', 'color:#10b981;font-weight:bold;font-size:13px');
-    console.log('%c✅ Popup blocker ON\n✅ Iframe sandboxed\n✅ Ad networks blocked\n✅ Redirect protection ON\n✅ Tab-switch protection ON', 'color:#888');
-  });
-
-  // Show immediately if DOM already loaded
-  if (document.readyState !== 'loading') {
-    nukeAds();
-    showShieldBadge();
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', boot);
+  } else {
+    boot();
   }
 
 })();
