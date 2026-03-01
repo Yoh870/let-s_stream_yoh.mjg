@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════
-   STREAMFLIX app.js — v3.6
+   STREAMFLIX app.js — v3.7 (pagination fix)
    Auto-patches genre chips — works with ANY HTML structure
 ═══════════════════════════════════════════════════════════ */
 
@@ -161,19 +161,15 @@ function renderRow(id, items, type=null, locked=false) {
 }
 
 function renderGrid(items) {
-  /* Always write into a guaranteed-visible container.
-     We CREATE it fresh if needed so CSS can never block it. */
   let wrap = qs('#sf-results-wrap');
   if (!wrap) {
     wrap = document.createElement('div');
     wrap.id = 'sf-results-wrap';
-    /* Try to insert into the existing results container */
     const rc = qs('#searchResultsContainer') || qs('#searchResults');
     if (rc) {
       rc.innerHTML = '';
       rc.appendChild(wrap);
     } else {
-      /* Last resort: append after main content */
       document.body.appendChild(wrap);
     }
   }
@@ -192,7 +188,6 @@ function renderGrid(items) {
     ? items.map((item,i)=>makeCard(item,item.media_type||(item.title?'movie':'tv'),i)).join('')
     : '<p style="color:#666;padding:30px;text-align:center;grid-column:1/-1">No results found.</p>';
 
-  /* Force every ancestor visible */
   let node=wrap.parentElement;
   while(node&&node!==document.body){
     if(getComputedStyle(node).display==='none') node.style.display='block';
@@ -239,22 +234,18 @@ async function loadCategory(cat,page=1){
   const items=d.results.map(r=>({...r,media_type:r.media_type||(def.mv?'movie':'tv')}));
   setInfo(def.label,`${(d.total_results||items.length).toLocaleString()} titles — Page ${page}`);
   renderGrid(items);
-  makePagination(d.total_pages||1,page,p=>loadCategory(cat,p));
+  // ✅ FIX: pass string template instead of arrow function with closure
+  makePagination(d.total_pages||1, page, `loadCategory('${cat}',PAGE)`);
 }
 
 /* ═══════════════════════════════════════════════════════
-   GENRE FILTER — THE CORE FIX
-
-   This is called by patchGenreChips() which re-attaches
-   ALL genre chip click handlers directly, bypassing
-   whatever onclick="" the HTML originally had.
+   GENRE FILTER
 ═══════════════════════════════════════════════════════ */
 async function fetchGenre(gid, label, page=1) {
   console.log(`[Genre] Fetching gid=${gid} "${label}" page=${page}`);
   showResultsView();
   setInfo(label,'⏳ Loading…');
 
-  /* Show skeleton while loading */
   const grid=qs('#sf-results-wrap')||(() => {
     const w=document.createElement('div'); w.id='sf-results-wrap';
     const rc=qs('#searchResultsContainer')||qs('#searchResults');
@@ -289,18 +280,15 @@ async function fetchGenre(gid, label, page=1) {
 
   setInfo(label,`${total.toLocaleString()} titles${page>1?' — Page '+page:''}`);
   renderGrid(results);
-  makePagination(maxPages,page,p=>fetchGenre(gid,label,p));
+  // ✅ FIX: escape label properly and pass as string template
+  const safeLabel = label.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+  makePagination(maxPages, page, `fetchGenre('${gid}','${safeLabel}',PAGE)`);
 }
 
 /* ═══════════════════════════════════════════════════════
-   PATCH GENRE CHIPS — THE KEY FUNCTION
-
-   Finds ALL chip elements using multiple selectors,
-   removes their existing onclick, and attaches a fresh
-   addEventListener. This works no matter what the HTML says.
+   PATCH GENRE CHIPS
 ═══════════════════════════════════════════════════════ */
 function patchGenreChips() {
-  /* Collect chips from all possible selectors */
   const chips = [
     ...qsa('.gchip'),
     ...qsa('.genre-chip'),
@@ -308,37 +296,26 @@ function patchGenreChips() {
     ...qsa('[data-genre]'),
   ];
 
-  /* Deduplicate */
   const seen = new Set();
   const unique = chips.filter(c => { if(seen.has(c)) return false; seen.add(c); return true; });
 
   console.log(`[Chips] Found ${unique.length} genre chips. Patching…`);
 
   unique.forEach(chip => {
-    /* Determine the genre ID from any attribute */
     const rawId = chip.dataset.g || chip.dataset.genre || chip.dataset.id || '';
     const label  = chip.textContent.trim();
-    /* Map to TMDB genre ID */
     const gid = GENRE_ID_MAP[rawId] || GENRE_ID_MAP[label.toLowerCase()] || rawId;
 
-    /* Remove old onclick completely */
     chip.removeAttribute('onclick');
     chip.onclick = null;
 
-    /* Clone to remove all existing event listeners */
     const fresh = chip.cloneNode(true);
     fresh.removeAttribute('onclick');
     chip.parentNode.replaceChild(fresh, chip);
 
-    /* Attach brand new click handler */
     fresh.addEventListener('click', () => {
       console.log(`[Chip clicked] label="${label}" rawId="${rawId}" gid="${gid}"`);
 
-      /* Highlight active chip */
-      unique.forEach(c => {
-        const fc = document.querySelector(`.gchip[data-g="${c.dataset.g}"],.genre-chip[data-genre="${c.dataset.genre}"]`) || c;
-        fc.classList.remove('active');
-      });
       qsa('.gchip,.genre-chip,[data-g],[data-genre]').forEach(c=>c.classList.remove('active'));
       fresh.classList.add('active');
 
@@ -372,20 +349,41 @@ async function doSearch(page=1){
   const items=d.results.filter(r=>r.media_type!=='person');
   setInfo(`Results for "<span style="color:#e50914">${q}</span>"`,`${(d.total_results||0).toLocaleString()} results`);
   renderGrid(items);
-  makePagination(Math.min(d.total_pages||1,500),page,p=>doSearch(p));
+  // ✅ FIX: pass string template instead of arrow function with closure
+  makePagination(Math.min(d.total_pages||1,500), page, 'doSearch(PAGE)');
 }
 
 /* ═══════════════════════════════════════════════════════
-   PAGINATION
+   PAGINATION — ✅ FIXED
+   Now accepts onPageCall as a STRING template.
+   Use "PAGE" as the placeholder for the page number.
+   
+   Example calls:
+     makePagination(50, 1, "loadCategory('movies',PAGE)")
+     makePagination(50, 1, "fetchGenre('28','Action',PAGE)")
+     makePagination(50, 1, "doSearch(PAGE)")
 ═══════════════════════════════════════════════════════ */
-function makePagination(totalPages,current,onPage){
-  const el=qs('#pagination');if(!el)return;
-  if(totalPages<=1){el.innerHTML='';return;}
-  const max=Math.min(totalPages,500);
-  let pages=[];
-  if(max<=7)pages=Array.from({length:max},(_,i)=>i+1);
-  else{pages=[1];if(current>3)pages.push('…');for(let i=Math.max(2,current-2);i<=Math.min(max-1,current+2);i++)pages.push(i);if(current<max-2)pages.push('…');pages.push(max);}
-  el.innerHTML=pages.map(p=>p==='…'?`<span style="padding:8px 12px;opacity:.4">…</span>`:`<button class="page-btn ${p===current?'active':''}" style="padding:8px 16px;background:${p===current?'#e50914':'rgba(255,255,255,.1)'};border:1px solid ${p===current?'#e50914':'rgba(255,255,255,.2)'};border-radius:5px;color:#fff;cursor:pointer;font-size:.85rem" onclick="(${onPage.toString()})(${p})">${p}</button>`).join('');
+function makePagination(totalPages, current, onPageCall) {
+  const el = qs('#pagination'); if(!el) return;
+  if(totalPages <= 1) { el.innerHTML=''; return; }
+  const max = Math.min(totalPages, 500);
+  let pages = [];
+  if(max <= 7) {
+    pages = Array.from({length:max}, (_,i) => i+1);
+  } else {
+    pages = [1];
+    if(current > 3) pages.push('…');
+    for(let i=Math.max(2,current-2); i<=Math.min(max-1,current+2); i++) pages.push(i);
+    if(current < max-2) pages.push('…');
+    pages.push(max);
+  }
+  el.innerHTML = pages.map(p => {
+    if(p === '…') return `<span style="padding:8px 12px;opacity:.4">…</span>`;
+    const isActive = p === current;
+    // ✅ Replace "PAGE" placeholder with actual page number
+    const onclickCall = onPageCall.replace('PAGE', p);
+    return `<button class="page-btn ${isActive?'active':''}" style="padding:8px 16px;background:${isActive?'#e50914':'rgba(255,255,255,.1)'};border:1px solid ${isActive?'#e50914':'rgba(255,255,255,.2)'};border-radius:5px;color:#fff;cursor:pointer;font-size:.85rem" onclick="${onclickCall}">${p}</button>`;
+  }).join('');
 }
 
 /* ═══════════════════════════════════════════════════════
@@ -394,7 +392,6 @@ function makePagination(totalPages,current,onPage){
 function showResultsView(){
   const hero=qs('#hero')||qs('#heroSection');if(hero)hero.style.display='none';
   const main=qs('#mainContent');if(main)main.style.display='none';
-  /* Force results container visible */
   const rc=qs('#searchResultsContainer')||qs('#searchResults');
   if(rc){rc.style.cssText='display:block;opacity:1;visibility:visible;min-height:300px';}
   const info=qs('#searchInfo');
@@ -404,7 +401,6 @@ function showHomeView(){
   const hero=qs('#hero')||qs('#heroSection');if(hero)hero.style.display='';
   const main=qs('#mainContent');if(main)main.style.display='';
   const rc=qs('#searchResultsContainer')||qs('#searchResults');if(rc)rc.style.display='none';
-  /* Remove the dynamic grid wrapper */
   qs('#sf-results-wrap')?.remove();
   const info=qs('#searchInfo');if(info){info.classList.remove('active','on');info.style.display='';}
   qsa('.gchip,.genre-chip,[data-g],[data-genre]').forEach(c=>{
@@ -525,14 +521,14 @@ document.addEventListener('DOMContentLoaded', async () => {
   initMobileSearch();
   document.addEventListener('contextmenu',e=>{if(e.target.closest('#playerVideo'))e.preventDefault();});
 
-  /* ★ PATCH ALL GENRE CHIPS — runs after DOM is ready */
+  /* ★ PATCH ALL GENRE CHIPS */
   patchGenreChips();
 
   /* Load home rows */
   await Promise.all([loadTrending(),loadMovies(),loadTV(),loadKDrama(),loadAnime()]);
   initWheelScroll();
 
-  console.log('%c✅ StreamFlix 3.6 ready — genre chips auto-patched!','color:lime;font-weight:bold');
+  console.log('%c✅ Flixora v3.7 ready — pagination fixed!','color:lime;font-weight:bold');
   console.log('%c💡 Manual test: fetchGenre("28","Action")','color:#f5c518');
 
   if(typeof initFirebase==='function'){try{await initFirebase();}catch(e){console.warn('[Firebase]',e.message);}}
