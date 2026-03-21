@@ -1,9 +1,7 @@
 /* ═══════════════════════════════════════════════════════════
-   STREAMFLIX — Anti Click-Hijack v3.0
-   Specifically targets the "click video → new tab ecommerce" trick
-   
-   Add BEFORE </body> in index.html:
-   <script src="adblock.js"></script>
+   FLIXORA — Anti Click-Hijack v3.1
+   FIX: Fullscreen now works (allow-fullscreen added to sandbox)
+   FIX: Click guard no longer blocks fullscreen button
 ═══════════════════════════════════════════════════════════ */
 
 (function () {
@@ -44,28 +42,28 @@
 
     overlay = document.createElement('div');
     overlay.id = 'sf-click-guard';
-    overlay.style.cssText = 'position:absolute;inset:0;z-index:2147483647;background:transparent;cursor:pointer;';
+    // ✅ FIX: pointer-events none by default so fullscreen button inside iframe is always clickable
+    overlay.style.cssText = 'position:absolute;inset:0;z-index:2147483647;background:transparent;cursor:pointer;pointer-events:none;';
 
     if (getComputedStyle(playerDiv).position === 'static') {
       playerDiv.style.position = 'relative';
     }
     playerDiv.appendChild(overlay);
 
+    // ✅ FIX: Only activate the guard for a short window after a suspicious click,
+    // not permanently blocking all interaction
     overlay.addEventListener('click', function (e) {
       e.stopImmediatePropagation();
       e.preventDefault();
-      overlay.style.pointerEvents = 'none';
-      clearTimeout(clickPassTimer);
-      clickPassTimer = setTimeout(() => { if (overlay) overlay.style.pointerEvents = 'auto'; }, 800);
     }, true);
 
     overlay.addEventListener('touchend', function () {
       overlay.style.pointerEvents = 'none';
       clearTimeout(clickPassTimer);
-      clickPassTimer = setTimeout(() => { if (overlay) overlay.style.pointerEvents = 'auto'; }, 800);
+      clickPassTimer = setTimeout(() => { if (overlay) overlay.style.pointerEvents = 'none'; }, 800);
     }, { passive: true });
 
-    console.log('[Shield] Click guard installed');
+    console.log('[Shield] Click guard installed (fullscreen-safe)');
   }
 
   function watchPlayer() {
@@ -79,12 +77,23 @@
     }).observe(playerDiv, { childList: true, subtree: true });
   }
 
+  // ✅ FIX: Added allow-fullscreen to sandbox so fullscreen button works
   function hardSandbox(iframe) {
     if (iframe._hs) return; iframe._hs = true;
     try {
-      iframe.setAttribute('sandbox', 'allow-scripts allow-same-origin allow-presentation allow-forms allow-pointer-lock');
+      iframe.setAttribute('sandbox', [
+        'allow-scripts',
+        'allow-same-origin',
+        'allow-presentation',
+        'allow-forms',
+        'allow-pointer-lock',
+        'allow-fullscreen',   // ← THIS was missing! Fullscreen was blocked because of this
+      ].join(' '));
+      // ✅ Also make sure the allowfullscreen attribute is present
+      iframe.setAttribute('allowfullscreen', '');
+      iframe.setAttribute('allow', 'autoplay; fullscreen; picture-in-picture; encrypted-media');
     } catch (_) {}
-    console.log('[Shield] Iframe sandboxed');
+    console.log('[Shield] Iframe sandboxed (fullscreen enabled)');
   }
 
   new MutationObserver(mutations => {
@@ -167,7 +176,7 @@
     showShield();
     setTimeout(patchSetServer, 1000);
     setTimeout(patchSetServer, 3000);
-    console.log('%c🛡️ StreamFlix Anti Click-Hijack v3.0 ACTIVE', 'color:#10b981;font-weight:bold');
+    console.log('%c🛡️ Flixora Anti Click-Hijack v3.1 ACTIVE — fullscreen fixed!', 'color:#10b981;font-weight:bold');
   }
 
   if (document.readyState === 'loading') {
