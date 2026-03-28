@@ -4,1400 +4,755 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>FLIXORA — Watch Anything, Anywhere</title>
-<meta name="description" content="Stream movies, TV series, K-Drama, and Anime for free on Flixora. Watch anything, anywhere.">
+<meta name="description" content="Stream movies, TV series, K-Drama, and Anime for free. No subscription needed.">
 <meta name="theme-color" content="#0a0a0f">
+<link rel="manifest" href="manifest.json">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Playfair+Display:wght@700;900&display=swap" rel="stylesheet">
 <style>
-:root {
-  --bg: #0a0a0f;
-  --bg2: #111118;
-  --bg3: #18181f;
-  --bg4: #1e1e28;
-  --surface: rgba(255,255,255,0.04);
-  --surface2: rgba(255,255,255,0.07);
-  --border: rgba(255,255,255,0.08);
-  --border2: rgba(255,255,255,0.14);
-  --text: #f0f0f8;
-  --text2: #9898b0;
-  --text3: #5a5a72;
-  --accent: #e63946;
-  --accent2: #ff6b6b;
-  --accent-dim: rgba(230,57,70,0.15);
-  --gold: #f4c430;
-  --gold-dim: rgba(244,196,48,0.12);
-  --teal: #2dd4bf;
-  --purple: #a855f7;
-  --sidebar-w: 240px;
-  --topbar-h: 64px;
-  --card-r: 12px;
-  --r: 8px;
-  --ease: cubic-bezier(0.16,1,0.3,1);
-  --dur: 240ms;
+:root{
+  --bg:#0a0a0f;--bg2:#111118;--bg3:#18181f;--bg4:#1e1e28;
+  --sur:rgba(255,255,255,.05);--sur2:rgba(255,255,255,.08);--sur3:rgba(255,255,255,.12);
+  --bd:rgba(255,255,255,.08);--bd2:rgba(255,255,255,.14);
+  --tx:#f0f0f8;--tx2:#9898b0;--tx3:#55556a;
+  --red:#e63946;--red2:#ff6b6b;--rd:rgba(230,57,70,.14);
+  --gold:#f5c518;--gd:rgba(245,197,24,.12);
+  --nav:240px;--top:62px;--r:8px;--r2:12px;
+  --ease:cubic-bezier(.16,1,.3,1);
 }
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:'Outfit',sans-serif;background:var(--bg);color:var(--tx);min-height:100vh;overflow-x:hidden;-webkit-font-smoothing:antialiased}
+img{display:block;max-width:100%}
+a{text-decoration:none;color:inherit}
+button{font-family:inherit;cursor:pointer;border:none;background:none}
+input,select{font-family:inherit;outline:none}
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-thumb{background:rgba(255,255,255,.1);border-radius:4px}
 
-*,*::before,*::after { box-sizing:border-box; margin:0; padding:0; }
-html { scroll-behavior:smooth; }
-body {
-  font-family:'Outfit',sans-serif;
-  background:var(--bg);
-  color:var(--text);
-  min-height:100vh;
-  overflow-x:hidden;
-  -webkit-font-smoothing:antialiased;
-}
-img { display:block; max-width:100%; }
-a { text-decoration:none; color:inherit; }
-button { font-family:inherit; cursor:pointer; border:none; background:none; }
-input { font-family:inherit; }
+/* SIDEBAR */
+#sidebar{position:fixed;top:0;left:0;height:100vh;width:var(--nav);background:rgba(8,8,13,.97);backdrop-filter:blur(24px);border-right:1px solid var(--bd);display:flex;flex-direction:column;z-index:200;transition:transform .3s var(--ease)}
+.sb-logo{display:flex;align-items:center;gap:11px;padding:20px 18px 18px;border-bottom:1px solid var(--bd);flex-shrink:0}
+.sb-mark{width:34px;height:34px;border-radius:9px;background:linear-gradient(135deg,var(--red),#c1121f);display:flex;align-items:center;justify-content:center;font-weight:900;font-size:14px;color:#fff;letter-spacing:-1px;flex-shrink:0;box-shadow:0 4px 14px rgba(230,57,70,.4)}
+.sb-name{font-family:'Playfair Display',serif;font-size:1.25rem;font-weight:900;letter-spacing:.06em;background:linear-gradient(135deg,#fff,var(--tx2));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.sb-nav{flex:1;overflow-y:auto;padding:10px 8px;scrollbar-width:none}
+.sb-nav::-webkit-scrollbar{display:none}
+.sb-sec{margin-bottom:20px}
+.sb-lbl{font-size:.6rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--tx3);padding:0 10px;margin-bottom:3px;display:block}
+.ni{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:var(--r);color:var(--tx2);font-size:.88rem;font-weight:500;cursor:pointer;transition:all 140ms;position:relative}
+.ni:hover{background:var(--sur);color:var(--tx)}
+.ni.active{background:var(--rd);color:var(--red2)}
+.ni.active::before{content:'';position:absolute;left:0;top:22%;bottom:22%;width:3px;background:var(--red);border-radius:0 3px 3px 0}
+.ni-ico{font-size:1rem;width:20px;text-align:center;flex-shrink:0}
+.ni-badge{margin-left:auto;background:var(--red);color:#fff;font-size:.58rem;font-weight:800;padding:2px 6px;border-radius:20px}
+.sb-foot{padding:12px 8px;border-top:1px solid var(--bd);flex-shrink:0}
+.sb-kofi{width:100%;padding:10px 14px;border-radius:var(--r);background:var(--gd);border:1px solid rgba(245,197,24,.2);color:var(--gold);font-size:.82rem;font-weight:700;display:flex;align-items:center;gap:8px;justify-content:center;transition:all 150ms}
+.sb-kofi:hover{background:rgba(245,197,24,.18)}
 
-::-webkit-scrollbar { width:4px; height:4px; }
-::-webkit-scrollbar-track { background:transparent; }
-::-webkit-scrollbar-thumb { background:rgba(255,255,255,0.12); border-radius:4px; }
-::-webkit-scrollbar-thumb:hover { background:rgba(255,255,255,0.2); }
+/* OVERLAY */
+#sbOv{position:fixed;inset:0;background:rgba(0,0,0,.75);backdrop-filter:blur(4px);z-index:190;display:none}
+#sbOv.on{display:block}
 
-/* ── SIDEBAR ── */
-.sidebar {
-  position:fixed; top:0; left:0; height:100vh; width:var(--sidebar-w);
-  background:rgba(10,10,15,0.96);
-  backdrop-filter:blur(24px);
-  border-right:1px solid var(--border);
-  display:flex; flex-direction:column; z-index:200;
-  transition:transform var(--dur) var(--ease);
-}
-.sidebar-logo {
-  display:flex; align-items:center; gap:12px;
-  padding:22px 20px 18px;
-  border-bottom:1px solid var(--border);
-}
-.logo-icon {
-  width:36px; height:36px; border-radius:10px;
-  background:var(--accent); display:flex; align-items:center; justify-content:center;
-  font-weight:900; font-size:16px; color:#fff; letter-spacing:-1px; flex-shrink:0;
-}
-.logo-name {
-  font-family:'Playfair Display',serif;
-  font-size:1.3rem; font-weight:900; letter-spacing:0.05em;
-  background:linear-gradient(135deg,#fff 0%,var(--text2) 100%);
-  -webkit-background-clip:text; -webkit-text-fill-color:transparent;
-}
-.sidebar-nav { flex:1; overflow-y:auto; padding:12px 10px; }
-.nav-section { margin-bottom:24px; }
-.nav-label {
-  font-size:0.62rem; font-weight:700; letter-spacing:0.14em;
-  text-transform:uppercase; color:var(--text3);
-  padding:0 10px; margin-bottom:4px;
-}
-.nav-item {
-  display:flex; align-items:center; gap:11px;
-  padding:9px 10px; border-radius:var(--r);
-  color:var(--text2); font-size:0.9rem; font-weight:500;
-  cursor:pointer; transition:all 150ms;
-  position:relative;
-}
-.nav-item:hover { background:var(--surface); color:var(--text); }
-.nav-item.active { background:var(--accent-dim); color:var(--accent2); }
-.nav-item.active::before {
-  content:''; position:absolute; left:0; top:20%; bottom:20%;
-  width:3px; background:var(--accent); border-radius:0 3px 3px 0;
-}
-.nav-icon { font-size:1.1rem; width:20px; text-align:center; flex-shrink:0; }
-.nav-badge {
-  margin-left:auto; background:var(--accent); color:#fff;
-  font-size:0.6rem; font-weight:700; padding:2px 6px; border-radius:20px;
-}
-.sidebar-footer {
-  padding:14px 10px;
-  border-top:1px solid var(--border);
-}
-.support-btn {
-  width:100%; padding:10px 14px; border-radius:var(--r);
-  background:var(--gold-dim); border:1px solid rgba(244,196,48,0.2);
-  color:var(--gold); font-size:0.85rem; font-weight:600;
-  display:flex; align-items:center; gap:8px; justify-content:center;
-  transition:all 150ms;
-}
-.support-btn:hover { background:rgba(244,196,48,0.2); }
+/* TOPBAR */
+#topbar{position:fixed;top:0;left:var(--nav);right:0;height:var(--top);z-index:150;background:rgba(10,10,15,.9);backdrop-filter:blur(20px);border-bottom:1px solid var(--bd);display:flex;align-items:center;gap:14px;padding:0 22px;transition:left .3s var(--ease)}
+#topbar.fw{left:0}
+.tb-menu{display:none;width:36px;height:36px;border-radius:var(--r);background:var(--sur);border:1px solid var(--bd);color:var(--tx2);font-size:1.1rem;align-items:center;justify-content:center;flex-shrink:0}
+.tb-srch{flex:1;max-width:440px;position:relative}
+.tb-srch input{width:100%;padding:9px 14px 9px 38px;background:var(--sur);border:1px solid var(--bd);border-radius:30px;color:var(--tx);font-size:.88rem;transition:all 180ms}
+.tb-srch input:focus{border-color:rgba(230,57,70,.4);background:var(--bg3);box-shadow:0 0 0 3px var(--rd)}
+.tb-srch input::placeholder{color:var(--tx3)}
+.tb-sico{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--tx3);font-size:.85rem;pointer-events:none}
+.tb-acts{display:flex;align-items:center;gap:8px;margin-left:auto}
+.tb-btn{width:36px;height:36px;border-radius:var(--r);background:var(--sur);border:1px solid var(--bd);color:var(--tx2);display:flex;align-items:center;justify-content:center;font-size:.95rem;transition:all 140ms;flex-shrink:0}
+.tb-btn:hover{background:var(--sur2);color:var(--tx);border-color:var(--bd2)}
 
-/* ── TOPBAR ── */
-.topbar {
-  position:fixed; top:0; left:var(--sidebar-w); right:0;
-  height:var(--topbar-h); z-index:150;
-  background:rgba(10,10,15,0.85); backdrop-filter:blur(20px);
-  border-bottom:1px solid var(--border);
-  display:flex; align-items:center; gap:16px; padding:0 24px;
-}
-.topbar-search {
-  flex:1; max-width:460px; position:relative;
-}
-.topbar-search input {
-  width:100%; padding:9px 14px 9px 40px;
-  background:var(--surface2); border:1px solid var(--border);
-  border-radius:30px; color:var(--text); font-size:0.9rem;
-  transition:all 200ms; outline:none;
-}
-.topbar-search input:focus {
-  border-color:rgba(230,57,70,0.4); background:var(--bg3);
-  box-shadow:0 0 0 3px var(--accent-dim);
-}
-.topbar-search input::placeholder { color:var(--text3); }
-.search-icon {
-  position:absolute; left:13px; top:50%; transform:translateY(-50%);
-  color:var(--text3); font-size:0.9rem; pointer-events:none;
-}
-.topbar-actions { display:flex; align-items:center; gap:8px; margin-left:auto; }
-.topbar-btn {
-  width:38px; height:38px; border-radius:var(--r);
-  background:var(--surface); border:1px solid var(--border);
-  color:var(--text2); display:flex; align-items:center; justify-content:center;
-  font-size:1rem; transition:all 150ms; position:relative;
-}
-.topbar-btn:hover { background:var(--surface2); color:var(--text); border-color:var(--border2); }
-.btn-dot {
-  position:absolute; top:-3px; right:-3px;
-  width:8px; height:8px; background:var(--accent); border-radius:50%;
-  border:2px solid var(--bg);
-}
-.mobile-menu-btn { display:none; }
+/* MAIN */
+#mainWrap{margin-left:var(--nav);padding-top:var(--top);min-height:100vh;transition:margin-left .3s var(--ease)}
 
-/* ── MAIN ── */
-.main {
-  margin-left:var(--sidebar-w);
-  padding-top:var(--topbar-h);
-  min-height:100vh;
-}
+/* HERO */
+#hero{position:relative;height:500px;overflow:hidden}
+.hero-slide{position:absolute;inset:0;opacity:0;transition:opacity .9s ease}
+.hero-slide.active{opacity:1}
+.hero-bg-img{width:100%;height:100%;object-fit:cover;object-position:center top}
+.hero-ov{position:absolute;inset:0;background:linear-gradient(to right,rgba(10,10,15,.97) 0%,rgba(10,10,15,.72) 50%,rgba(10,10,15,.2) 100%),linear-gradient(to top,rgba(10,10,15,1) 0%,transparent 40%)}
+.hero-content{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;padding:0 40px;max-width:660px}
+.hero-badge{display:inline-flex;align-items:center;gap:6px;background:var(--rd);border:1px solid rgba(230,57,70,.25);color:var(--red2);font-size:.7rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:5px 12px;border-radius:30px;margin-bottom:16px;width:fit-content}
+.hero-title{font-family:'Playfair Display',serif;font-size:clamp(2rem,4vw,2.9rem);font-weight:900;line-height:1.1;margin-bottom:12px;letter-spacing:-.02em}
+.hero-description{color:var(--tx2);font-size:.93rem;line-height:1.7;margin-bottom:22px;max-width:440px}
+.hero-acts{display:flex;gap:10px;flex-wrap:wrap}
+.hero-meta{display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap}
+.btn-play{display:inline-flex;align-items:center;gap:8px;padding:11px 24px;border-radius:30px;background:var(--red);color:#fff;font-weight:700;font-size:.9rem;transition:all 200ms var(--ease);box-shadow:0 8px 24px rgba(230,57,70,.35)}
+.btn-play:hover{background:var(--red2);transform:translateY(-2px);box-shadow:0 12px 30px rgba(230,57,70,.45)}
+.btn-info{display:inline-flex;align-items:center;gap:8px;padding:10px 20px;border-radius:30px;background:var(--sur2);border:1px solid var(--bd2);color:var(--tx);font-weight:600;font-size:.9rem;transition:all 150ms}
+.btn-info:hover{background:var(--sur3)}
+#heroBar{position:absolute;bottom:0;left:0;height:2px;background:linear-gradient(90deg,var(--red),var(--red2));z-index:2;border-radius:0 2px 2px 0}
+#heroDots{position:absolute;bottom:16px;right:24px;display:flex;gap:6px;z-index:3}
+.hdot{width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,.3);cursor:pointer;transition:all 200ms}
+.hdot.active{background:#fff;transform:scale(1.3)}
 
-/* ── HERO ── */
-.hero {
-  position:relative; height:520px; overflow:hidden;
-  margin-bottom:0;
-}
-.hero-bg {
-  position:absolute; inset:0;
-  background:linear-gradient(135deg, #0d0d1a 0%, #1a0a0a 50%, #0a0d1a 100%);
-}
-.hero-shimmer {
-  position:absolute; inset:0;
-  background:
-    radial-gradient(ellipse 80% 60% at 20% 50%, rgba(230,57,70,0.08) 0%, transparent 60%),
-    radial-gradient(ellipse 60% 40% at 80% 30%, rgba(168,85,247,0.06) 0%, transparent 50%);
-}
-.hero-grid {
-  position:absolute; inset:0; opacity:0.03;
-  background-image:
-    linear-gradient(rgba(255,255,255,0.5) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255,255,255,0.5) 1px, transparent 1px);
-  background-size:40px 40px;
-}
-.hero-content {
-  position:relative; z-index:2; height:100%;
-  display:flex; flex-direction:column; justify-content:center;
-  padding:0 40px; max-width:700px;
-}
-.hero-tag {
-  display:inline-flex; align-items:center; gap:6px;
-  background:var(--accent-dim); border:1px solid rgba(230,57,70,0.25);
-  color:var(--accent2); font-size:0.72rem; font-weight:700;
-  letter-spacing:0.1em; text-transform:uppercase;
-  padding:5px 12px; border-radius:30px; margin-bottom:18px;
-  width:fit-content;
-}
-.hero-pulse {
-  width:6px; height:6px; background:var(--accent); border-radius:50%;
-  animation:pulse 2s ease-in-out infinite;
-}
-@keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.4;transform:scale(0.7)} }
-.hero h1 {
-  font-family:'Playfair Display',serif;
-  font-size:clamp(2rem,4vw,3.2rem); font-weight:900;
-  line-height:1.1; margin-bottom:14px;
-  letter-spacing:-0.02em;
-}
-.hero h1 em { font-style:normal; color:var(--accent2); }
-.hero p {
-  color:var(--text2); font-size:1rem; line-height:1.7;
-  margin-bottom:28px; max-width:480px;
-}
-.hero-btns { display:flex; gap:12px; flex-wrap:wrap; }
-.btn-primary {
-  display:inline-flex; align-items:center; gap:8px;
-  padding:12px 24px; border-radius:30px;
-  background:var(--accent); color:#fff; font-weight:700; font-size:0.9rem;
-  transition:all 200ms var(--ease); box-shadow:0 8px 24px rgba(230,57,70,0.35);
-}
-.btn-primary:hover { background:var(--accent2); transform:translateY(-2px); box-shadow:0 12px 32px rgba(230,57,70,0.45); }
-.btn-ghost {
-  display:inline-flex; align-items:center; gap:8px;
-  padding:11px 22px; border-radius:30px;
-  background:var(--surface); border:1px solid var(--border2);
-  color:var(--text); font-weight:600; font-size:0.9rem;
-  transition:all 150ms;
-}
-.btn-ghost:hover { background:var(--surface2); border-color:rgba(255,255,255,0.25); }
-.hero-stats {
-  position:absolute; right:40px; top:50%; transform:translateY(-50%);
-  display:flex; flex-direction:column; gap:12px; z-index:2;
-}
-.hero-stat {
-  background:rgba(255,255,255,0.05); backdrop-filter:blur(12px);
-  border:1px solid var(--border2); border-radius:var(--card-r);
-  padding:14px 18px; text-align:center; min-width:100px;
-}
-.hero-stat-num { font-size:1.6rem; font-weight:800; color:var(--text); line-height:1; }
-.hero-stat-label { font-size:0.68rem; color:var(--text2); margin-top:3px; letter-spacing:0.05em; }
+/* GENRE BAR */
+#genreBar{display:flex;gap:8px;padding:16px 22px 10px;overflow-x:auto;border-bottom:1px solid var(--bd);scrollbar-width:none}
+#genreBar::-webkit-scrollbar{display:none}
+.genre-chip{flex-shrink:0;padding:6px 16px;border-radius:30px;background:var(--sur);border:1px solid var(--bd);color:var(--tx2);font-size:.8rem;font-weight:500;cursor:pointer;transition:all 140ms;white-space:nowrap}
+.genre-chip:hover{background:var(--sur2);color:var(--tx);border-color:var(--bd2)}
+.genre-chip.active{background:var(--red);border-color:var(--red);color:#fff;font-weight:700}
 
-/* ── GENRE CHIPS ── */
-.genre-bar {
-  display:flex; gap:8px; padding:18px 24px 6px; overflow-x:auto;
-  border-bottom:1px solid var(--border);
-}
-.genre-bar::-webkit-scrollbar { display:none; }
-.genre-chip {
-  flex-shrink:0; padding:6px 16px; border-radius:30px;
-  background:var(--surface); border:1px solid var(--border);
-  color:var(--text2); font-size:0.8rem; font-weight:500;
-  cursor:pointer; transition:all 150ms; white-space:nowrap;
-}
-.genre-chip:hover { background:var(--surface2); color:var(--text); border-color:var(--border2); }
-.genre-chip.active {
-  background:var(--accent); border-color:var(--accent);
-  color:#fff; font-weight:600;
-}
+/* SECTIONS */
+.sec{padding:28px 22px 8px}
+.sec-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.sec-title{font-size:1.1rem;font-weight:700;display:flex;align-items:center;gap:8px}
+.see-all-btn{font-size:.78rem;color:var(--tx2);font-weight:600;display:flex;align-items:center;gap:4px;padding:5px 12px;border-radius:var(--r);background:var(--sur);border:1px solid var(--bd);transition:all 140ms}
+.see-all-btn:hover{color:var(--tx);border-color:var(--bd2)}
 
-/* ── SECTIONS ── */
-.section { padding:32px 24px; }
-.section-header {
-  display:flex; align-items:center; justify-content:space-between; margin-bottom:20px;
-}
-.section-title {
-  font-size:1.2rem; font-weight:700; display:flex; align-items:center; gap:10px;
-}
-.section-title-icon { font-size:1.1rem; }
-.see-all {
-  font-size:0.8rem; color:var(--text2); font-weight:600;
-  display:flex; align-items:center; gap:4px;
-  padding:6px 12px; border-radius:var(--r);
-  background:var(--surface); border:1px solid var(--border);
-  transition:all 150ms;
-}
-.see-all:hover { color:var(--text); border-color:var(--border2); }
+/* ROW */
+.row-wrap{position:relative}
+.row-scroll{display:grid;grid-auto-flow:column;grid-auto-columns:150px;gap:12px;overflow-x:auto;padding:4px 4px 14px;scroll-snap-type:x mandatory;scrollbar-width:none}
+.row-scroll::-webkit-scrollbar{display:none}
+.row-arrow{position:absolute;top:40%;transform:translateY(-50%);width:38px;height:38px;border-radius:50%;background:rgba(10,10,15,.93);backdrop-filter:blur(8px);border:1px solid var(--bd2);color:var(--tx);display:flex;align-items:center;justify-content:center;font-size:1rem;z-index:5;cursor:pointer;transition:all 150ms;box-shadow:0 4px 14px rgba(0,0,0,.55);opacity:0;pointer-events:none}
+.row-wrap:hover .row-arrow{opacity:1;pointer-events:all}
+.row-arrow:hover{background:var(--red);border-color:var(--red)}
+.row-arrow.l{left:-16px}
+.row-arrow.r{right:-16px}
 
-/* ── CAROUSEL ── */
-.carousel-wrap { position:relative; }
-.carousel {
-  display:flex; gap:14px; overflow-x:auto; padding:4px 4px 16px;
-  scroll-snap-type:x mandatory; scrollbar-width:none;
-}
-.carousel::-webkit-scrollbar { display:none; }
-.carousel-arrow {
-  position:absolute; top:50%; transform:translateY(-50%);
-  width:40px; height:40px; border-radius:50%;
-  background:rgba(10,10,15,0.9); backdrop-filter:blur(8px);
-  border:1px solid var(--border2); color:var(--text);
-  display:flex; align-items:center; justify-content:center; font-size:1rem;
-  z-index:5; cursor:pointer; transition:all 150ms;
-  box-shadow:0 4px 16px rgba(0,0,0,0.4);
-  opacity:0;
-}
-.carousel-wrap:hover .carousel-arrow { opacity:1; }
-.carousel-arrow:hover { background:var(--accent); border-color:var(--accent); transform:translateY(-50%) scale(1.05); }
-.carousel-arrow.prev { left:-16px; }
-.carousel-arrow.next { right:-16px; }
+/* SKELETON */
+.skel{border-radius:8px;overflow:hidden;background:var(--bg3);flex-shrink:0;width:150px;scroll-snap-align:start}
+.skel-p{aspect-ratio:2/3;background:linear-gradient(110deg,var(--bg3) 30%,var(--bg4) 50%,var(--bg3) 70%);background-size:300% 100%;animation:sfShim 1.6s ease-in-out infinite}
+.skel-t{padding:9px 8px}
+.skel-l{height:11px;border-radius:4px;background:var(--bg4);margin-bottom:6px}
+.skel-l.s{width:55%;height:9px;background:var(--bg3)}
 
-/* ── MEDIA CARD ── */
-.media-card {
-  flex-shrink:0; width:160px; border-radius:var(--card-r);
-  overflow:hidden; cursor:pointer; scroll-snap-align:start;
-  transition:transform 200ms var(--ease);
-  position:relative;
-}
-.media-card:hover { transform:scale(1.04) translateY(-4px); z-index:2; }
-.media-card:hover .card-overlay { opacity:1; }
-.card-poster {
-  width:100%; aspect-ratio:2/3; object-fit:cover;
-  background:var(--bg3);
-  display:block;
-}
-.card-skeleton {
-  width:100%; aspect-ratio:2/3;
-  background:linear-gradient(90deg, var(--bg3) 25%, var(--bg4) 50%, var(--bg3) 75%);
-  background-size:200% 100%; animation:shimmer 1.6s ease-in-out infinite;
-  border-radius:var(--card-r);
-}
-@keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
-.card-overlay {
-  position:absolute; inset:0; opacity:0; transition:opacity 200ms;
-  background:linear-gradient(to top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.4) 50%, transparent 100%);
-  display:flex; flex-direction:column; justify-content:flex-end; padding:12px;
-}
-.card-play {
-  width:36px; height:36px; border-radius:50%;
-  background:var(--accent); display:flex; align-items:center; justify-content:center;
-  font-size:0.9rem; margin-bottom:8px; flex-shrink:0;
-  box-shadow:0 4px 12px rgba(230,57,70,0.5);
-}
-.card-title { font-size:0.78rem; font-weight:600; line-height:1.3; margin-bottom:4px; }
-.card-meta { font-size:0.68rem; color:var(--text2); display:flex; align-items:center; gap:6px; }
-.card-rating { color:var(--gold); font-weight:600; display:flex; align-items:center; gap:2px; }
-.card-badge-wrap {
-  position:absolute; top:8px; left:8px; display:flex; flex-direction:column; gap:4px;
-}
-.badge-pill {
-  font-size:0.58rem; font-weight:800; letter-spacing:0.06em; text-transform:uppercase;
-  padding:3px 7px; border-radius:4px;
-}
-.badge-new { background:var(--teal); color:#0a2f2b; }
-.badge-hot { background:var(--accent); color:#fff; }
-.badge-top { background:var(--gold); color:#1a1000; }
-.card-info {
-  padding:10px 0 2px;
-}
-.card-info-title {
-  font-size:0.82rem; font-weight:600; color:var(--text);
-  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
-  margin-bottom:3px;
-}
-.card-info-meta { font-size:0.72rem; color:var(--text2); display:flex; align-items:center; gap:6px; }
+/* CONTENT CARD base - app.js makeCard() injects the rest */
+.content-card{scroll-snap-align:start}
 
-/* Large card variant */
-.media-card.lg { width:220px; }
-.media-card.lg .card-poster { aspect-ratio:16/9; }
+/* RESULTS */
+#searchResultsContainer{display:none;min-height:300px}
+#searchInfo{display:none;padding:22px 22px 8px}
+#searchTitle{font-family:'Playfair Display',serif;font-size:1.5rem;font-weight:900;margin-bottom:4px}
+#searchCount{font-size:.85rem;color:var(--tx2)}
+#sf-results-wrap{display:grid;grid-template-columns:repeat(auto-fill,minmax(145px,1fr));gap:14px;padding:10px 22px 24px}
+#pagination{display:flex;gap:8px;flex-wrap:wrap;padding:8px 22px 28px;justify-content:center}
 
-/* ── MODAL / PLAYER ── */
-.modal-overlay {
-  position:fixed; inset:0; background:rgba(0,0,0,0.88);
-  backdrop-filter:blur(8px); z-index:500;
-  display:flex; align-items:center; justify-content:center;
-  padding:20px; opacity:0; pointer-events:none;
-  transition:opacity 250ms;
-}
-.modal-overlay.open { opacity:1; pointer-events:all; }
-.modal {
-  background:var(--bg2); border:1px solid var(--border);
-  border-radius:20px; width:100%; max-width:900px;
-  max-height:90vh; overflow:hidden; overflow-y:auto;
-  transform:translateY(20px) scale(0.97);
-  transition:transform 250ms var(--ease);
-  box-shadow:0 32px 80px rgba(0,0,0,0.7);
-}
-.modal-overlay.open .modal { transform:none; }
-.modal-close {
-  position:absolute; top:16px; right:16px; z-index:10;
-  width:36px; height:36px; border-radius:50%;
-  background:rgba(0,0,0,0.6); color:#fff; font-size:1rem;
-  display:flex; align-items:center; justify-content:center; cursor:pointer;
-  transition:all 150ms;
-}
-.modal-close:hover { background:var(--accent); }
-.player-wrap { position:relative; padding-top:56.25%; background:#000; }
-.player-wrap iframe {
-  position:absolute; inset:0; width:100%; height:100%; border:none;
-}
-.player-loading {
-  position:absolute; inset:0; display:flex; flex-direction:column;
-  align-items:center; justify-content:center; gap:12px; color:var(--text2);
-}
-.spinner {
-  width:40px; height:40px; border:3px solid var(--border);
-  border-top-color:var(--accent); border-radius:50%;
-  animation:spin 0.8s linear infinite;
-}
-@keyframes spin { to { transform:rotate(360deg); } }
-.modal-body { padding:24px; position:relative; }
-.modal-title { font-family:'Playfair Display',serif; font-size:1.6rem; font-weight:900; margin-bottom:8px; }
-.modal-meta {
-  display:flex; align-items:center; gap:10px; flex-wrap:wrap;
-  font-size:0.82rem; color:var(--text2); margin-bottom:16px;
-}
-.modal-rating { color:var(--gold); font-weight:700; display:flex; align-items:center; gap:3px; }
-.modal-tag {
-  padding:3px 10px; border-radius:4px; background:var(--surface2);
-  font-size:0.72rem; font-weight:600; color:var(--text2);
-}
-.modal-overview { color:var(--text2); font-size:0.9rem; line-height:1.7; margin-bottom:20px; }
-.server-section { margin-bottom:18px; }
-.server-label {
-  font-size:0.72rem; font-weight:700; letter-spacing:0.1em;
-  text-transform:uppercase; color:var(--text3); margin-bottom:10px;
-}
-.server-btns { display:flex; gap:8px; flex-wrap:wrap; }
-.server-btn {
-  padding:8px 16px; border-radius:var(--r);
-  background:var(--surface); border:1px solid var(--border);
-  color:var(--text2); font-size:0.82rem; font-weight:600;
-  cursor:pointer; transition:all 150ms;
-}
-.server-btn:hover { border-color:var(--border2); color:var(--text); }
-.server-btn.active { background:var(--accent-dim); border-color:rgba(230,57,70,0.4); color:var(--accent2); }
-.server-tip {
-  margin-top:10px; padding:10px 14px; border-radius:var(--r);
-  background:var(--gold-dim); border:1px solid rgba(244,196,48,0.15);
-  font-size:0.78rem; color:rgba(244,196,48,0.9);
-  display:flex; align-items:center; gap:6px;
-}
-.watch-actions { display:flex; gap:10px; flex-wrap:wrap; }
+/* PLAYER */
+#playerModal{position:fixed;inset:0;background:rgba(0,0,0,.92);backdrop-filter:blur(10px);z-index:800;display:flex;align-items:center;justify-content:center;padding:16px;opacity:0;pointer-events:none;transition:opacity .25s}
+#playerModal.active{opacity:1;pointer-events:all}
+.p-box{background:var(--bg2);border:1px solid var(--bd);border-radius:18px;width:100%;max-width:880px;max-height:92vh;overflow:hidden;overflow-y:auto;transform:translateY(20px) scale(.97);transition:transform .25s var(--ease);box-shadow:0 40px 100px rgba(0,0,0,.75);position:relative}
+#playerModal.active .p-box{transform:none}
+#playerClose{position:absolute;top:14px;right:14px;z-index:10;width:34px;height:34px;border-radius:50%;background:rgba(0,0,0,.7);color:#fff;font-size:.95rem;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all 140ms}
+#playerClose:hover{background:var(--red)}
+#playerVideo{position:relative;padding-top:56.25%;background:#000;min-height:200px}
+#playerVideo iframe{position:absolute;inset:0;width:100%;height:100%;border:none}
+.p-spin{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;color:var(--tx2)}
+.spinner{width:38px;height:38px;border:3px solid rgba(255,255,255,.1);border-top-color:var(--red);border-radius:50%;animation:sfSpin 1s linear infinite}
+.p-meta{padding:20px 22px}
+#playerTitle{font-family:'Playfair Display',serif;font-size:1.4rem;font-weight:900;margin-bottom:16px}
+#episodePanel{display:none;margin-bottom:14px}
+.ep-lbl{font-size:.68rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--tx3);margin-bottom:8px}
+#seasonSelect,#episodeSelect{padding:8px 12px;border-radius:var(--r);background:var(--bg3);border:1px solid var(--bd);color:var(--tx);font-size:.85rem;margin-right:8px;cursor:pointer}
+.srv-lbl{font-size:.68rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--tx3);margin-bottom:8px}
+#serverButtons{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.server-btn{padding:7px 14px;border-radius:var(--r);background:var(--sur);border:1px solid var(--bd);color:var(--tx2);font-size:.8rem;font-weight:600;cursor:pointer;transition:all 140ms}
+.server-btn:hover{border-color:var(--bd2);color:var(--tx)}
+.server-btn.active{background:var(--rd);border-color:rgba(230,57,70,.35);color:var(--red2)}
+.sub-badge{background:#10b981;color:#fff;padding:1px 4px;border-radius:3px;font-size:.55rem;margin-left:3px;font-weight:800}
+.srv-tip{padding:9px 13px;border-radius:var(--r);background:var(--gd);border:1px solid rgba(245,197,24,.15);font-size:.76rem;color:rgba(245,197,24,.9);display:flex;align-items:center;gap:6px;margin-bottom:14px}
+.p-acts{display:flex;gap:10px;flex-wrap:wrap}
+.btn-tog{display:inline-flex;align-items:center;gap:7px;padding:9px 18px;border-radius:30px;background:var(--sur2);border:1px solid var(--bd2);color:var(--tx);font-weight:600;font-size:.85rem;transition:all 150ms}
+.btn-tog:hover{background:var(--sur3)}
 
-/* ── AGE GATE ── */
-.agegate-overlay {
-  position:fixed; inset:0; background:rgba(0,0,0,0.95);
-  backdrop-filter:blur(12px); z-index:600;
-  display:flex; align-items:center; justify-content:center; padding:20px;
-}
-.agegate-box {
-  background:var(--bg2); border:1px solid rgba(230,57,70,0.2);
-  border-radius:20px; padding:40px; max-width:440px; width:100%; text-align:center;
-  box-shadow:0 32px 80px rgba(0,0,0,0.6);
-}
-.agegate-icon { font-size:3rem; margin-bottom:16px; }
-.agegate-title { font-family:'Playfair Display',serif; font-size:1.5rem; font-weight:900; margin-bottom:8px; }
-.agegate-desc { color:var(--text2); font-size:0.9rem; line-height:1.6; margin-bottom:28px; }
-.agegate-check {
-  display:flex; align-items:center; gap:10px;
-  background:var(--surface); border:1px solid var(--border);
-  border-radius:var(--r); padding:12px 16px; margin-bottom:16px; cursor:pointer;
-  transition:all 150ms; text-align:left;
-}
-.agegate-check:hover { border-color:var(--border2); }
-.agegate-check input { accent-color:var(--accent); width:16px; height:16px; flex-shrink:0; }
-.agegate-check label { font-size:0.9rem; cursor:pointer; }
-.agegate-btns { display:flex; gap:10px; }
-.agegate-btns .btn-primary { flex:1; justify-content:center; }
-.agegate-btns .btn-ghost { flex:1; justify-content:center; }
+/* CHAT */
+#chatPanel{position:absolute;right:0;top:0;height:100%;width:260px;background:var(--bg2);border-left:1px solid var(--bd);display:flex;flex-direction:column;transform:translateX(100%);transition:transform .3s var(--ease);z-index:5}
+#chatPanel.show{transform:none}
+.ch-hd{padding:12px 14px;border-bottom:1px solid var(--bd);font-weight:700;font-size:.9rem;display:flex;align-items:center;justify-content:space-between}
+.ch-hd button{color:var(--tx2)}
+#chatMessages{flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:8px;font-size:.82rem;color:var(--tx2)}
+.ch-inp{display:flex;gap:6px;padding:10px;border-top:1px solid var(--bd)}
+.ch-inp input{flex:1;padding:7px 10px;border-radius:var(--r);background:var(--bg3);border:1px solid var(--bd);color:var(--tx);font-size:.82rem}
+.ch-inp button{padding:7px 12px;border-radius:var(--r);background:var(--red);color:#fff;font-size:.82rem;font-weight:600}
 
-/* ── WATCH TOGETHER ── */
-.together-modal .modal { max-width:480px; }
-.together-options { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:20px; }
-.together-option {
-  padding:20px; border-radius:var(--card-r);
-  background:var(--surface); border:1px solid var(--border);
-  text-align:center; cursor:pointer; transition:all 200ms;
-}
-.together-option:hover { background:var(--surface2); border-color:var(--border2); transform:translateY(-2px); }
-.together-option-icon { font-size:2rem; margin-bottom:10px; }
-.together-option-title { font-weight:700; font-size:0.95rem; margin-bottom:4px; }
-.together-option-desc { font-size:0.78rem; color:var(--text2); }
-.room-code {
-  font-family:monospace; font-size:2rem; font-weight:800; letter-spacing:0.3em;
-  color:var(--accent2); background:var(--accent-dim); padding:16px 24px;
-  border-radius:var(--r); text-align:center; margin-bottom:16px;
-  border:1px solid rgba(230,57,70,0.2);
-}
-.room-actions { display:flex; gap:8px; }
-.room-actions button { flex:1; }
+/* 18+ */
+#verifyModal{position:fixed;inset:0;background:rgba(0,0,0,.96);backdrop-filter:blur(14px);z-index:900;display:none;align-items:center;justify-content:center;padding:20px}
+.v-box{background:var(--bg2);border:1px solid rgba(230,57,70,.2);border-radius:20px;padding:38px 32px;max-width:420px;width:100%;text-align:center;box-shadow:0 40px 100px rgba(0,0,0,.7)}
+.v-ico{font-size:2.8rem;margin-bottom:14px}
+.v-title{font-family:'Playfair Display',serif;font-size:1.4rem;font-weight:900;margin-bottom:8px}
+.v-desc{color:var(--tx2);font-size:.88rem;line-height:1.65;margin-bottom:24px}
+#vs1,#vs2{display:none}
+#vs1.on,#vs2.on{display:block}
+.v-chk{display:flex;align-items:center;gap:10px;text-align:left;background:var(--sur);border:1px solid var(--bd);border-radius:var(--r);padding:11px 14px;margin-bottom:14px;cursor:pointer}
+.v-chk input{accent-color:var(--red);width:16px;height:16px;flex-shrink:0}
+.v-chk label{font-size:.88rem;cursor:pointer}
+.pin-row{display:flex;gap:10px;justify-content:center;margin-bottom:14px}
+.pin-d{width:52px;height:58px;border-radius:var(--r);text-align:center;background:var(--bg3);border:1px solid var(--bd);color:var(--tx);font-size:1.4rem;font-weight:700;transition:border-color 150ms}
+.pin-d:focus{border-color:var(--red);box-shadow:0 0 0 3px var(--rd)}
+#pinErr{color:var(--red2);font-size:.8rem;min-height:20px;margin-bottom:10px}
+.v-btns{display:flex;gap:10px}
+.btn-red{flex:1;padding:11px 18px;border-radius:30px;background:var(--red);color:#fff;font-weight:700;font-size:.9rem;transition:all 150ms}
+.btn-red:hover{background:var(--red2)}
+.btn-ghost{flex:1;padding:10px 18px;border-radius:30px;background:var(--sur2);border:1px solid var(--bd2);color:var(--tx);font-weight:600;font-size:.9rem;transition:all 150ms}
+.btn-ghost:hover{background:var(--sur3)}
 
-/* ── SUPPORT MODAL ── */
-.support-modal .modal { max-width:440px; }
-.support-header { text-align:center; padding:28px 24px 0; }
-.support-icon { font-size:2.5rem; margin-bottom:12px; }
-.support-title { font-family:'Playfair Display',serif; font-size:1.4rem; font-weight:900; margin-bottom:6px; }
-.support-desc { color:var(--text2); font-size:0.88rem; line-height:1.6; }
-.support-amounts { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin:20px 24px 0; }
-.amount-btn {
-  padding:10px 8px; border-radius:var(--r);
-  background:var(--surface); border:1px solid var(--border);
-  color:var(--text); font-weight:700; font-size:0.85rem; cursor:pointer;
-  transition:all 150ms; text-align:center;
-}
-.amount-btn:hover { border-color:var(--gold); color:var(--gold); }
-.amount-btn.active { background:var(--gold-dim); border-color:var(--gold); color:var(--gold); }
-.support-cta { margin:16px 24px 24px; }
-.support-cta a { display:block; width:100%; text-align:center; }
+/* WATCH TOGETHER */
+#watchTogetherMenu,#joinRoomModal{position:fixed;inset:0;background:rgba(0,0,0,.88);backdrop-filter:blur(10px);z-index:850;display:none;align-items:center;justify-content:center;padding:20px}
+#watchTogetherMenu.open,#joinRoomModal.open{display:flex}
+.wt-box{background:var(--bg2);border:1px solid var(--bd);border-radius:18px;padding:28px;max-width:440px;width:100%;box-shadow:0 32px 80px rgba(0,0,0,.65)}
+.wt-hd{text-align:center;margin-bottom:22px}
+.wt-hd h2{font-family:'Playfair Display',serif;font-size:1.3rem;font-weight:900;margin-bottom:4px}
+.wt-hd p{color:var(--tx2);font-size:.83rem}
+.wt-opts{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px}
+.wt-opt{padding:18px 14px;border-radius:var(--r2);background:var(--sur);border:1px solid var(--bd);text-align:center;cursor:pointer;transition:all 180ms}
+.wt-opt:hover{background:var(--sur2);border-color:var(--bd2);transform:translateY(-2px)}
+.wt-opt-ico{font-size:1.8rem;margin-bottom:8px}
+.wt-opt-name{font-weight:700;font-size:.9rem;margin-bottom:3px}
+.wt-opt-desc{font-size:.74rem;color:var(--tx2)}
+.room-code{font-family:monospace;font-size:2.2rem;font-weight:900;letter-spacing:.3em;color:var(--red2);background:var(--rd);padding:16px;border-radius:var(--r);text-align:center;margin-bottom:14px;border:1px solid rgba(230,57,70,.2)}
+.rc-acts{display:flex;gap:8px;margin-bottom:12px}
+.rc-acts button{flex:1}
+.join-inp{width:100%;padding:12px 14px;border-radius:var(--r);background:var(--bg3);border:1px solid var(--bd);color:var(--tx);font-size:1rem;font-weight:600;text-align:center;letter-spacing:.12em;margin-bottom:12px;text-transform:uppercase}
+.join-inp:focus{border-color:rgba(230,57,70,.4);box-shadow:0 0 0 3px var(--rd)}
 
-/* ── INSTALL BANNER ── */
-.install-banner {
-  position:fixed; bottom:80px; left:50%; transform:translateX(-50%);
-  background:var(--bg3); border:1px solid var(--border2);
-  border-radius:16px; padding:14px 20px;
-  display:flex; align-items:center; gap:14px;
-  box-shadow:0 16px 48px rgba(0,0,0,0.5);
-  z-index:300; max-width:380px; width:calc(100% - 40px);
-  opacity:0; pointer-events:none; transition:all 400ms var(--ease);
-  bottom:-100px;
-}
-.install-banner.show { opacity:1; pointer-events:all; bottom:24px; }
-.install-banner-icon { font-size:2rem; flex-shrink:0; }
-.install-banner-text { flex:1; }
-.install-banner-title { font-weight:700; font-size:0.9rem; margin-bottom:2px; }
-.install-banner-sub { font-size:0.75rem; color:var(--text2); }
-.install-btn {
-  padding:8px 16px; border-radius:var(--r);
-  background:var(--accent); color:#fff; font-weight:700; font-size:0.8rem;
-  cursor:pointer; white-space:nowrap; transition:all 150ms;
-}
-.install-btn:hover { background:var(--accent2); }
-.install-close {
-  color:var(--text3); font-size:1.1rem; cursor:pointer; flex-shrink:0;
-  width:24px; height:24px; display:flex; align-items:center; justify-content:center;
-}
-.install-close:hover { color:var(--text); }
+/* SUPPORT */
+#supportModal{position:fixed;inset:0;background:rgba(0,0,0,.88);backdrop-filter:blur(10px);z-index:850;display:none;align-items:center;justify-content:center;padding:20px}
+#supportModal.open{display:flex}
+.sp-box{background:var(--bg2);border:1px solid var(--bd);border-radius:18px;max-width:400px;width:100%;overflow:hidden;box-shadow:0 32px 80px rgba(0,0,0,.65);position:relative}
+.sp-hd{text-align:center;padding:28px 24px 16px}
+.sp-ico{font-size:2.4rem;margin-bottom:10px}
+.sp-hd h2{font-family:'Playfair Display',serif;font-size:1.3rem;font-weight:900;margin-bottom:6px}
+.sp-hd p{color:var(--tx2);font-size:.85rem;line-height:1.6}
+.sp-amts{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;padding:0 24px 16px}
+.amt{padding:9px 6px;border-radius:var(--r);background:var(--sur);border:1px solid var(--bd);color:var(--tx);font-weight:700;font-size:.85rem;cursor:pointer;transition:all 140ms;text-align:center}
+.amt:hover{border-color:var(--gold);color:var(--gold)}
+.amt.active{background:var(--gd);border-color:var(--gold);color:var(--gold)}
+.sp-cta{padding:0 24px 24px}
+.sp-cta a,.sp-cta button{display:flex;align-items:center;justify-content:center;width:100%;padding:11px 18px;border-radius:30px;font-weight:700;font-size:.9rem;transition:all 150ms}
+.sp-cta a{background:var(--gold);color:#1a1000;margin-bottom:8px}
+.sp-cta a:hover{background:#f0b800}
+.sp-cta button{background:var(--sur);border:1px solid var(--bd);color:var(--tx2)}
+.sp-cta button:hover{color:var(--tx);border-color:var(--bd2)}
 
-/* ── BOTTOM NAV (Mobile) ── */
-.bottom-nav {
-  position:fixed; bottom:0; left:0; right:0; height:64px;
-  background:rgba(10,10,15,0.96); backdrop-filter:blur(20px);
-  border-top:1px solid var(--border);
-  display:none; align-items:center; justify-content:space-around; z-index:200;
-}
-.bottom-nav-item {
-  display:flex; flex-direction:column; align-items:center; gap:4px;
-  color:var(--text3); font-size:0.62rem; font-weight:600;
-  cursor:pointer; transition:color 150ms; padding:8px 12px;
-}
-.bottom-nav-item.active { color:var(--accent2); }
-.bottom-nav-icon { font-size:1.2rem; }
+/* INSTALL */
+#installBanner{position:fixed;bottom:-100px;left:50%;transform:translateX(-50%);background:var(--bg3);border:1px solid var(--bd2);border-radius:14px;padding:13px 18px;display:flex;align-items:center;gap:13px;box-shadow:0 16px 48px rgba(0,0,0,.55);z-index:400;max-width:360px;width:calc(100% - 32px);opacity:0;pointer-events:none;transition:all .4s var(--ease)}
+#installBanner.show{bottom:16px;opacity:1;pointer-events:all}
+.ib-ico{font-size:1.8rem;flex-shrink:0}
+.ib-tx{flex:1}
+.ib-title{font-weight:700;font-size:.88rem;margin-bottom:2px}
+.ib-sub{font-size:.73rem;color:var(--tx2)}
+#installBtn{padding:7px 14px;border-radius:var(--r);background:var(--red);color:#fff;font-weight:700;font-size:.78rem;cursor:pointer;white-space:nowrap;transition:all 140ms}
+#installBtn:hover{background:var(--red2)}
+#closeBanner{color:var(--tx3);font-size:1.1rem;cursor:pointer;flex-shrink:0;padding:2px 4px}
+#closeBanner:hover{color:var(--tx)}
 
-/* ── EMPTY / ERROR STATES ── */
-.empty-state {
-  display:flex; flex-direction:column; align-items:center; justify-content:center;
-  padding:48px 24px; text-align:center; color:var(--text2);
-  gap:12px;
-}
-.empty-icon { font-size:3rem; opacity:0.5; }
-.empty-title { font-size:1rem; font-weight:600; color:var(--text); }
-.empty-desc { font-size:0.85rem; max-width:280px; }
-.retry-btn {
-  margin-top:8px; padding:8px 20px; border-radius:var(--r);
-  background:var(--surface); border:1px solid var(--border);
-  color:var(--text); font-weight:600; font-size:0.85rem; cursor:pointer;
-  transition:all 150ms;
-}
-.retry-btn:hover { border-color:var(--border2); }
+/* TOAST */
+#toast{position:fixed;top:76px;right:18px;z-index:999;background:var(--bg3);border:1px solid var(--bd2);border-radius:var(--r);padding:11px 16px;display:flex;align-items:center;gap:9px;font-size:.83rem;font-weight:500;box-shadow:0 8px 24px rgba(0,0,0,.45);transform:translateX(120%);transition:transform .3s var(--ease);max-width:300px}
+#toast.show{transform:none}
 
-/* ── TOAST ── */
-.toast {
-  position:fixed; top:80px; right:20px; z-index:900;
-  background:var(--bg3); border:1px solid var(--border2);
-  border-radius:var(--r); padding:12px 18px;
-  display:flex; align-items:center; gap:10px;
-  font-size:0.85rem; font-weight:500;
-  box-shadow:0 8px 24px rgba(0,0,0,0.4);
-  transform:translateX(120%); transition:transform 300ms var(--ease);
-  max-width:320px;
-}
-.toast.show { transform:none; }
-.toast-icon { font-size:1.1rem; }
+/* BOTTOM NAV */
+#bottomNav{position:fixed;bottom:0;left:0;right:0;height:60px;background:rgba(10,10,15,.97);backdrop-filter:blur(20px);border-top:1px solid var(--bd);display:none;align-items:center;justify-content:space-around;z-index:200}
+.bni{display:flex;flex-direction:column;align-items:center;gap:3px;color:var(--tx3);font-size:.59rem;font-weight:700;letter-spacing:.03em;cursor:pointer;transition:color 140ms;padding:8px 10px}
+.bni.active{color:var(--red2)}
+.bni-ico{font-size:1.15rem}
 
-/* ── RESPONSIVE ── */
-@media (max-width:900px) {
-  .sidebar { transform:translateX(-100%); }
-  .sidebar.open { transform:none; }
-  .topbar { left:0; }
-  .main { margin-left:0; }
-  .mobile-menu-btn { display:flex; }
-  .hero { height:420px; }
-  .hero-stats { display:none; }
-  .hero-content { padding:0 24px; }
-  .hero h1 { font-size:1.8rem; }
-  .bottom-nav { display:flex; }
-  .main { padding-bottom:64px; }
-  .install-banner { bottom:72px; }
-  .install-banner.show { bottom:72px; }
-}
-@media (max-width:600px) {
-  .hero { height:380px; }
-  .hero-btns { gap:8px; }
-  .btn-primary,.btn-ghost { padding:10px 18px; font-size:0.85rem; }
-  .section { padding:24px 16px; }
-  .carousel { gap:10px; }
-  .media-card { width:140px; }
-  .genre-bar { padding:14px 16px 4px; }
-}
+/* 18+ section */
+#section-mature{display:none}
+#section-mature.visible{display:block}
 
-/* ── SIDEBAR OVERLAY ── */
-.sidebar-overlay {
-  position:fixed; inset:0; background:rgba(0,0,0,0.7);
-  backdrop-filter:blur(4px); z-index:190; display:none;
-}
-.sidebar-overlay.show { display:block; }
+/* KEYFRAMES */
+@keyframes sfShim{0%{background-position:100% 0}100%{background-position:-100% 0}}
+@keyframes sfSpin{to{transform:rotate(360deg)}}
 
-/* ── ANIMATIONS ── */
-@keyframes fadeInUp {
-  from { opacity:0; transform:translateY(16px); }
-  to { opacity:1; transform:none; }
+/* RESPONSIVE */
+@media(max-width:900px){
+  #sidebar{transform:translateX(-100%)}
+  #sidebar.open{transform:none}
+  #topbar,#topbar.fw{left:0}
+  #mainWrap{margin-left:0}
+  .tb-menu{display:flex}
+  #hero{height:400px}
+  .hero-content{padding:0 22px}
+  .hero-title{font-size:1.7rem}
+  #bottomNav{display:flex}
+  #mainWrap{padding-bottom:60px}
+  #installBanner.show{bottom:68px}
 }
-.fade-in { animation:fadeInUp 0.5s var(--ease) both; }
-.fade-in-d1 { animation-delay:0.1s; }
-.fade-in-d2 { animation-delay:0.2s; }
-.fade-in-d3 { animation-delay:0.3s; }
+@media(max-width:600px){
+  #hero{height:350px}
+  .hero-description{display:none}
+  .sec{padding:20px 14px 6px}
+  .row-scroll{grid-auto-columns:136px;gap:10px}
+  .skel{width:136px}
+  #genreBar{padding:12px 14px 8px}
+  #sf-results-wrap{grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px;padding:8px 14px 20px}
+  .hero-acts .btn-info{display:none}
+}
 </style>
 </head>
 <body>
 
-<!-- SIDEBAR OVERLAY -->
-<div class="sidebar-overlay" id="sidebarOverlay"></div>
+<div id="sbOv"></div>
 
-<!-- SIDEBAR -->
-<aside class="sidebar" id="sidebar">
-  <div class="sidebar-logo">
-    <div class="logo-icon">FX</div>
-    <div class="logo-name">FLIXORA</div>
+<!-- ═══ SIDEBAR ═══ -->
+<nav id="sidebar">
+  <div class="sb-logo">
+    <div class="sb-mark">FX</div>
+    <div class="sb-name">FLIXORA</div>
   </div>
-  <nav class="sidebar-nav">
-    <div class="nav-section">
-      <div class="nav-label">Discover</div>
-      <div class="nav-item active" data-section="home">
-        <span class="nav-icon">🏠</span> Home
-      </div>
-      <div class="nav-item" data-section="movies">
-        <span class="nav-icon">🎬</span> Movies
-      </div>
-      <div class="nav-item" data-section="series">
-        <span class="nav-icon">📺</span> TV Series
-      </div>
-      <div class="nav-item" data-section="kdrama">
-        <span class="nav-icon">🇰🇷</span> K-Drama
-      </div>
-      <div class="nav-item" data-section="anime">
-        <span class="nav-icon">🎌</span> Anime
-      </div>
-      <div class="nav-item" data-section="adult" id="adultNav">
-        <span class="nav-icon">🔞</span> 18+ Mature
-        <span class="nav-badge">+18</span>
-      </div>
+  <div class="sb-nav">
+    <div class="sb-sec">
+      <span class="sb-lbl">Discover</span>
+      <div class="ni active" onclick="goHome();_setNav(this)"><span class="ni-ico">🏠</span>Home</div>
+      <div class="ni" onclick="loadCategory('movies');_setNav(this)" data-cat="movies"><span class="ni-ico">🎬</span>Movies</div>
+      <div class="ni" onclick="loadCategory('tv');_setNav(this)" data-cat="tv"><span class="ni-ico">📺</span>TV Series</div>
+      <div class="ni" onclick="loadCategory('kdrama');_setNav(this)" data-cat="kdrama"><span class="ni-ico">🇰🇷</span>K-Drama</div>
+      <div class="ni" onclick="loadCategory('anime');_setNav(this)" data-cat="anime"><span class="ni-ico">🎌</span>Anime</div>
+      <div class="ni" onclick="App.openMature()"><span class="ni-ico">🔞</span>18+ Mature<span class="ni-badge">+18</span></div>
     </div>
-    <div class="nav-section">
-      <div class="nav-label">Tools</div>
-      <div class="nav-item" id="togetherNavBtn">
-        <span class="nav-icon">👥</span> Watch Together
-      </div>
-      <div class="nav-item" id="searchNavBtn">
-        <span class="nav-icon">🔍</span> Search
-      </div>
+    <div class="sb-sec">
+      <span class="sb-lbl">Browse</span>
+      <div class="ni" onclick="loadCategory('top_rated');_setNav(this)" data-cat="top_rated"><span class="ni-ico">⭐</span>Top Rated</div>
+      <div class="ni" onclick="loadCategory('now');_setNav(this)" data-cat="now"><span class="ni-ico">🆕</span>Now In Cinemas</div>
+      <div class="ni" onclick="loadCategory('trending');_setNav(this)" data-cat="trending"><span class="ni-ico">🔥</span>Trending</div>
     </div>
-  </nav>
-  <div class="sidebar-footer">
-    <button class="support-btn" id="supportSidebarBtn">☕ Support Flixora</button>
-  </div>
-</aside>
-
-<!-- TOPBAR -->
-<header class="topbar">
-  <button class="topbar-btn mobile-menu-btn" id="mobileMenuBtn">☰</button>
-  <div class="topbar-search">
-    <span class="search-icon">🔍</span>
-    <input type="text" placeholder="Search movies, shows, anime…" id="searchInput" autocomplete="off">
-  </div>
-  <div class="topbar-actions">
-    <button class="topbar-btn" id="togetherTopBtn" title="Watch Together">
-      👥
-    </button>
-    <button class="topbar-btn" id="supportTopBtn" title="Support Flixora">
-      ☕
-    </button>
-  </div>
-</header>
-
-<!-- MAIN -->
-<main class="main" id="mainContent">
-
-  <!-- HERO -->
-  <section class="hero fade-in">
-    <div class="hero-bg"></div>
-    <div class="hero-shimmer"></div>
-    <div class="hero-grid"></div>
-    <div class="hero-content">
-      <div class="hero-tag"><div class="hero-pulse"></div> Now Streaming</div>
-      <h1>Watch Anything,<br><em>Anywhere</em> — Free.</h1>
-      <p>Movies, TV series, K-Drama, Anime and more. No subscription, no account required. Just press play.</p>
-      <div class="hero-btns">
-        <button class="btn-primary" id="heroPlayBtn">▶ Start Watching</button>
-        <button class="btn-ghost" id="heroBrowseBtn">Browse Library</button>
-      </div>
-    </div>
-    <div class="hero-stats">
-      <div class="hero-stat fade-in fade-in-d1">
-        <div class="hero-stat-num">50K+</div>
-        <div class="hero-stat-label">Titles</div>
-      </div>
-      <div class="hero-stat fade-in fade-in-d2">
-        <div class="hero-stat-num">HD</div>
-        <div class="hero-stat-label">Quality</div>
-      </div>
-      <div class="hero-stat fade-in fade-in-d3">
-        <div class="hero-stat-num">Free</div>
-        <div class="hero-stat-label">Forever</div>
-      </div>
-    </div>
-  </section>
-
-  <!-- GENRE CHIPS -->
-  <div class="genre-bar" id="genreBar">
-    <div class="genre-chip active" data-genre="">✦ All</div>
-    <div class="genre-chip" data-genre="28">Action</div>
-    <div class="genre-chip" data-genre="18">Drama</div>
-    <div class="genre-chip" data-genre="35">Comedy</div>
-    <div class="genre-chip" data-genre="53">Thriller</div>
-    <div class="genre-chip" data-genre="10749">Romance</div>
-    <div class="genre-chip" data-genre="878">Sci-Fi</div>
-    <div class="genre-chip" data-genre="27">Horror</div>
-    <div class="genre-chip" data-genre="14">Fantasy</div>
-    <div class="genre-chip" data-genre="16">Animation</div>
-    <div class="genre-chip" data-genre="99">Documentary</div>
-    <div class="genre-chip" data-genre="80">Crime</div>
-    <div class="genre-chip" data-genre="10402">Music</div>
-    <div class="genre-chip" data-genre="9648">Mystery</div>
-  </div>
-
-  <!-- TRENDING -->
-  <section class="section" id="trendingSection">
-    <div class="section-header">
-      <div class="section-title"><span class="section-title-icon">🔥</span> Trending Now</div>
-      <a class="see-all" href="#" data-section="movies">See All →</a>
-    </div>
-    <div class="carousel-wrap">
-      <button class="carousel-arrow prev" data-target="trendingCarousel">‹</button>
-      <div class="carousel" id="trendingCarousel">
-        <!-- Skeleton placeholders -->
-        <div class="card-skeleton" style="width:160px;flex-shrink:0"></div>
-        <div class="card-skeleton" style="width:160px;flex-shrink:0"></div>
-        <div class="card-skeleton" style="width:160px;flex-shrink:0"></div>
-        <div class="card-skeleton" style="width:160px;flex-shrink:0"></div>
-        <div class="card-skeleton" style="width:160px;flex-shrink:0"></div>
-        <div class="card-skeleton" style="width:160px;flex-shrink:0"></div>
-      </div>
-      <button class="carousel-arrow next" data-target="trendingCarousel">›</button>
-    </div>
-  </section>
-
-  <!-- POPULAR MOVIES -->
-  <section class="section" id="moviesSection">
-    <div class="section-header">
-      <div class="section-title"><span class="section-title-icon">🎬</span> Popular Movies</div>
-      <a class="see-all" href="#">See All →</a>
-    </div>
-    <div class="carousel-wrap">
-      <button class="carousel-arrow prev" data-target="moviesCarousel">‹</button>
-      <div class="carousel" id="moviesCarousel">
-        <div class="card-skeleton" style="width:160px;flex-shrink:0"></div>
-        <div class="card-skeleton" style="width:160px;flex-shrink:0"></div>
-        <div class="card-skeleton" style="width:160px;flex-shrink:0"></div>
-        <div class="card-skeleton" style="width:160px;flex-shrink:0"></div>
-        <div class="card-skeleton" style="width:160px;flex-shrink:0"></div>
-        <div class="card-skeleton" style="width:160px;flex-shrink:0"></div>
-      </div>
-      <button class="carousel-arrow next" data-target="moviesCarousel">›</button>
-    </div>
-  </section>
-
-  <!-- TV SERIES -->
-  <section class="section" id="seriesSection">
-    <div class="section-header">
-      <div class="section-title"><span class="section-title-icon">📺</span> TV Series</div>
-      <a class="see-all" href="#">See All →</a>
-    </div>
-    <div class="carousel-wrap">
-      <button class="carousel-arrow prev" data-target="seriesCarousel">‹</button>
-      <div class="carousel" id="seriesCarousel">
-        <div class="card-skeleton" style="width:160px;flex-shrink:0"></div>
-        <div class="card-skeleton" style="width:160px;flex-shrink:0"></div>
-        <div class="card-skeleton" style="width:160px;flex-shrink:0"></div>
-        <div class="card-skeleton" style="width:160px;flex-shrink:0"></div>
-        <div class="card-skeleton" style="width:160px;flex-shrink:0"></div>
-        <div class="card-skeleton" style="width:160px;flex-shrink:0"></div>
-      </div>
-      <button class="carousel-arrow next" data-target="seriesCarousel">›</button>
-    </div>
-  </section>
-
-  <!-- K-DRAMA -->
-  <section class="section" id="kdramaSection">
-    <div class="section-header">
-      <div class="section-title"><span class="section-title-icon">🇰🇷</span> K-Drama</div>
-      <a class="see-all" href="#">See All →</a>
-    </div>
-    <div class="carousel-wrap">
-      <button class="carousel-arrow prev" data-target="kdramaCarousel">‹</button>
-      <div class="carousel" id="kdramaCarousel">
-        <div class="card-skeleton" style="width:160px;flex-shrink:0"></div>
-        <div class="card-skeleton" style="width:160px;flex-shrink:0"></div>
-        <div class="card-skeleton" style="width:160px;flex-shrink:0"></div>
-        <div class="card-skeleton" style="width:160px;flex-shrink:0"></div>
-        <div class="card-skeleton" style="width:160px;flex-shrink:0"></div>
-      </div>
-      <button class="carousel-arrow next" data-target="kdramaCarousel">›</button>
-    </div>
-  </section>
-
-  <!-- ANIME -->
-  <section class="section" id="animeSection">
-    <div class="section-header">
-      <div class="section-title"><span class="section-title-icon">🎌</span> Anime</div>
-      <a class="see-all" href="#">See All →</a>
-    </div>
-    <div class="carousel-wrap">
-      <button class="carousel-arrow prev" data-target="animeCarousel">‹</button>
-      <div class="carousel" id="animeCarousel">
-        <div class="card-skeleton" style="width:160px;flex-shrink:0"></div>
-        <div class="card-skeleton" style="width:160px;flex-shrink:0"></div>
-        <div class="card-skeleton" style="width:160px;flex-shrink:0"></div>
-        <div class="card-skeleton" style="width:160px;flex-shrink:0"></div>
-        <div class="card-skeleton" style="width:160px;flex-shrink:0"></div>
-      </div>
-      <button class="carousel-arrow next" data-target="animeCarousel">›</button>
-    </div>
-  </section>
-
-</main>
-
-<!-- ── PLAYER MODAL ── -->
-<div class="modal-overlay" id="playerModal">
-  <div class="modal" style="position:relative;">
-    <button class="modal-close" id="playerClose">✕</button>
-    <div class="player-wrap" id="playerWrap">
-      <div class="player-loading" id="playerLoading">
-        <div class="spinner"></div>
-        <span>Loading player…</span>
-      </div>
-      <iframe id="playerFrame" allowfullscreen allow="autoplay; fullscreen" style="display:none;"></iframe>
-    </div>
-    <div class="modal-body">
-      <div class="modal-title" id="modalTitle">—</div>
-      <div class="modal-meta" id="modalMeta">
-        <span class="modal-rating" id="modalRating">★ —</span>
-        <span class="modal-tag" id="modalYear">—</span>
-        <span class="modal-tag" id="modalType">Movie</span>
-      </div>
-      <p class="modal-overview" id="modalOverview">—</p>
-      <div class="server-section">
-        <div class="server-label">Select Server</div>
-        <div class="server-btns" id="serverBtns">
-          <button class="server-btn active" data-server="vidsrc">Server 1</button>
-          <button class="server-btn" data-server="embed">Server 2</button>
-          <button class="server-btn" data-server="2embed">Server 3</button>
-          <button class="server-btn" data-server="smashystream">Server 4</button>
-        </div>
-        <div class="server-tip">💡 If one server doesn't load, try another — most include English subtitles.</div>
-      </div>
-      <div class="watch-actions">
-        <button class="btn-primary" id="watchTogetherBtn">👥 Watch Together</button>
-      </div>
+    <div class="sb-sec">
+      <span class="sb-lbl">Social</span>
+      <div class="ni" onclick="openWT()"><span class="ni-ico">👥</span>Watch Together</div>
+      <div class="ni" onclick="App.openSettings()"><span class="ni-ico">⚙️</span>Settings</div>
     </div>
   </div>
-</div>
-
-<!-- ── AGE GATE MODAL ── -->
-<div class="agegate-overlay" id="agegateOverlay" style="display:none;">
-  <div class="agegate-box" id="agegateStep1">
-    <div class="agegate-icon">🔞</div>
-    <div class="agegate-title">Restricted Content</div>
-    <p class="agegate-desc">This section contains mature content intended for adults only. You must confirm you are 18 years or older to continue.</p>
-    <div class="agegate-check">
-      <input type="checkbox" id="ageConfirm">
-      <label for="ageConfirm">I confirm I am 18 years of age or older</label>
-    </div>
-    <div class="agegate-btns">
-      <button class="btn-primary" id="agegateConfirmBtn">Enter</button>
-      <button class="btn-ghost" id="agegateCancel">Cancel</button>
-    </div>
-  </div>
-</div>
-
-<!-- ── WATCH TOGETHER MODAL ── -->
-<div class="modal-overlay together-modal" id="togetherModal">
-  <div class="modal" style="position:relative;padding:28px;">
-    <button class="modal-close" id="togetherClose" style="position:static;float:right;margin-bottom:8px;">✕</button>
-    <div style="clear:both"></div>
-    <div style="text-align:center;margin-bottom:24px;">
-      <div style="font-size:2rem;margin-bottom:8px;">👥</div>
-      <div style="font-family:'Playfair Display',serif;font-size:1.3rem;font-weight:900;margin-bottom:6px;">Watch Together</div>
-      <div style="color:var(--text2);font-size:0.85rem;">Watch in real-time with friends</div>
-    </div>
-    <div id="togetherHome">
-      <div class="together-options">
-        <div class="together-option" id="createRoomBtn">
-          <div class="together-option-icon">🎬</div>
-          <div class="together-option-title">Create Room</div>
-          <div class="together-option-desc">Start watching with friends</div>
-        </div>
-        <div class="together-option" id="joinRoomBtn">
-          <div class="together-option-icon">🔗</div>
-          <div class="together-option-title">Join Room</div>
-          <div class="together-option-desc">Enter room code to join</div>
-        </div>
-      </div>
-      <button class="btn-ghost" id="togetherCancelBtn" style="width:100%;justify-content:center;">Cancel</button>
-    </div>
-    <div id="togetherCreated" style="display:none;">
-      <div style="color:var(--text2);font-size:0.82rem;margin-bottom:8px;text-align:center;">Share this code with your friends</div>
-      <div class="room-code" id="roomCodeDisplay">—</div>
-      <div class="room-actions" style="margin-bottom:12px;">
-        <button class="btn-ghost" id="copyRoomLink" style="flex:1;justify-content:center;">📋 Copy Link</button>
-        <button class="btn-ghost" style="flex:1;justify-content:center;">📤 Share</button>
-      </div>
-      <button class="btn-primary" id="startWatchingBtn" style="width:100%;justify-content:center;">▶ Start Watching</button>
-    </div>
-    <div id="togetherJoin" style="display:none;">
-      <input type="text" id="joinCodeInput" placeholder="Enter room code (e.g. ABC123)"
-        style="width:100%;padding:12px 16px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);color:var(--text);font-size:1rem;margin-bottom:12px;outline:none;">
-      <button class="btn-primary" id="joinRoomConfirm" style="width:100%;justify-content:center;margin-bottom:8px;">Join Room</button>
-      <button class="btn-ghost" id="joinBackBtn" style="width:100%;justify-content:center;">← Back</button>
-    </div>
-  </div>
-</div>
-
-<!-- ── SUPPORT MODAL ── -->
-<div class="modal-overlay support-modal" id="supportModal">
-  <div class="modal" style="position:relative;">
-    <button class="modal-close" id="supportClose">✕</button>
-    <div class="support-header">
-      <div class="support-icon">☕</div>
-      <div class="support-title">Support Flixora</div>
-      <p class="support-desc">Flixora is free for everyone. If you enjoy watching here, consider buying me a coffee — it keeps the streams going and ads away! 🙏</p>
-    </div>
-    <div class="support-amounts">
-      <div class="amount-btn" data-amount="50">₱50</div>
-      <div class="amount-btn active" data-amount="100">₱100</div>
-      <div class="amount-btn" data-amount="200">₱200</div>
-      <div class="amount-btn" data-amount="500">₱500</div>
-    </div>
-    <div class="support-cta">
-      <a href="https://ko-fi.com" target="_blank" class="btn-primary" style="display:flex;justify-content:center;margin-bottom:10px;">☕ Support on Ko-fi</a>
-      <button class="btn-ghost" id="supportLater" style="width:100%;justify-content:center;">Maybe later</button>
-    </div>
-  </div>
-</div>
-
-<!-- ── INSTALL BANNER ── -->
-<div class="install-banner" id="installBanner">
-  <div class="install-banner-icon">📱</div>
-  <div class="install-banner-text">
-    <div class="install-banner-title">Install Flixora</div>
-    <div class="install-banner-sub">Add to home screen for the best experience</div>
-  </div>
-  <button class="install-btn" id="installBtn">Install</button>
-  <button class="install-close" id="installClose">✕</button>
-</div>
-
-<!-- ── TOAST ── -->
-<div class="toast" id="toast">
-  <span class="toast-icon" id="toastIcon">✅</span>
-  <span id="toastMsg">Copied!</span>
-</div>
-
-<!-- ── BOTTOM NAV ── -->
-<nav class="bottom-nav">
-  <div class="bottom-nav-item active" data-section="home">
-    <span class="bottom-nav-icon">🏠</span> Home
-  </div>
-  <div class="bottom-nav-item" data-section="movies">
-    <span class="bottom-nav-icon">🎬</span> Movies
-  </div>
-  <div class="bottom-nav-item" id="searchNavMobile">
-    <span class="bottom-nav-icon">🔍</span> Search
-  </div>
-  <div class="bottom-nav-item" id="togetherNavMobile">
-    <span class="bottom-nav-icon">👥</span> Together
-  </div>
-  <div class="bottom-nav-item" id="supportNavMobile">
-    <span class="bottom-nav-icon">☕</span> Support
+  <div class="sb-foot">
+    <button class="sb-kofi" onclick="openSupport()">☕ Support Flixora</button>
   </div>
 </nav>
 
+<!-- ═══ TOPBAR ═══ -->
+<header id="topbar">
+  <button class="tb-btn tb-menu" id="menuBtn" onclick="toggleSb()">☰</button>
+  <div class="tb-srch">
+    <span class="tb-sico">🔍</span>
+    <input type="text" id="searchInput" placeholder="Search movies, shows, anime…" autocomplete="off"
+      onkeydown="if(event.key==='Enter')doSearch(1)">
+  </div>
+  <div class="tb-acts">
+    <button class="tb-btn" onclick="openWT()" title="Watch Together">👥</button>
+    <button class="tb-btn" onclick="openSupport()" title="Support">☕</button>
+  </div>
+</header>
+
+<!-- ═══ MAIN ═══ -->
+<div id="mainWrap">
+  <div id="mainContent">
+
+    <!-- HERO -->
+    <section id="hero">
+      <div id="heroBar"></div>
+      <div id="heroDots"></div>
+    </section>
+
+    <!-- GENRES -->
+    <div id="genreBar">
+      <div class="genre-chip active" data-g="all">✦ All</div>
+      <div class="genre-chip" data-g="28">Action</div>
+      <div class="genre-chip" data-g="18">Drama</div>
+      <div class="genre-chip" data-g="35">Comedy</div>
+      <div class="genre-chip" data-g="53">Thriller</div>
+      <div class="genre-chip" data-g="10749">Romance</div>
+      <div class="genre-chip" data-g="878">Sci-Fi</div>
+      <div class="genre-chip" data-g="27">Horror</div>
+      <div class="genre-chip" data-g="14">Fantasy</div>
+      <div class="genre-chip" data-g="16">Animation</div>
+      <div class="genre-chip" data-g="99">Documentary</div>
+      <div class="genre-chip" data-g="80">Crime</div>
+      <div class="genre-chip" data-g="10402">Music</div>
+      <div class="genre-chip" data-g="9648">Mystery</div>
+    </div>
+
+    <!-- TRENDING -->
+    <section class="sec">
+      <div class="sec-hd">
+        <div class="sec-title">🔥 Trending Now</div>
+        <button class="see-all-btn" onclick="loadCategory('trending')">See All →</button>
+      </div>
+      <div class="row-wrap">
+        <button class="row-arrow l" onclick="scrollRow('trendingContent',-650)">‹</button>
+        <div class="row-scroll" id="trendingContent">
+          <div class="skel"><div class="skel-p"></div><div class="skel-t"><div class="skel-l"></div><div class="skel-l s"></div></div></div>
+          <div class="skel"><div class="skel-p"></div><div class="skel-t"><div class="skel-l"></div><div class="skel-l s"></div></div></div>
+          <div class="skel"><div class="skel-p"></div><div class="skel-t"><div class="skel-l"></div><div class="skel-l s"></div></div></div>
+          <div class="skel"><div class="skel-p"></div><div class="skel-t"><div class="skel-l"></div><div class="skel-l s"></div></div></div>
+          <div class="skel"><div class="skel-p"></div><div class="skel-t"><div class="skel-l"></div><div class="skel-l s"></div></div></div>
+          <div class="skel"><div class="skel-p"></div><div class="skel-t"><div class="skel-l"></div><div class="skel-l s"></div></div></div>
+        </div>
+        <button class="row-arrow r" onclick="scrollRow('trendingContent',650)">›</button>
+      </div>
+    </section>
+
+    <!-- MOVIES -->
+    <section class="sec">
+      <div class="sec-hd">
+        <div class="sec-title">🎬 Popular Movies</div>
+        <button class="see-all-btn" onclick="loadCategory('movies')">See All →</button>
+      </div>
+      <div class="row-wrap">
+        <button class="row-arrow l" onclick="scrollRow('moviesContent',-650)">‹</button>
+        <div class="row-scroll" id="moviesContent">
+          <div class="skel"><div class="skel-p"></div><div class="skel-t"><div class="skel-l"></div><div class="skel-l s"></div></div></div>
+          <div class="skel"><div class="skel-p"></div><div class="skel-t"><div class="skel-l"></div><div class="skel-l s"></div></div></div>
+          <div class="skel"><div class="skel-p"></div><div class="skel-t"><div class="skel-l"></div><div class="skel-l s"></div></div></div>
+          <div class="skel"><div class="skel-p"></div><div class="skel-t"><div class="skel-l"></div><div class="skel-l s"></div></div></div>
+          <div class="skel"><div class="skel-p"></div><div class="skel-t"><div class="skel-l"></div><div class="skel-l s"></div></div></div>
+          <div class="skel"><div class="skel-p"></div><div class="skel-t"><div class="skel-l"></div><div class="skel-l s"></div></div></div>
+        </div>
+        <button class="row-arrow r" onclick="scrollRow('moviesContent',650)">›</button>
+      </div>
+    </section>
+
+    <!-- TV -->
+    <section class="sec">
+      <div class="sec-hd">
+        <div class="sec-title">📺 TV Series</div>
+        <button class="see-all-btn" onclick="loadCategory('tv')">See All →</button>
+      </div>
+      <div class="row-wrap">
+        <button class="row-arrow l" onclick="scrollRow('tvContent',-650)">‹</button>
+        <div class="row-scroll" id="tvContent">
+          <div class="skel"><div class="skel-p"></div><div class="skel-t"><div class="skel-l"></div><div class="skel-l s"></div></div></div>
+          <div class="skel"><div class="skel-p"></div><div class="skel-t"><div class="skel-l"></div><div class="skel-l s"></div></div></div>
+          <div class="skel"><div class="skel-p"></div><div class="skel-t"><div class="skel-l"></div><div class="skel-l s"></div></div></div>
+          <div class="skel"><div class="skel-p"></div><div class="skel-t"><div class="skel-l"></div><div class="skel-l s"></div></div></div>
+          <div class="skel"><div class="skel-p"></div><div class="skel-t"><div class="skel-l"></div><div class="skel-l s"></div></div></div>
+          <div class="skel"><div class="skel-p"></div><div class="skel-t"><div class="skel-l"></div><div class="skel-l s"></div></div></div>
+        </div>
+        <button class="row-arrow r" onclick="scrollRow('tvContent',650)">›</button>
+      </div>
+    </section>
+
+    <!-- KDRAMA -->
+    <section class="sec">
+      <div class="sec-hd">
+        <div class="sec-title">🇰🇷 K-Drama</div>
+        <button class="see-all-btn" onclick="loadCategory('kdrama')">See All →</button>
+      </div>
+      <div class="row-wrap">
+        <button class="row-arrow l" onclick="scrollRow('kdramaContent',-650)">‹</button>
+        <div class="row-scroll" id="kdramaContent">
+          <div class="skel"><div class="skel-p"></div><div class="skel-t"><div class="skel-l"></div><div class="skel-l s"></div></div></div>
+          <div class="skel"><div class="skel-p"></div><div class="skel-t"><div class="skel-l"></div><div class="skel-l s"></div></div></div>
+          <div class="skel"><div class="skel-p"></div><div class="skel-t"><div class="skel-l"></div><div class="skel-l s"></div></div></div>
+          <div class="skel"><div class="skel-p"></div><div class="skel-t"><div class="skel-l"></div><div class="skel-l s"></div></div></div>
+          <div class="skel"><div class="skel-p"></div><div class="skel-t"><div class="skel-l"></div><div class="skel-l s"></div></div></div>
+        </div>
+        <button class="row-arrow r" onclick="scrollRow('kdramaContent',650)">›</button>
+      </div>
+    </section>
+
+    <!-- ANIME -->
+    <section class="sec">
+      <div class="sec-hd">
+        <div class="sec-title">🎌 Anime</div>
+        <button class="see-all-btn" onclick="loadCategory('anime')">See All →</button>
+      </div>
+      <div class="row-wrap">
+        <button class="row-arrow l" onclick="scrollRow('animeContent',-650)">‹</button>
+        <div class="row-scroll" id="animeContent">
+          <div class="skel"><div class="skel-p"></div><div class="skel-t"><div class="skel-l"></div><div class="skel-l s"></div></div></div>
+          <div class="skel"><div class="skel-p"></div><div class="skel-t"><div class="skel-l"></div><div class="skel-l s"></div></div></div>
+          <div class="skel"><div class="skel-p"></div><div class="skel-t"><div class="skel-l"></div><div class="skel-l s"></div></div></div>
+          <div class="skel"><div class="skel-p"></div><div class="skel-t"><div class="skel-l"></div><div class="skel-l s"></div></div></div>
+          <div class="skel"><div class="skel-p"></div><div class="skel-t"><div class="skel-l"></div><div class="skel-l s"></div></div></div>
+        </div>
+        <button class="row-arrow r" onclick="scrollRow('animeContent',650)">›</button>
+      </div>
+    </section>
+
+    <!-- 18+ -->
+    <section class="sec" id="section-mature">
+      <div class="sec-hd">
+        <div class="sec-title">🔞 18+ Mature</div>
+      </div>
+      <div class="row-wrap">
+        <div class="row-scroll" id="matureContent"></div>
+      </div>
+    </section>
+
+  </div><!-- /mainContent -->
+
+  <!-- RESULTS -->
+  <div id="searchResultsContainer">
+    <div id="searchInfo">
+      <div id="searchTitle"></div>
+      <div id="searchCount"></div>
+    </div>
+    <div id="sf-results-wrap"></div>
+    <div id="pagination"></div>
+  </div>
+</div>
+
+<!-- ═══ PLAYER ═══ -->
+<div id="playerModal">
+  <div class="p-box">
+    <button id="playerClose" onclick="closePlayer()">✕</button>
+    <div id="playerVideo">
+      <div class="p-spin"><div class="spinner"></div><span>Loading player…</span></div>
+    </div>
+    <!-- Chat -->
+    <div id="chatPanel">
+      <div class="ch-hd"><span>💬 Live Chat</span><button onclick="toggleChatPanel()">✕</button></div>
+      <div id="chatMessages"><span style="color:var(--tx3);font-style:italic">Share the room to chat…</span></div>
+      <div class="ch-inp">
+        <input type="text" id="chatInput" placeholder="Message…" onkeydown="if(event.key==='Enter')_sendChat()">
+        <button onclick="_sendChat()">➤</button>
+      </div>
+    </div>
+    <div class="p-meta">
+      <div id="playerTitle">—</div>
+      <!-- Episode panel (populated by episode-feature.js) -->
+      <div id="episodePanel">
+        <div class="ep-lbl">Season &amp; Episode</div>
+        <select id="seasonSelect"></select>
+        <select id="episodeSelect"></select>
+      </div>
+      <div class="srv-lbl" style="margin-top:14px">Select Server</div>
+      <div id="serverButtons"></div>
+      <div class="srv-tip">💡 Servers 1 &amp; 2 have fewest ads. All support English subtitles (CC).</div>
+      <div class="p-acts">
+        <button class="btn-tog" onclick="openWT()">👥 Watch Together</button>
+        <button class="btn-tog" onclick="toggleChatPanel()">💬 Live Chat</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ 18+ VERIFY ═══ -->
+<div id="verifyModal">
+  <div class="v-box">
+    <div class="v-ico">🔞</div>
+    <div class="v-title">Restricted Content</div>
+    <p class="v-desc">This section contains mature content for adults only. Please confirm your age.</p>
+    <div id="vs1" class="on">
+      <div class="v-chk">
+        <input type="checkbox" id="ageCheckbox">
+        <label for="ageCheckbox">I confirm I am 18 years of age or older</label>
+      </div>
+      <div class="v-btns">
+        <button class="btn-red" onclick="verifyAge()">✓ Enter</button>
+        <button class="btn-ghost" onclick="closeVerify()">Cancel</button>
+      </div>
+      <div style="margin-top:14px;text-align:center">
+        <button style="font-size:.8rem;color:var(--tx2);cursor:pointer" onclick="App.showPin()">🔐 Use Parental PIN instead</button>
+      </div>
+    </div>
+    <div id="vs2">
+      <p style="font-size:.82rem;color:var(--tx2);margin-bottom:14px">Enter your 4-digit parental PIN</p>
+      <div class="pin-row">
+        <input class="pin-d" type="password" inputmode="numeric" maxlength="1">
+        <input class="pin-d" type="password" inputmode="numeric" maxlength="1">
+        <input class="pin-d" type="password" inputmode="numeric" maxlength="1">
+        <input class="pin-d" type="password" inputmode="numeric" maxlength="1">
+      </div>
+      <div id="pinErr"></div>
+      <div class="v-btns">
+        <button class="btn-red" onclick="verifyPin()">Unlock</button>
+        <button class="btn-ghost" onclick="App.showAge()">← Back</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ WATCH TOGETHER ═══ -->
+<div id="watchTogetherMenu">
+  <div class="wt-box">
+    <div class="wt-hd">
+      <div style="font-size:2rem;margin-bottom:8px">👥</div>
+      <h2>Watch Together</h2>
+      <p>Watch in real-time with friends</p>
+    </div>
+    <div id="wtHome">
+      <div class="wt-opts">
+        <div class="wt-opt" onclick="_createRoom()">
+          <div class="wt-opt-ico">🎬</div>
+          <div class="wt-opt-name">Create Room</div>
+          <div class="wt-opt-desc">Start watching with friends</div>
+        </div>
+        <div class="wt-opt" onclick="showJoinRoomDialog()">
+          <div class="wt-opt-ico">🔗</div>
+          <div class="wt-opt-name">Join Room</div>
+          <div class="wt-opt-desc">Enter room code to join</div>
+        </div>
+      </div>
+      <button class="btn-ghost" style="width:100%;justify-content:center" onclick="closeWatchTogetherMenu()">Cancel</button>
+    </div>
+    <div id="wtCreated" style="display:none">
+      <p style="font-size:.8rem;color:var(--tx2);text-align:center;margin-bottom:8px">Share this code with friends</p>
+      <div class="room-code" id="roomCodeDisplay">—</div>
+      <div class="rc-acts">
+        <button class="btn-ghost" style="justify-content:center" onclick="_copyRoom()">📋 Copy Link</button>
+        <button class="btn-ghost" style="justify-content:center" onclick="_shareRoom()">📤 Share</button>
+      </div>
+      <button class="btn-red" style="width:100%;padding:11px" onclick="_startWT()">▶ Start Watching</button>
+    </div>
+  </div>
+</div>
+
+<!-- JOIN ROOM -->
+<div id="joinRoomModal">
+  <div class="wt-box">
+    <div class="wt-hd">
+      <div style="font-size:2rem;margin-bottom:8px">🔗</div>
+      <h2>Join Room</h2>
+      <p>Enter the 6-letter room code</p>
+    </div>
+    <input type="text" class="join-inp" id="joinCodeInput" placeholder="ABC123" maxlength="6">
+    <button class="btn-red" style="width:100%;padding:11px;margin-bottom:8px" onclick="_joinRoom()">Join Room</button>
+    <button class="btn-ghost" style="width:100%;justify-content:center" onclick="closeJoinRoomDialog()">← Back</button>
+  </div>
+</div>
+
+<!-- ═══ SUPPORT ═══ -->
+<div id="supportModal">
+  <div class="sp-box">
+    <button style="position:absolute;top:14px;right:14px;color:var(--tx2);font-size:1.1rem;cursor:pointer;z-index:2;background:none;border:none" onclick="closeSupport()">✕</button>
+    <div class="sp-hd">
+      <div class="sp-ico">☕</div>
+      <h2>Support Flixora</h2>
+      <p>Flixora is free for everyone. If you enjoy it here, consider buying me a coffee — it keeps the streams going! 🙏</p>
+    </div>
+    <div class="sp-amts">
+      <div class="amt" data-a="50">₱50</div>
+      <div class="amt active" data-a="100">₱100</div>
+      <div class="amt" data-a="200">₱200</div>
+      <div class="amt" data-a="500">₱500</div>
+    </div>
+    <div class="sp-cta">
+      <a href="https://ko-fi.com" target="_blank" rel="noopener">☕ Support on Ko-fi</a>
+      <button onclick="closeSupport()">Maybe later</button>
+    </div>
+  </div>
+</div>
+
+<!-- INSTALL BANNER -->
+<div id="installBanner">
+  <div class="ib-ico">📱</div>
+  <div class="ib-tx">
+    <div class="ib-title">Install Flixora</div>
+    <div class="ib-sub">Add to home screen for the best experience</div>
+  </div>
+  <button id="installBtn">Install</button>
+  <button id="closeBanner">✕</button>
+</div>
+
+<!-- TOAST -->
+<div id="toast"><span id="toastIcon">✅</span> <span id="toastMsg">Done!</span></div>
+
+<!-- BOTTOM NAV -->
+<nav id="bottomNav">
+  <div class="bni active" id="bn-home" onclick="goHome();_setNavBni('home')"><span class="bni-ico">🏠</span>Home</div>
+  <div class="bni" id="bn-movies" onclick="loadCategory('movies');_setNavBni('movies')"><span class="bni-ico">🎬</span>Movies</div>
+  <div class="bni" id="bn-search" onclick="document.getElementById('searchInput').focus()"><span class="bni-ico">🔍</span>Search</div>
+  <div class="bni" id="bn-together" onclick="openWT()"><span class="bni-ico">👥</span>Together</div>
+  <div class="bni" id="bn-support" onclick="openSupport()"><span class="bni-ico">☕</span>Support</div>
+</nav>
+
+<!-- ═══ SCRIPTS ═══ -->
+<script src="adblock.js" onerror="console.warn('adblock.js not found')"></script>
+<script src="app.js"></script>
+<script src="episode-feature.js" onerror="console.warn('episode-feature.js not found')"></script>
+<script src="watch-together/room-manager.js" onerror="console.warn('room-manager.js not found')"></script>
+
 <script>
-/* ─────────────────────────────────────────────
-   FLIXORA — Main App Script
-   Uses TMDB API for real content
-─────────────────────────────────────────────── */
+/* ────────────────────────────────────────────
+   UI GLUE — wraps app.js seamlessly
+───────────────────────────────────────────── */
 
-const TMDB_KEY = '4a7592e62e3b8d4ea27b32f71c8a1e3e'; // public demo key
-const TMDB = 'https://api.themoviedb.org/3';
-const IMG = 'https://image.tmdb.org/t/p/w342';
+/* Sidebar */
+function toggleSb(){document.getElementById('sidebar').classList.toggle('open');document.getElementById('sbOv').classList.toggle('on');}
+function closeSb(){document.getElementById('sidebar').classList.remove('open');document.getElementById('sbOv').classList.remove('on');}
+document.getElementById('sbOv').onclick=closeSb;
+function _setNav(el){document.querySelectorAll('.ni').forEach(n=>n.classList.remove('active'));el.classList.add('active');closeSb();}
+function _setNavBni(id){document.querySelectorAll('.bni').forEach(b=>b.classList.remove('active'));const el=document.getElementById('bn-'+id);if(el)el.classList.add('active');}
 
-// ── State ──
-let currentItem = null;
-let currentServer = 'vidsrc';
-let ageVerified = localStorage.getItem('flixora_age_verified') === 'true';
+/* Toast */
+window.showToast=function(msg,icon='✅',ms=2600){
+  const t=document.getElementById('toast');
+  document.getElementById('toastMsg').textContent=msg;
+  document.getElementById('toastIcon').textContent=icon;
+  t.classList.add('show');clearTimeout(t._t);
+  t._t=setTimeout(()=>t.classList.remove('show'),ms);
+};
 
-// ── Toast ──
-function showToast(msg, icon='✅', dur=2500) {
-  const t = document.getElementById('toast');
-  const tm = document.getElementById('toastMsg');
-  const ti = document.getElementById('toastIcon');
-  tm.textContent = msg;
-  ti.textContent = icon;
-  t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), dur);
+/* Support */
+function openSupport(){document.getElementById('supportModal').style.display='flex';requestAnimationFrame(()=>document.getElementById('supportModal').classList.add('open'));}
+function closeSupport(){document.getElementById('supportModal').classList.remove('open');setTimeout(()=>{document.getElementById('supportModal').style.display='none';},300);}
+document.getElementById('supportModal').onclick=e=>{if(e.target===document.getElementById('supportModal'))closeSupport();};
+document.querySelectorAll('.amt').forEach(b=>{b.onclick=()=>{document.querySelectorAll('.amt').forEach(x=>x.classList.remove('active'));b.classList.add('active');};});
+
+/* Watch Together */
+function openWT(){document.getElementById('watchTogetherMenu').style.display='flex';document.getElementById('watchTogetherMenu').classList.add('open');}
+function _closeWT(){document.getElementById('watchTogetherMenu').classList.remove('open');setTimeout(()=>{document.getElementById('watchTogetherMenu').style.display='none';document.getElementById('wtHome').style.display='';document.getElementById('wtCreated').style.display='none';},250);}
+window.closeWatchTogetherMenu=_closeWT;
+window.showWatchTogetherMenu=openWT;
+document.getElementById('watchTogetherMenu').onclick=e=>{if(e.target===document.getElementById('watchTogetherMenu'))_closeWT();};
+
+function _createRoom(){
+  const code=Math.random().toString(36).substring(2,8).toUpperCase();
+  document.getElementById('roomCodeDisplay').textContent=code;
+  document.getElementById('wtHome').style.display='none';
+  document.getElementById('wtCreated').style.display='';
+}
+function _copyRoom(){
+  const code=document.getElementById('roomCodeDisplay').textContent;
+  navigator.clipboard.writeText(location.origin+location.pathname+'?room='+code).then(()=>showToast('Room link copied!','📋')).catch(()=>showToast('Code: '+code,'📋',4000));
+}
+function _shareRoom(){
+  const code=document.getElementById('roomCodeDisplay').textContent;
+  if(navigator.share)navigator.share({title:'Watch on Flixora',text:'Join my room!',url:location.href+'?room='+code});else _copyRoom();
+}
+function _startWT(){_closeWT();showToast('Room ready — share the code! 🎉','🎉');}
+
+/* Join Room */
+window.showJoinRoomDialog=function(){document.getElementById('joinRoomModal').style.display='flex';document.getElementById('joinRoomModal').classList.add('open');};
+window.closeJoinRoomDialog=function(){document.getElementById('joinRoomModal').classList.remove('open');setTimeout(()=>{document.getElementById('joinRoomModal').style.display='none';document.getElementById('joinCodeInput').value='';},250);};
+document.getElementById('joinRoomModal').onclick=e=>{if(e.target===document.getElementById('joinRoomModal'))closeJoinRoomDialog();};
+function _joinRoom(){
+  const code=document.getElementById('joinCodeInput').value.trim().toUpperCase();
+  if(!code){showToast('Please enter a room code','⚠️');return;}
+  closeJoinRoomDialog();_closeWT();showToast('Joined room '+code+'!','✅');
 }
 
-// ── Fetch TMDB ──
-async function tmdb(path, params='') {
-  try {
-    const res = await fetch(`${TMDB}${path}?api_key=${TMDB_KEY}&${params}`);
-    if (!res.ok) throw new Error(res.status);
-    return await res.json();
-  } catch(e) {
-    return null;
-  }
+/* Chat */
+function _sendChat(){
+  const inp=document.getElementById('chatInput');
+  const msg=inp.value.trim();if(!msg)return;
+  const box=document.getElementById('chatMessages');
+  const d=document.createElement('div');
+  d.innerHTML=`<span style="color:var(--red2);font-weight:600">You:</span> `+msg;
+  box.appendChild(d);box.scrollTop=box.scrollHeight;inp.value='';
 }
 
-// ── Render card ──
-function renderCard(item, type='movie', badge='') {
-  const title = item.title || item.name || 'Unknown';
-  const year = (item.release_date || item.first_air_date || '').slice(0,4);
-  const rating = item.vote_average ? item.vote_average.toFixed(1) : '—';
-  const poster = item.poster_path ? `${IMG}${item.poster_path}` : '';
+/* Install — delayed 45s */
+setTimeout(()=>{
+  const b=document.getElementById('installBanner');
+  if(!localStorage.getItem('sf_installed')&&!window.matchMedia('(display-mode:standalone)').matches)b.classList.add('show');
+},45000);
 
-  const div = document.createElement('div');
-  div.className = 'media-card';
-  div.innerHTML = `
-    ${badge ? `<div class="card-badge-wrap"><span class="badge-pill ${badge.cls}">${badge.label}</span></div>` : ''}
-    ${poster
-      ? `<img class="card-poster" src="${poster}" alt="${title}" loading="lazy" onerror="this.style.background='var(--bg4)'">`
-      : `<div class="card-poster" style="background:var(--bg4);display:flex;align-items:center;justify-content:center;color:var(--text3);font-size:2rem;">🎬</div>`
-    }
-    <div class="card-overlay">
-      <div class="card-play">▶</div>
-      <div class="card-title">${title}</div>
-      <div class="card-meta">
-        <span class="card-rating">★ ${rating}</span>
-        ${year ? `<span>${year}</span>` : ''}
-      </div>
-    </div>
-    <div class="card-info">
-      <div class="card-info-title">${title}</div>
-      <div class="card-info-meta">
-        <span class="card-rating">★ ${rating}</span>
-        ${year ? `<span>${year}</span>` : ''}
-      </div>
-    </div>
-  `;
-  div.addEventListener('click', () => openPlayer(item, type));
-  return div;
-}
+/* Player spinner — ensure it shows while loading */
+const _origSetServer=window.setServer;
+window.setServer=function(idx,data){
+  const pv=document.getElementById('playerVideo');
+  if(pv){pv.querySelectorAll('iframe').forEach(f=>f.remove());let sp=pv.querySelector('.p-spin');if(!sp){sp=document.createElement('div');sp.className='p-spin';sp.innerHTML='<div class="spinner"></div><span>Loading player…</span>';pv.appendChild(sp);}sp.style.display='flex';}
+  if(typeof _origSetServer==='function')_origSetServer(idx,data);
+  setTimeout(()=>{const sp=pv?.querySelector('.p-spin');if(sp)sp.style.display='none';},3500);
+};
 
-// ── Load carousel ──
-async function loadCarousel(id, data, type='movie', badgeFn=null) {
-  const el = document.getElementById(id);
-  if (!el || !data) {
-    if(el) renderEmptyState(el);
-    return;
-  }
-  el.innerHTML = '';
-  const items = data.results || [];
-  if (!items.length) { renderEmptyState(el); return; }
-  items.slice(0, 12).forEach((item, i) => {
-    const badge = badgeFn ? badgeFn(item, i) : null;
-    el.appendChild(renderCard(item, type, badge));
-  });
-}
-
-function renderEmptyState(container) {
-  container.innerHTML = `<div class="empty-state" style="width:100%;">
-    <div class="empty-icon">🎬</div>
-    <div class="empty-title">Nothing here yet</div>
-    <div class="empty-desc">Content couldn't load. Please check your connection.</div>
-    <button class="retry-btn" onclick="initAll()">Try again</button>
-  </div>`;
-}
-
-// ── Open player ──
-function openPlayer(item, type='movie') {
-  currentItem = { ...item, mediaType: type };
-  const title = item.title || item.name;
-  const year = (item.release_date || item.first_air_date || '').slice(0,4);
-  const rating = item.vote_average ? item.vote_average.toFixed(1) : '—';
-
-  document.getElementById('modalTitle').textContent = title;
-  document.getElementById('modalYear').textContent = year;
-  document.getElementById('modalType').textContent = type === 'movie' ? 'Movie' : 'TV Series';
-  document.getElementById('modalRating').textContent = `★ ${rating}`;
-  document.getElementById('modalOverview').textContent = item.overview || 'No description available.';
-
-  loadPlayerServer(currentServer);
-  document.getElementById('playerModal').classList.add('open');
-  document.body.style.overflow = 'hidden';
-}
-
-function getPlayerUrl(server, item) {
-  const id = item.id;
-  const type = item.mediaType === 'movie' ? 'movie' : 'tv';
-  const servers = {
-    vidsrc: `https://vidsrc.to/embed/${type}/${id}`,
-    embed: `https://www.2embed.cc/embed/${id}`,
-    '2embed': `https://www.2embed.to/embed/tmdb/${type}?id=${id}`,
-    smashystream: `https://embed.smashystream.com/playere.php?tmdb=${id}&type=${type}`
-  };
-  return servers[server] || servers.vidsrc;
-}
-
-function loadPlayerServer(server) {
-  currentServer = server;
-  document.querySelectorAll('.server-btn').forEach(b => {
-    b.classList.toggle('active', b.dataset.server === server);
-  });
-  const frame = document.getElementById('playerFrame');
-  const loading = document.getElementById('playerLoading');
-  frame.style.display = 'none';
-  loading.style.display = 'flex';
-  if (!currentItem) return;
-  const url = getPlayerUrl(server, currentItem);
-  frame.src = url;
-  frame.onload = () => { loading.style.display='none'; frame.style.display='block'; };
-  setTimeout(() => { loading.style.display='none'; frame.style.display='block'; }, 4000);
-}
-
-function closePlayer() {
-  document.getElementById('playerModal').classList.remove('open');
-  document.getElementById('playerFrame').src = '';
-  document.getElementById('playerFrame').style.display = 'none';
-  document.getElementById('playerLoading').style.display = 'flex';
-  document.body.style.overflow = '';
-}
-
-// ── Modal helpers ──
-function openModal(id) {
-  document.getElementById(id).classList.add('open');
-  document.body.style.overflow = 'hidden';
-}
-function closeModal(id) {
-  document.getElementById(id).classList.remove('open');
-  document.body.style.overflow = '';
-}
-
-// ── Age gate ──
-function openAgeGate() {
-  document.getElementById('agegateOverlay').style.display = 'flex';
-}
-function closeAgeGate() {
-  document.getElementById('agegateOverlay').style.display = 'none';
-}
-
-// ── Watch Together ──
-function generateCode() {
-  return Math.random().toString(36).substring(2,8).toUpperCase();
-}
-
-// ── Carousel scroll ──
-document.querySelectorAll('.carousel-arrow').forEach(btn => {
-  btn.addEventListener('click', () => {
-    const target = document.getElementById(btn.dataset.target);
-    if (!target) return;
-    const scroll = target.clientWidth * 0.8;
-    target.scrollBy({ left: btn.classList.contains('prev') ? -scroll : scroll, behavior:'smooth' });
-  });
+/* ESC closes everything */
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape'){closeSupport();_closeWT();closeJoinRoomDialog();}
 });
 
-// ── Genre chips ──
-document.querySelectorAll('.genre-chip').forEach(chip => {
-  chip.addEventListener('click', async () => {
-    document.querySelectorAll('.genre-chip').forEach(c => c.classList.remove('active'));
-    chip.classList.add('active');
-    const genre = chip.dataset.genre;
-    const param = genre ? `with_genres=${genre}` : '';
-    const [movies, series] = await Promise.all([
-      tmdb('/discover/movie', `${param}&sort_by=popularity.desc`),
-      tmdb('/discover/tv', `${param}&sort_by=popularity.desc`)
-    ]);
-    loadCarousel('moviesCarousel', movies, 'movie');
-    loadCarousel('seriesCarousel', series, 'tv');
-  });
-});
+/* Active nav sync when app.js calls setNavActive */
+const _origSetNavActive=window.setNavActive;
+window.setNavActive=function(cat){
+  if(typeof _origSetNavActive==='function')_origSetNavActive(cat);
+  document.querySelectorAll('.ni[data-cat]').forEach(n=>n.classList.toggle('active',n.dataset.cat===cat));
+};
 
-// ── Server buttons ──
-document.querySelectorAll('.server-btn').forEach(btn => {
-  btn.addEventListener('click', () => loadPlayerServer(btn.dataset.server));
-});
-
-// ── Player close ──
-document.getElementById('playerClose').addEventListener('click', closePlayer);
-document.getElementById('playerModal').addEventListener('click', e => {
-  if (e.target === document.getElementById('playerModal')) closePlayer();
-});
-
-// ── Age gate logic ──
-document.getElementById('adultNav').addEventListener('click', () => {
-  if (ageVerified) { showToast('18+ section — loading…', '🔞'); return; }
-  openAgeGate();
-});
-document.getElementById('agegateConfirmBtn').addEventListener('click', () => {
-  if (!document.getElementById('ageConfirm').checked) {
-    showToast('Please check the confirmation box.', '⚠️'); return;
-  }
-  ageVerified = true;
-  localStorage.setItem('flixora_age_verified', 'true');
-  closeAgeGate();
-  showToast('Access granted. Please enjoy responsibly.', '✅');
-});
-document.getElementById('agegateCancel').addEventListener('click', closeAgeGate);
-
-// ── Together modal ──
-function openTogetherModal() { openModal('togetherModal'); }
-function closeTogetherModal() {
-  closeModal('togetherModal');
-  document.getElementById('togetherHome').style.display = '';
-  document.getElementById('togetherCreated').style.display = 'none';
-  document.getElementById('togetherJoin').style.display = 'none';
-}
-document.getElementById('togetherTopBtn').addEventListener('click', openTogetherModal);
-document.getElementById('togetherNavBtn').addEventListener('click', openTogetherModal);
-document.getElementById('togetherNavMobile')?.addEventListener('click', openTogetherModal);
-document.getElementById('togetherClose').addEventListener('click', closeTogetherModal);
-document.getElementById('togetherCancelBtn').addEventListener('click', closeTogetherModal);
-document.getElementById('watchTogetherBtn').addEventListener('click', () => {
-  closePlayer();
-  openTogetherModal();
-});
-
-document.getElementById('createRoomBtn').addEventListener('click', () => {
-  const code = generateCode();
-  document.getElementById('roomCodeDisplay').textContent = code;
-  document.getElementById('togetherHome').style.display = 'none';
-  document.getElementById('togetherCreated').style.display = '';
-});
-document.getElementById('joinRoomBtn').addEventListener('click', () => {
-  document.getElementById('togetherHome').style.display = 'none';
-  document.getElementById('togetherJoin').style.display = '';
-});
-document.getElementById('joinBackBtn').addEventListener('click', () => {
-  document.getElementById('togetherHome').style.display = '';
-  document.getElementById('togetherJoin').style.display = 'none';
-});
-document.getElementById('startWatchingBtn').addEventListener('click', () => {
-  closeTogetherModal();
-  showToast('Room ready! Share the code with friends.', '🎉');
-});
-document.getElementById('joinRoomConfirm').addEventListener('click', () => {
-  const code = document.getElementById('joinCodeInput').value.trim().toUpperCase();
-  if (!code) { showToast('Please enter a room code.','⚠️'); return; }
-  closeTogetherModal();
-  showToast(`Joined room ${code}!`, '✅');
-});
-document.getElementById('copyRoomLink').addEventListener('click', () => {
-  const code = document.getElementById('roomCodeDisplay').textContent;
-  navigator.clipboard.writeText(`${location.href}?room=${code}`).then(() => showToast('Link copied!','📋'));
-});
-document.getElementById('togetherModal').addEventListener('click', e => {
-  if (e.target === document.getElementById('togetherModal')) closeTogetherModal();
-});
-
-// ── Support modal ──
-function openSupportModal() { openModal('supportModal'); }
-function closeSupportModal() { closeModal('supportModal'); }
-[document.getElementById('supportTopBtn'), document.getElementById('supportSidebarBtn'),
- document.getElementById('supportNavMobile')].forEach(btn => {
-  if(btn) btn.addEventListener('click', openSupportModal);
-});
-document.getElementById('supportClose').addEventListener('click', closeSupportModal);
-document.getElementById('supportLater').addEventListener('click', closeSupportModal);
-document.getElementById('supportModal').addEventListener('click', e => {
-  if (e.target === document.getElementById('supportModal')) closeSupportModal();
-});
-document.querySelectorAll('.amount-btn').forEach(btn => {
-  btn.addEventListener('click', () => {
-    document.querySelectorAll('.amount-btn').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-  });
-});
-
-// ── Mobile menu ──
-document.getElementById('mobileMenuBtn').addEventListener('click', () => {
-  document.getElementById('sidebar').classList.toggle('open');
-  document.getElementById('sidebarOverlay').classList.toggle('show');
-});
-document.getElementById('sidebarOverlay').addEventListener('click', () => {
-  document.getElementById('sidebar').classList.remove('open');
-  document.getElementById('sidebarOverlay').classList.remove('show');
-});
-
-// ── Install banner — delayed 45s ──
-let deferredPrompt;
-window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); deferredPrompt = e; });
-setTimeout(() => {
-  const banner = document.getElementById('installBanner');
-  if (!window.matchMedia('(display-mode: standalone)').matches) {
-    banner.classList.add('show');
-  }
-}, 45000);
-document.getElementById('installBtn').addEventListener('click', async () => {
-  document.getElementById('installBanner').classList.remove('show');
-  if (deferredPrompt) { deferredPrompt.prompt(); }
-  else { showToast('Open browser menu → "Add to Home Screen"', '📱', 4000); }
-});
-document.getElementById('installClose').addEventListener('click', () => {
-  document.getElementById('installBanner').classList.remove('show');
-});
-
-// ── Hero buttons ──
-document.getElementById('heroPlayBtn').addEventListener('click', () => {
-  document.getElementById('trendingCarousel').scrollIntoView({ behavior:'smooth', block:'center' });
-});
-document.getElementById('heroBrowseBtn').addEventListener('click', () => {
-  document.getElementById('moviesSection').scrollIntoView({ behavior:'smooth' });
-});
-
-// ── Search ──
-let searchTimeout;
-document.getElementById('searchInput').addEventListener('input', e => {
-  clearTimeout(searchTimeout);
-  const q = e.target.value.trim();
-  if (!q) return;
-  searchTimeout = setTimeout(async () => {
-    const data = await tmdb('/search/multi', `query=${encodeURIComponent(q)}`);
-    if (!data) return;
-    const trending = document.getElementById('trendingCarousel');
-    trending.innerHTML = '';
-    const items = (data.results||[]).filter(r => r.media_type !== 'person');
-    if (!items.length) { renderEmptyState(trending); return; }
-    items.slice(0,12).forEach(item => {
-      trending.appendChild(renderCard(item, item.media_type || 'movie'));
-    });
-    document.getElementById('trendingSection').scrollIntoView({ behavior:'smooth' });
-  }, 500);
-});
-
-// ── Init all content ──
-async function initAll() {
-  const [trending, movies, series, kdrama, anime] = await Promise.all([
-    tmdb('/trending/all/week'),
-    tmdb('/movie/popular', 'region=PH'),
-    tmdb('/tv/popular'),
-    tmdb('/discover/tv', 'with_origin_country=KR&sort_by=popularity.desc'),
-    tmdb('/discover/tv', 'with_genres=16&with_keywords=210024&sort_by=popularity.desc')
-  ]);
-
-  loadCarousel('trendingCarousel', trending, 'movie', (item, i) => {
-    if (i === 0) return { cls:'badge-hot', label:'🔥 Hot' };
-    if (i < 3) return { cls:'badge-top', label:'Top 10' };
-    if (item.vote_average >= 8) return { cls:'badge-new', label:'⭐ Top Rated' };
-    return null;
-  });
-
-  loadCarousel('moviesCarousel', movies, 'movie', (item, i) => {
-    if (i < 3) return { cls:'badge-top', label:'#' + (i+1) };
-    return null;
-  });
-
-  loadCarousel('seriesCarousel', series, 'tv', (item) => {
-    if (item.vote_average >= 8) return { cls:'badge-new', label:'Top Rated' };
-    return null;
-  });
-
-  loadCarousel('kdramaCarousel', kdrama, 'tv', (item, i) => {
-    if (i === 0) return { cls:'badge-hot', label:'🔥 Hot' };
-    return null;
-  });
-
-  loadCarousel('animeCarousel', anime, 'tv');
-}
-
-// ── Bottom nav active ──
-document.querySelectorAll('.bottom-nav-item[data-section],.nav-item[data-section]').forEach(item => {
-  item.addEventListener('click', () => {
-    document.querySelectorAll('.nav-item[data-section]').forEach(n => n.classList.remove('active'));
-    document.querySelectorAll('.bottom-nav-item').forEach(n => n.classList.remove('active'));
-    item.classList.add('active');
-    const twin = document.querySelector(`.bottom-nav-item[data-section="${item.dataset.section}"]`);
-    if (twin) twin.classList.add('active');
-    const navTwin = document.querySelector(`.nav-item[data-section="${item.dataset.section}"]`);
-    if (navTwin) navTwin.classList.add('active');
-    // Close mobile sidebar
-    document.getElementById('sidebar').classList.remove('open');
-    document.getElementById('sidebarOverlay').classList.remove('show');
-  });
-});
-
-// ── Boot ──
-document.addEventListener('DOMContentLoaded', initAll);
+console.log('%c✅ FLIXORA UI ready','color:#e63946;font-weight:900;font-size:14px');
 </script>
 </body>
 </html>
