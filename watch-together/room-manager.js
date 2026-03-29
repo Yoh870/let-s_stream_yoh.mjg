@@ -1,3 +1,13 @@
+const firebaseConfig = {
+  apiKey: "AIzaSyBoBMQHx9nxhOgdYKX9x7M5kCrIKRxZ5gg",
+  authDomain: "streamflix-watch-together.firebaseapp.com",
+  databaseURL: "https://streamflix-watch-together-default-rtdb.firebaseio.com",
+  projectId: "streamflix-watch-together",
+  storageBucket: "streamflix-watch-together.firebasestorage.app",
+  messagingSenderId: "626707913714",
+  appId: "1:626707913714:web:2dc18c5480043f0b8e696b",
+  measurementId: "G-7THK0ZDBFC"
+};
 // ===========================
 // STREAMFLIX WATCH TOGETHER - ROOM MANAGEMENT
 // ===========================
