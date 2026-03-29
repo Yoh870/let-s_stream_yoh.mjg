@@ -690,18 +690,11 @@ function _destroyRoomHUD() {
 }
 
 function _ensureNameBar() {
-  if (_wtQs('#wt-name-bar')) return;
-  const cp = _wtQs('#chatPanel');
-  if (!cp) return;
-  const bar = document.createElement('div');
-  bar.id = 'wt-name-bar';
-  bar.classList.add('show');
-  bar.innerHTML = `
-    <span style="font-size:.72rem;color:#9898b0;white-space:nowrap">Your name:</span>
-    <input id="wt-name-inp" value="${_esc(WT.userName)}" maxlength="20" placeholder="Your name">
-    <button id="wt-name-save" onclick="_saveWTName()">Save</button>
-  `;
-  cp.appendChild(bar);
+  // Name bar removed from chat panel — it blocked the input.
+  // Name is shown in viewer panel instead.
+  // Just patch the chat send button label with user name.
+  const hd = _wtQs('.ch-hd span');
+  if (hd) hd.textContent = `💬 Chat — ${WT.userName}`;
 }
 
 function _saveWTName() {
@@ -714,10 +707,35 @@ function _saveWTName() {
 }
 
 function _patchChatInput() {
-  // Override _sendChat globally
-  window._sendChat = function() {
-    const inp = _wtQs('#chatInput');
-    const msg = (inp?.value || '').trim();
+  // ── Rebuild the entire ch-inp area for reliability ──
+  const chatPanel = _wtQs('#chatPanel');
+  if (!chatPanel) return;
+
+  // Remove old ch-inp if exists
+  const oldInp = chatPanel.querySelector('.ch-inp');
+  if (oldInp) oldInp.remove();
+
+  // Also remove stale name bar
+  _wtQs('#wt-name-bar')?.remove();
+
+  // Build fresh chat input row
+  const row = document.createElement('div');
+  row.className = 'ch-inp';
+  row.style.cssText = 'display:flex;gap:6px;padding:10px;border-top:1px solid rgba(255,255,255,.08);flex-shrink:0';
+  row.innerHTML = `
+    <input id="wt-chat-inp" type="text" placeholder="Type a message…"
+      style="flex:1;padding:8px 11px;border-radius:8px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);color:#fff;font-size:.82rem;font-family:inherit;outline:none"
+      maxlength="200">
+    <button id="wt-chat-send"
+      style="padding:8px 13px;border-radius:8px;background:#e63946;color:#fff;font-size:.82rem;font-weight:700;cursor:pointer;border:none;flex-shrink:0">➤</button>
+  `;
+  chatPanel.appendChild(row);
+
+  const inp  = row.querySelector('#wt-chat-inp');
+  const send = row.querySelector('#wt-chat-send');
+
+  function doSend() {
+    const msg = (inp.value || '').trim();
     if (!msg) return;
     if (WT.roomCode) {
       sendChatMessage(msg);
@@ -725,28 +743,19 @@ function _patchChatInput() {
       const box = _wtQs('#chatMessages');
       if (box) {
         const d = document.createElement('div');
-        d.innerHTML = `<span style="color:#ff6b6b;font-weight:700">You:</span> ${_esc(msg)}`;
+        d.innerHTML = `<span style="color:#ff6b6b;font-weight:700">${_esc(WT.userName)}:</span> ${_esc(msg)}`;
         box.appendChild(d); box.scrollTop = box.scrollHeight;
       }
     }
-    if (inp) inp.value = '';
-  };
-
-  // Remove old listeners and re-attach to chat input
-  const inp = _wtQs('#chatInput');
-  if (inp) {
-    const fresh = inp.cloneNode(true);
-    inp.parentNode.replaceChild(fresh, inp);
-    fresh.addEventListener('keydown', e => { if(e.key==='Enter'){e.preventDefault();window._sendChat();} });
+    inp.value = '';
+    inp.focus();
   }
 
-  // Also patch the send button
-  const btns = document.querySelectorAll('.ch-inp button');
-  btns.forEach(btn => {
-    const fresh = btn.cloneNode(true);
-    btn.parentNode.replaceChild(fresh, btn);
-    fresh.addEventListener('click', () => window._sendChat());
-  });
+  send.addEventListener('click', doSend);
+  inp.addEventListener('keydown', e => { if(e.key==='Enter'){e.preventDefault();doSend();} });
+
+  // Also keep window._sendChat working
+  window._sendChat = doSend;
 }
 
 function _toggleViewerPanel() {
@@ -918,55 +927,68 @@ function _injectMaximizeBtn() {
   btn.id = 'wt-maximize-btn';
   btn.innerHTML = '⛶';
   btn.title = 'Fullscreen';
-  btn.style.cssText = 'position:absolute;bottom:10px;right:10px;z-index:30;width:36px;height:36px;border-radius:8px;background:rgba(0,0,0,.7);border:1px solid rgba(255,255,255,.2);color:#fff;font-size:1.1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 140ms;backdrop-filter:blur(4px)';
-  btn.onmouseenter = () => btn.style.background = 'rgba(230,57,70,.8)';
-  btn.onmouseleave = () => btn.style.background = 'rgba(0,0,0,.7)';
+  btn.style.cssText = 'position:absolute;bottom:10px;right:10px;z-index:30;width:36px;height:36px;border-radius:8px;background:rgba(0,0,0,.75);border:1px solid rgba(255,255,255,.25);color:#fff;font-size:1.1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 140ms';
+  btn.onmouseenter = () => btn.style.background = 'rgba(230,57,70,.85)';
+  btn.onmouseleave = () => btn.style.background = 'rgba(0,0,0,.75)';
+
+  let isManual = false;
+
+  function enterFS() {
+    // Try native fullscreen on the whole modal first
+    const target = _wtQs('#playerModal') || document.documentElement;
+    const req = target.requestFullscreen || target.webkitRequestFullscreen || target.mozRequestFullScreen || target.msRequestFullscreen;
+    if (req) {
+      req.call(target).catch(() => _manualMax());
+    } else {
+      _manualMax();
+    }
+  }
+
+  function exitFS() {
+    if (isManual) {
+      _manualRestore();
+    } else {
+      const exit = document.exitFullscreen || document.webkitExitFullscreen || document.mozCancelFullScreen;
+      if (exit) exit.call(document).catch(() => _manualRestore());
+    }
+  }
+
+  function _manualMax() {
+    const pbox = _wtQs('.p-box');
+    if (!pbox) return;
+    pbox._origStyle = pbox.style.cssText;
+    pbox.style.cssText = 'position:fixed!important;inset:0!important;max-width:100vw!important;max-height:100vh!important;width:100vw!important;height:100vh!important;border-radius:0!important;z-index:9999!important;overflow-y:auto';
+    document.body.style.overflow = 'hidden';
+    isManual = true;
+    btn.innerHTML = '✕';
+    btn.title = 'Exit Fullscreen';
+  }
+
+  function _manualRestore() {
+    const pbox = _wtQs('.p-box');
+    if (!pbox) return;
+    pbox.style.cssText = pbox._origStyle || '';
+    document.body.style.overflow = '';
+    isManual = false;
+    btn.innerHTML = '⛶';
+    btn.title = 'Fullscreen';
+  }
 
   btn.addEventListener('click', () => {
-    const target = pv;
-    const fsEl = document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement;
-
-    if (!fsEl) {
-      // Enter fullscreen
-      const req = target.requestFullscreen || target.webkitRequestFullscreen || target.mozRequestFullScreen || target.msRequestFullscreen;
-      if (req) {
-        req.call(target).then(() => {
-          btn.innerHTML = '✕';
-          btn.title = 'Exit Fullscreen';
-        }).catch(e => {
-          // Fallback: maximize the p-box
-          const pbox = _wtQs('.p-box');
-          if (pbox) {
-            pbox.style.cssText = 'position:fixed;inset:0;max-width:100%;max-height:100%;border-radius:0;z-index:900;overflow:hidden';
-            btn.innerHTML = '✕';
-            btn.dataset.manual = '1';
-          }
-        });
-      }
-    } else {
-      // Exit fullscreen
-      const exit = document.exitFullscreen || document.webkitExitFullscreen || document.mozCancelFullScreen;
-      if (exit) exit.call(document);
-      btn.innerHTML = '⛶';
-      btn.title = 'Fullscreen';
-
-      // Also reset manual fullscreen
-      if (btn.dataset.manual) {
-        const pbox = _wtQs('.p-box');
-        if (pbox) pbox.style.cssText = '';
-        btn.dataset.manual = '';
-      }
-    }
+    const fsEl = document.fullscreenElement || document.webkitFullscreenElement;
+    if (fsEl || isManual) exitFS(); else enterFS();
   });
 
-  // Track fullscreen change from iframe double-click or browser controls
   document.addEventListener('fullscreenchange', () => {
-    if (!document.fullscreenElement) {
+    if (!document.fullscreenElement && !isManual) {
       btn.innerHTML = '⛶';
       btn.title = 'Fullscreen';
-    } else {
-      btn.innerHTML = '✕';
-      btn.title = 'Exit Fullscreen';
+    }
+  });
+  document.addEventListener('webkitfullscreenchange', () => {
+    if (!document.webkitFullscreenElement && !isManual) {
+      btn.innerHTML = '⛶';
+      btn.title = 'Fullscreen';
     }
   });
 
