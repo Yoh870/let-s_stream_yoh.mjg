@@ -169,6 +169,9 @@ async function _joinRoomInternal(code, asHost) {
   WT.roomCode = code;
   WT.isHost   = asHost;
 
+  // Show joining overlay immediately on guest screen
+  if (!asHost) _showJoiningOverlay(code);
+
   // Register presence
   WT.presenceRef = WT.db.ref(`rooms/${code}/presence/${WT.userId}`);
   await WT.presenceRef.set({ name: WT.userName, joinedAt: _ts(), lastSeen: _ts(), online: true });
@@ -179,30 +182,76 @@ async function _joinRoomInternal(code, asHost) {
     WT.presenceRef?.update({ lastSeen: _ts(), online: true });
   }, 3000);
 
+  // If joining as GUEST — load content FIRST before subscribing
+  if (!asHost) {
+    const snap = await WT.db.ref(`rooms/${code}/meta`).get();
+    if (snap.exists()) {
+      const meta = snap.val();
+      const c    = meta?.content;
+
+      if (c && c.tmdb) {
+        _removeJoiningOverlay();
+        // Open player modal first
+        const modal = qs('#playerModal');
+        if (modal && !modal.classList.contains('active')) {
+          modal.classList.add('active');
+          document.body.style.overflow = 'hidden';
+        }
+        // Wait for modal animation then load content
+        await new Promise(r => setTimeout(r, 350));
+        if (typeof playById === 'function') {
+          await playById(c.tmdb, c.type, c.title || '', c.year || '');
+        }
+        // Sync to correct server
+        if (meta.serverIdx && typeof setServer === 'function') {
+          setTimeout(() => setServer(meta.serverIdx, window.currentContent || c), 900);
+        }
+      } else {
+        _removeJoiningOverlay();
+        _showToast('Room joined! Waiting for host to play something…', '👀', 4000);
+      }
+    } else {
+      _removeJoiningOverlay();
+    }
+  }
+
   // Subscribe to room state
   _subscribeRoom(code);
   _subscribePresence(code);
   _subscribeChat(code);
 
-  // Update UI
+  // Build HUD
   _buildRoomHUD();
-  _showToast(asHost ? `Room ${code} created!` : `Joined room ${code}!`, asHost ? '🎬' : '✅');
-
-  // If joining (not host), load whatever host is watching
-  if (!asHost) {
-    const snap = await WT.db.ref(`rooms/${code}/meta/content`).get();
-    if (snap.exists() && snap.val()) {
-      const c = snap.val();
-      if (typeof playById === 'function') {
-        playById(c.tmdb, c.type, c.title||'', c.year||'');
-      }
-    }
-  }
+  _showToast(asHost ? `Room ${code} created! 🎬` : `Joined room ${code}! ✅`, asHost ? '🎬' : '✅');
 
   // Push current URL with room code (shareable link)
   const url = new URL(location.href);
   url.searchParams.set('room', code);
-  history.replaceState(null,'', url.toString());
+  history.replaceState(null, '', url.toString());
+}
+
+/* Loading overlay shown while guest fetches room content */
+function _showJoiningOverlay(code) {
+  if (qs('#wt-joining-ov')) return;
+  const ov = document.createElement('div');
+  ov.id = 'wt-joining-ov';
+  ov.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(10,10,15,.96);backdrop-filter:blur(14px);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;font-family:Outfit,sans-serif;color:#fff';
+  ov.innerHTML = `
+    <div style="width:52px;height:52px;border:3px solid rgba(255,255,255,.1);border-top-color:#e63946;border-radius:50%;animation:sfSpin 1s linear infinite"></div>
+    <div style="text-align:center">
+      <div style="font-size:1.1rem;font-weight:700;margin-bottom:6px">Joining Room <span style="color:#e63946;letter-spacing:.1em">${code}</span></div>
+      <div style="font-size:.82rem;color:#9898b0">Loading what the host is watching…</div>
+    </div>
+  `;
+  document.body.appendChild(ov);
+}
+
+function _removeJoiningOverlay() {
+  const ov = qs('#wt-joining-ov');
+  if (!ov) return;
+  ov.style.transition = 'opacity .3s';
+  ov.style.opacity = '0';
+  setTimeout(() => ov.remove(), 320);
 }
 
 /* ═══ ROOM: LEAVE ════════════════════════════════════════════════ */
