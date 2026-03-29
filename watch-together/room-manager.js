@@ -340,14 +340,26 @@ function _subscribeRoom(code) {
     WT.hostOnly = meta.hostOnly || false;
     _updateHUDHostBadge();
 
-    // Sync content — if host changed what's playing, follow along
+    // Sync content — if host changed what's playing, guest auto-loads
     if (!WT.isHost && meta.content) {
       const cur = window.currentContent;
       const mc  = meta.content;
-      if (cur?.tmdb !== String(mc.tmdb) || cur?.type !== mc.type ||
-          cur?.season !== mc.season    || cur?.episode !== mc.episode) {
+      const isDiff = !cur ||
+        String(cur.tmdb) !== String(mc.tmdb) ||
+        cur.type !== mc.type ||
+        cur.season !== mc.season ||
+        cur.episode !== mc.episode;
+
+      if (isDiff && mc.tmdb) {
+        console.log('[WT] Host changed content → syncing guest', mc);
+        // Open modal if not open
+        const modal = _wtQs('#playerModal');
+        if (modal && !modal.classList.contains('active')) {
+          modal.classList.add('active');
+          document.body.style.overflow = 'hidden';
+        }
         if (typeof playById === 'function') {
-          playById(mc.tmdb, mc.type, mc.title||'', mc.year||'');
+          playById(String(mc.tmdb), mc.type, mc.title||'', mc.year||'');
         }
       }
     }
@@ -658,6 +670,13 @@ function _buildRoomHUD() {
 
   // Patch chat send
   _patchChatInput();
+
+  // Open chat panel automatically when in room
+  const cp = _wtQs('#chatPanel');
+  if (cp) cp.classList.add('show');
+
+  // ── Add maximize/fullscreen button to player ──
+  _injectMaximizeBtn();
 }
 
 function _destroyRoomHUD() {
@@ -695,7 +714,7 @@ function _saveWTName() {
 }
 
 function _patchChatInput() {
-  // Override existing _sendChat to use Firebase
+  // Override _sendChat globally
   window._sendChat = function() {
     const inp = _wtQs('#chatInput');
     const msg = (inp?.value || '').trim();
@@ -703,7 +722,6 @@ function _patchChatInput() {
     if (WT.roomCode) {
       sendChatMessage(msg);
     } else {
-      // Fallback local chat
       const box = _wtQs('#chatMessages');
       if (box) {
         const d = document.createElement('div');
@@ -713,7 +731,22 @@ function _patchChatInput() {
     }
     if (inp) inp.value = '';
   };
-  _wtQs('#chatInput')?.addEventListener('keydown', e => { if(e.key==='Enter') window._sendChat(); });
+
+  // Remove old listeners and re-attach to chat input
+  const inp = _wtQs('#chatInput');
+  if (inp) {
+    const fresh = inp.cloneNode(true);
+    inp.parentNode.replaceChild(fresh, inp);
+    fresh.addEventListener('keydown', e => { if(e.key==='Enter'){e.preventDefault();window._sendChat();} });
+  }
+
+  // Also patch the send button
+  const btns = document.querySelectorAll('.ch-inp button');
+  btns.forEach(btn => {
+    const fresh = btn.cloneNode(true);
+    btn.parentNode.replaceChild(fresh, btn);
+    fresh.addEventListener('click', () => window._sendChat());
+  });
 }
 
 function _toggleViewerPanel() {
@@ -873,6 +906,71 @@ function _patchUINoFirebase() {
 function _showToast(msg, icon='✅', ms=2600) {
   if (typeof showToast === 'function') { showToast(msg, icon, ms); return; }
   console.log(`[WT] ${icon} ${msg}`);
+}
+
+/* ═══ MAXIMIZE / FULLSCREEN ══════════════════════════════════════ */
+function _injectMaximizeBtn() {
+  if (_wtQs('#wt-maximize-btn')) return;
+  const pv = _wtQs('#playerVideo');
+  if (!pv) return;
+
+  const btn = document.createElement('button');
+  btn.id = 'wt-maximize-btn';
+  btn.innerHTML = '⛶';
+  btn.title = 'Fullscreen';
+  btn.style.cssText = 'position:absolute;bottom:10px;right:10px;z-index:30;width:36px;height:36px;border-radius:8px;background:rgba(0,0,0,.7);border:1px solid rgba(255,255,255,.2);color:#fff;font-size:1.1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 140ms;backdrop-filter:blur(4px)';
+  btn.onmouseenter = () => btn.style.background = 'rgba(230,57,70,.8)';
+  btn.onmouseleave = () => btn.style.background = 'rgba(0,0,0,.7)';
+
+  btn.addEventListener('click', () => {
+    const target = pv;
+    const fsEl = document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement;
+
+    if (!fsEl) {
+      // Enter fullscreen
+      const req = target.requestFullscreen || target.webkitRequestFullscreen || target.mozRequestFullScreen || target.msRequestFullscreen;
+      if (req) {
+        req.call(target).then(() => {
+          btn.innerHTML = '✕';
+          btn.title = 'Exit Fullscreen';
+        }).catch(e => {
+          // Fallback: maximize the p-box
+          const pbox = _wtQs('.p-box');
+          if (pbox) {
+            pbox.style.cssText = 'position:fixed;inset:0;max-width:100%;max-height:100%;border-radius:0;z-index:900;overflow:hidden';
+            btn.innerHTML = '✕';
+            btn.dataset.manual = '1';
+          }
+        });
+      }
+    } else {
+      // Exit fullscreen
+      const exit = document.exitFullscreen || document.webkitExitFullscreen || document.mozCancelFullScreen;
+      if (exit) exit.call(document);
+      btn.innerHTML = '⛶';
+      btn.title = 'Fullscreen';
+
+      // Also reset manual fullscreen
+      if (btn.dataset.manual) {
+        const pbox = _wtQs('.p-box');
+        if (pbox) pbox.style.cssText = '';
+        btn.dataset.manual = '';
+      }
+    }
+  });
+
+  // Track fullscreen change from iframe double-click or browser controls
+  document.addEventListener('fullscreenchange', () => {
+    if (!document.fullscreenElement) {
+      btn.innerHTML = '⛶';
+      btn.title = 'Fullscreen';
+    } else {
+      btn.innerHTML = '✕';
+      btn.title = 'Exit Fullscreen';
+    }
+  });
+
+  pv.appendChild(btn);
 }
 
 /* ═══ EXPORTS ════════════════════════════════════════════════════ */
