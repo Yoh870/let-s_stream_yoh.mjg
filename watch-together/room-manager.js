@@ -79,25 +79,39 @@ const _wtQsa = s => [...document.querySelectorAll(s)];
 async function loadFirebaseSDK() {
   if (window._firebaseLoaded) return true;
 
-  // Check if already loaded via script tags
-  if (window.firebase?.initializeApp) { window._firebaseLoaded=true; return true; }
+  // Already loaded and initialized
+  if (window.firebase && window.firebase.database && typeof window.firebase.database === 'function') {
+    window._firebaseLoaded = true;
+    return true;
+  }
 
-  return new Promise(resolve => {
-    const scripts = [
-      { src: FIREBASE_CDN + 'firebase-app-compat.js',      id: 'fb-app' },
-      { src: FIREBASE_CDN + 'firebase-database-compat.js', id: 'fb-db'  },
-    ];
-    let loaded = 0;
-    scripts.forEach(s => {
-      if (document.getElementById(s.id)) { loaded++; if(loaded===scripts.length){window._firebaseLoaded=true;resolve(true);} return; }
-      const el = document.createElement('script');
-      el.id  = s.id;
-      el.src = s.src;
-      el.onload  = () => { loaded++; if(loaded===scripts.length){window._firebaseLoaded=true;resolve(true);} };
-      el.onerror = () => { console.error('[WT] Failed to load Firebase SDK'); resolve(false); };
-      document.head.appendChild(el);
-    });
+  // Load app first, then database sequentially (order matters!)
+  const loadScript = (src, id) => new Promise((resolve, reject) => {
+    if (document.getElementById(id)) { resolve(); return; }
+    const el = document.createElement('script');
+    el.id = id; el.src = src;
+    el.onload  = () => resolve();
+    el.onerror = () => reject(new Error('Failed to load: ' + src));
+    document.head.appendChild(el);
   });
+
+  try {
+    // Step 1: load firebase-app FIRST and wait
+    await loadScript(FIREBASE_CDN + 'firebase-app-compat.js', 'fb-app');
+    // Step 2: small pause to let app init
+    await new Promise(r => setTimeout(r, 80));
+    // Step 3: load firebase-database AFTER app is ready
+    await loadScript(FIREBASE_CDN + 'firebase-database-compat.js', 'fb-db');
+    // Step 4: verify both are available
+    await new Promise(r => setTimeout(r, 80));
+    if (!window.firebase?.database) throw new Error('firebase.database still not available');
+    window._firebaseLoaded = true;
+    console.log('[WT] Firebase SDK loaded successfully');
+    return true;
+  } catch(e) {
+    console.error('[WT] Firebase SDK load failed:', e.message);
+    return false;
+  }
 }
 
 /* ═══ INIT ════════════════════════════════════════════════════════ */
