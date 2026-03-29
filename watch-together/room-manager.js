@@ -589,6 +589,14 @@ function _injectStyles() {
     /* name bar removed */
 
     @keyframes wtPulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+
+    /* Push player close btn left when chat panel is open */
+    #chatPanel.show ~ * #playerClose,
+    .p-box:has(#chatPanel.show) #playerClose {
+      right: 274px !important;
+      transition: right .3s;
+    }
+    #playerClose { transition: right .3s; }
   `;
   document.head.appendChild(s);
 }
@@ -676,7 +684,12 @@ function _rebuildChatPanel() {
   // Header
   const hd = document.createElement('div');
   hd.style.cssText = 'padding:12px 14px;border-bottom:1px solid rgba(255,255,255,.08);font-weight:700;font-size:.88rem;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;color:#fff';
-  hd.innerHTML = `<span>💬 Live Chat</span><button onclick="toggleChatPanel()" style="color:#9898b0;background:none;border:none;cursor:pointer;font-size:1rem">✕</button>`;
+  hd.innerHTML = `
+    <button onclick="toggleChatPanel()" title="Hide chat"
+      style="width:28px;height:28px;border-radius:50%;background:rgba(255,255,255,.1);border:none;color:#fff;cursor:pointer;font-size:.8rem;display:flex;align-items:center;justify-content:center;flex-shrink:0">✕</button>
+    <span style="flex:1;text-align:center">💬 Live Chat</span>
+    <span style="width:28px"></span>
+  `;
   cp.appendChild(hd);
 
   // Name row
