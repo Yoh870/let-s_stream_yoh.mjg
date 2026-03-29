@@ -112,7 +112,7 @@ async function initFirebase() {
   }
 
   try {
-    if (!firebase.apps.length) {
+    if (!firebase.apps || !firebase.apps.length) {
       WT.app = firebase.initializeApp(FIREBASE_CONFIG);
     } else {
       WT.app = firebase.apps[0];
@@ -156,10 +156,14 @@ async function joinRoom(code) {
   code = code.toUpperCase().trim();
   if (!WT.db) { _showToast('Firebase not configured','⚠️'); return; }
 
-  const snap = await WT.db.ref(`rooms/${code}/meta`).get();
-  if (!snap.exists()) { _showToast('Room not found — check the code','❌'); return; }
-
-  _joinRoomInternal(code, false);
+  try {
+    const snap = await WT.db.ref(`rooms/${code}/meta`).once('value');
+    if (!snap.exists()) { _showToast('Room not found — check the code','❌'); return; }
+    _joinRoomInternal(code, false);
+  } catch(e) {
+    console.error('[WT] joinRoom error:', e);
+    _showToast('Failed to join — check console','❌');
+  }
 }
 
 async function _joinRoomInternal(code, asHost) {
@@ -184,34 +188,63 @@ async function _joinRoomInternal(code, asHost) {
 
   // If joining as GUEST — load content FIRST before subscribing
   if (!asHost) {
-    const snap = await WT.db.ref(`rooms/${code}/meta`).get();
-    if (snap.exists()) {
-      const meta = snap.val();
-      const c    = meta?.content;
+    try {
+      console.log('[WT] Guest fetching room meta for code:', code);
+      const snap = await WT.db.ref(`rooms/${code}/meta`).once('value');
+      console.log('[WT] Room meta exists:', snap.exists(), '| val:', JSON.stringify(snap.val()));
 
-      if (c && c.tmdb) {
-        _removeJoiningOverlay();
-        // Open player modal first
-        const modal = qs('#playerModal');
-        if (modal && !modal.classList.contains('active')) {
-          modal.classList.add('active');
-          document.body.style.overflow = 'hidden';
-        }
-        // Wait for modal animation then load content
-        await new Promise(r => setTimeout(r, 350));
-        if (typeof playById === 'function') {
-          await playById(c.tmdb, c.type, c.title || '', c.year || '');
-        }
-        // Sync to correct server
-        if (meta.serverIdx && typeof setServer === 'function') {
-          setTimeout(() => setServer(meta.serverIdx, window.currentContent || c), 900);
+      if (snap.exists()) {
+        const meta = snap.val();
+        const c    = meta?.content;
+
+        console.log('[WT] Content from room:', JSON.stringify(c));
+
+        if (c && c.tmdb) {
+          _removeJoiningOverlay();
+
+          // Open player modal
+          const modal = qs('#playerModal');
+          if (modal) {
+            modal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+            console.log('[WT] Player modal opened');
+          } else {
+            console.warn('[WT] #playerModal not found in DOM!');
+          }
+
+          // Wait for modal animation
+          await new Promise(r => setTimeout(r, 400));
+
+          console.log('[WT] Calling playById:', c.tmdb, c.type, c.title, c.year);
+          if (typeof playById === 'function') {
+            await playById(c.tmdb, c.type, c.title || '', c.year || '');
+            console.log('[WT] playById done');
+          } else {
+            console.error('[WT] playById function not found!');
+          }
+
+          // Sync to correct server after content loads
+          const sIdx = meta.serverIdx || 0;
+          setTimeout(() => {
+            console.log('[WT] Syncing server index:', sIdx);
+            if (typeof setServer === 'function') {
+              setServer(sIdx, window.currentContent || c);
+            }
+          }, 1200);
+
+        } else {
+          _removeJoiningOverlay();
+          console.log('[WT] No content in room yet — waiting for host');
+          _showToast('Room joined! Waiting for host to play something…', '👀', 4000);
         }
       } else {
         _removeJoiningOverlay();
-        _showToast('Room joined! Waiting for host to play something…', '👀', 4000);
+        console.warn('[WT] Room meta snap does not exist for code:', code);
       }
-    } else {
+    } catch(err) {
       _removeJoiningOverlay();
+      console.error('[WT] Guest content load error:', err);
+      _showToast('Joined room but failed to load content', '⚠️', 4000);
     }
   }
 
