@@ -72,8 +72,8 @@ function _code() {
 }
 function _ts() { return Date.now(); }
 function _dbPath(...parts) { return parts.join('/'); }
-const qs  = s => document.querySelector(s);
-const qsa = s => [...document.querySelectorAll(s)];
+const _wtQs  = s => document.querySelector(s);
+const _wtQsa = s => [...document.querySelectorAll(s)];
 
 /* ═══ FIREBASE LOADER ════════════════════════════════════════════ */
 async function loadFirebaseSDK() {
@@ -203,7 +203,7 @@ async function _joinRoomInternal(code, asHost) {
           _removeJoiningOverlay();
 
           // Open player modal
-          const modal = qs('#playerModal');
+          const modal = _wtQs('#playerModal');
           if (modal) {
             modal.classList.add('active');
             document.body.style.overflow = 'hidden';
@@ -265,7 +265,7 @@ async function _joinRoomInternal(code, asHost) {
 
 /* Loading overlay shown while guest fetches room content */
 function _showJoiningOverlay(code) {
-  if (qs('#wt-joining-ov')) return;
+  if (_wtQs('#wt-joining-ov')) return;
   const ov = document.createElement('div');
   ov.id = 'wt-joining-ov';
   ov.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(10,10,15,.96);backdrop-filter:blur(14px);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;font-family:Outfit,sans-serif;color:#fff';
@@ -280,7 +280,7 @@ function _showJoiningOverlay(code) {
 }
 
 function _removeJoiningOverlay() {
-  const ov = qs('#wt-joining-ov');
+  const ov = _wtQs('#wt-joining-ov');
   if (!ov) return;
   ov.style.transition = 'opacity .3s';
   ov.style.opacity = '0';
@@ -342,7 +342,7 @@ function _subscribeRoom(code) {
     if (!WT.isHost && meta.serverIdx !== undefined) {
       const content = window.currentContent || meta.content;
       if (content && typeof setServer === 'function') {
-        const btns = qsa('.server-btn');
+        const btns = _wtQsa('.server-btn');
         if (btns[meta.serverIdx] && !btns[meta.serverIdx].classList.contains('active')) {
           setServer(meta.serverIdx, content);
         }
@@ -372,7 +372,7 @@ function _subscribePresence(code) {
 
 /* ═══ SUBSCRIBE: CHAT ════════════════════════════════════════════ */
 function _subscribeChat(code) {
-  const box = qs('#chatMessages');
+  const box = _wtQs('#chatMessages');
   if (box) box.innerHTML = '';
 
   const ref = WT.db.ref(`rooms/${code}/messages`).orderByChild('ts').limitToLast(80);
@@ -397,7 +397,7 @@ function sendChatMessage(text) {
 }
 
 function _appendChatMessage(msg) {
-  const box = qs('#chatMessages');
+  const box = _wtQs('#chatMessages');
   if (!box) return;
 
   const isSelf   = msg.userId === WT.userId;
@@ -484,7 +484,7 @@ async function toggleHostOnly() {
 
 /* ═══ UI INJECTION ════════════════════════════════════════════════ */
 function _injectStyles() {
-  if (qs('#wt-styles')) return;
+  if (_wtQs('#wt-styles')) return;
   const s = document.createElement('style');
   s.id = 'wt-styles';
   s.textContent = `
@@ -587,15 +587,15 @@ function _injectStyles() {
 }
 
 function _buildRoomHUD() {
-  const pbox = qs('.p-box');
+  const pbox = _wtQs('.p-box');
   if (!pbox) return;
 
   // Ensure player video container is relative
-  const pv = qs('#playerVideo');
+  const pv = _wtQs('#playerVideo');
   if (pv) pv.style.position = 'relative';
 
   // ── Room HUD (over video) ──
-  let hud = qs('#wt-hud');
+  let hud = _wtQs('#wt-hud');
   if (!hud) {
     hud = document.createElement('div');
     hud.id = 'wt-hud';
@@ -613,7 +613,7 @@ function _buildRoomHUD() {
   hud.classList.add('show');
 
   // ── Viewer panel (dropdown) ──
-  let vp = qs('#wt-viewer-panel');
+  let vp = _wtQs('#wt-viewer-panel');
   if (!vp) {
     vp = document.createElement('div');
     vp.id = 'wt-viewer-panel';
@@ -621,8 +621,8 @@ function _buildRoomHUD() {
   }
 
   // ── Host controls bar (below video, inside p-meta) ──
-  const pmeta = qs('.p-meta');
-  let hcBar = qs('#wt-host-controls');
+  const pmeta = _wtQs('.p-meta');
+  let hcBar = _wtQs('#wt-host-controls');
   if (!hcBar && pmeta) {
     hcBar = document.createElement('div');
     hcBar.id = 'wt-host-controls';
@@ -647,18 +647,18 @@ function _buildRoomHUD() {
 }
 
 function _destroyRoomHUD() {
-  qs('#wt-hud')?.remove();
-  qs('#wt-viewer-panel')?.remove();
-  qs('#wt-host-controls')?.remove();
-  qs('#wt-name-bar')?.remove();
+  _wtQs('#wt-hud')?.remove();
+  _wtQs('#wt-viewer-panel')?.remove();
+  _wtQs('#wt-host-controls')?.remove();
+  _wtQs('#wt-name-bar')?.remove();
   // Clear chat
-  const box = qs('#chatMessages');
+  const box = _wtQs('#chatMessages');
   if (box) box.innerHTML = '<span style="color:var(--tx3,#55556a);font-style:italic">Share the room to chat…</span>';
 }
 
 function _ensureNameBar() {
-  if (qs('#wt-name-bar')) return;
-  const cp = qs('#chatPanel');
+  if (_wtQs('#wt-name-bar')) return;
+  const cp = _wtQs('#chatPanel');
   if (!cp) return;
   const bar = document.createElement('div');
   bar.id = 'wt-name-bar';
@@ -672,7 +672,7 @@ function _ensureNameBar() {
 }
 
 function _saveWTName() {
-  const v = (qs('#wt-name-inp')?.value || '').trim();
+  const v = (_wtQs('#wt-name-inp')?.value || '').trim();
   if (!v) return;
   WT.userName = v;
   localStorage.setItem('wt_name', v);
@@ -683,14 +683,14 @@ function _saveWTName() {
 function _patchChatInput() {
   // Override existing _sendChat to use Firebase
   window._sendChat = function() {
-    const inp = qs('#chatInput');
+    const inp = _wtQs('#chatInput');
     const msg = (inp?.value || '').trim();
     if (!msg) return;
     if (WT.roomCode) {
       sendChatMessage(msg);
     } else {
       // Fallback local chat
-      const box = qs('#chatMessages');
+      const box = _wtQs('#chatMessages');
       if (box) {
         const d = document.createElement('div');
         d.innerHTML = `<span style="color:#ff6b6b;font-weight:700">You:</span> ${_esc(msg)}`;
@@ -699,11 +699,11 @@ function _patchChatInput() {
     }
     if (inp) inp.value = '';
   };
-  qs('#chatInput')?.addEventListener('keydown', e => { if(e.key==='Enter') window._sendChat(); });
+  _wtQs('#chatInput')?.addEventListener('keydown', e => { if(e.key==='Enter') window._sendChat(); });
 }
 
 function _toggleViewerPanel() {
-  const vp = qs('#wt-viewer-panel');
+  const vp = _wtQs('#wt-viewer-panel');
   if (!vp) return;
   vp.classList.toggle('open');
   if (vp.classList.contains('open')) _updateViewerList();
@@ -711,12 +711,12 @@ function _toggleViewerPanel() {
 
 function _updateViewerCount() {
   const onlineCount = Object.values(WT.viewerMap).filter(v => v.online).length;
-  const el = qs('#wt-viewer-count');
+  const el = _wtQs('#wt-viewer-count');
   if (el) el.textContent = `${onlineCount} watching`;
 }
 
 function _updateViewerList() {
-  const vp = qs('#wt-viewer-panel');
+  const vp = _wtQs('#wt-viewer-panel');
   if (!vp) return;
 
   const entries = Object.entries(WT.viewerMap);
@@ -739,7 +739,7 @@ function _updateViewerList() {
 }
 
 function _updateHUDHostBadge() {
-  const btn = qs('#wt-lock-btn');
+  const btn = _wtQs('#wt-lock-btn');
   if (btn) {
     btn.textContent = WT.hostOnly ? '🔒 Locked' : '🔓 Unlocked';
     btn.classList.toggle('active', WT.hostOnly);
@@ -750,13 +750,13 @@ function _updateHUDHostBadge() {
 function _patchWTButtons() {
   // Override the Create Room button handler
   window._createRoom = async function() {
-    const hd = qs('#wtHome');
-    const cr = qs('#wtCreated');
+    const hd = _wtQs('#wtHome');
+    const cr = _wtQs('#wtCreated');
     if (!hd || !cr) { await createRoom(); return; }
 
     // Show room code first, then create on Firebase
     const code = _code();
-    qs('#roomCodeDisplay').textContent = code;
+    _wtQs('#roomCodeDisplay').textContent = code;
     hd.style.display = 'none';
     cr.style.display = '';
 
@@ -766,7 +766,7 @@ function _patchWTButtons() {
 
   // Override Start Watching
   window._startWT = async function() {
-    const code = WT._pendingCode || qs('#roomCodeDisplay')?.textContent;
+    const code = WT._pendingCode || _wtQs('#roomCodeDisplay')?.textContent;
     if (!code) return;
     window.closeWatchTogetherMenu?.();
     await createRoomWithCode(code);
@@ -774,7 +774,7 @@ function _patchWTButtons() {
 
   // Override Join Room
   window._joinRoom = async function() {
-    const code = qs('#joinCodeInput')?.value?.trim()?.toUpperCase();
+    const code = _wtQs('#joinCodeInput')?.value?.trim()?.toUpperCase();
     if (!code) { _showToast('Enter a room code','⚠️'); return; }
     window.closeJoinRoomDialog?.();
     window.closeWatchTogetherMenu?.();
@@ -783,7 +783,7 @@ function _patchWTButtons() {
 
   // Override copy link
   window._copyRoomLink = function() {
-    const code = WT.roomCode || WT._pendingCode || qs('#roomCodeDisplay')?.textContent;
+    const code = WT.roomCode || WT._pendingCode || _wtQs('#roomCodeDisplay')?.textContent;
     if (!code) return;
     const url = `${location.origin}${location.pathname}?room=${code}`;
     navigator.clipboard.writeText(url).then(()=>_showToast('Room link copied!','📋')).catch(()=>_showToast(url,'📋',5000));
@@ -791,7 +791,7 @@ function _patchWTButtons() {
 
   window._copyRoom = window._copyRoomLink;
   window._shareRoom = function() {
-    const code = WT.roomCode || WT._pendingCode || qs('#roomCodeDisplay')?.textContent;
+    const code = WT.roomCode || WT._pendingCode || _wtQs('#roomCodeDisplay')?.textContent;
     if (!code) return;
     const url  = `${location.origin}${location.pathname}?room=${code}`;
     if(navigator.share) navigator.share({title:'Watch on Flixora',text:`Join my room! Code: ${code}`,url});
