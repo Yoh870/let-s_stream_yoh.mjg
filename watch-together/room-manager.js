@@ -586,26 +586,7 @@ function _injectStyles() {
     .wt-hc-btn.danger { color:#ff6b6b; border-color:rgba(230,57,70,.25); }
     .wt-hc-btn.active { background:rgba(230,57,70,.2); border-color:rgba(230,57,70,.4); color:#ff6b6b; }
 
-    /* Shared name input banner */
-    #wt-name-bar {
-      position:absolute; bottom:0; left:0; right:0; z-index:25;
-      background:rgba(14,14,20,.95); padding:10px 14px;
-      display:none; align-items:center; gap:8px;
-      border-top:1px solid rgba(255,255,255,.08);
-    }
-    #wt-name-bar.show { display:flex; }
-    #wt-name-inp {
-      flex:1; padding:7px 12px; border-radius:8px;
-      background:rgba(255,255,255,.07); border:1px solid rgba(255,255,255,.12);
-      color:#fff; font-size:.82rem; outline:none;
-    }
-    #wt-name-inp:focus { border-color:rgba(230,57,70,.4); }
-    #wt-name-save {
-      padding:7px 14px; border-radius:8px;
-      background:#e63946; color:#fff; font-size:.8rem; font-weight:700;
-      cursor:pointer; border:none; transition:all 130ms;
-    }
-    #wt-name-save:hover { background:#ff6b6b; }
+    /* name bar removed */
 
     @keyframes wtPulse { 0%,100%{opacity:1} 50%{opacity:.4} }
   `;
@@ -665,15 +646,8 @@ function _buildRoomHUD() {
     hcBar.classList.add('show');
   }
 
-  // ── Name bar ──
-  _ensureNameBar();
-
-  // Patch chat send
-  _patchChatInput();
-
-  // Open chat panel automatically when in room
-  const cp = _wtQs('#chatPanel');
-  if (cp) cp.classList.add('show');
+  // ── Completely rebuild chat panel ──
+  _rebuildChatPanel();
 
   // ── Add maximize/fullscreen button to player ──
   _injectMaximizeBtn();
@@ -689,12 +663,82 @@ function _destroyRoomHUD() {
   if (box) box.innerHTML = '<span style="color:var(--tx3,#55556a);font-style:italic">Share the room to chat…</span>';
 }
 
-function _ensureNameBar() {
-  // Name bar removed from chat panel — it blocked the input.
-  // Name is shown in viewer panel instead.
-  // Just patch the chat send button label with user name.
-  const hd = _wtQs('.ch-hd span');
-  if (hd) hd.textContent = `💬 Chat — ${WT.userName}`;
+function _ensureNameBar() {} // no-op — replaced by _rebuildChatPanel
+
+function _rebuildChatPanel() {
+  const cp = _wtQs('#chatPanel');
+  if (!cp) return;
+
+  // Wipe everything and rebuild from scratch
+  cp.innerHTML = '';
+  cp.style.cssText = 'position:absolute;right:0;top:0;height:100%;width:260px;background:rgba(14,14,20,.97);border-left:1px solid rgba(255,255,255,.08);display:flex;flex-direction:column;z-index:5;transform:none';
+
+  // Header
+  const hd = document.createElement('div');
+  hd.style.cssText = 'padding:12px 14px;border-bottom:1px solid rgba(255,255,255,.08);font-weight:700;font-size:.88rem;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;color:#fff';
+  hd.innerHTML = `<span>💬 Live Chat</span><button onclick="toggleChatPanel()" style="color:#9898b0;background:none;border:none;cursor:pointer;font-size:1rem">✕</button>`;
+  cp.appendChild(hd);
+
+  // Name row
+  const nameRow = document.createElement('div');
+  nameRow.style.cssText = 'padding:7px 10px;border-bottom:1px solid rgba(255,255,255,.06);display:flex;align-items:center;gap:6px;flex-shrink:0';
+  nameRow.innerHTML = `
+    <input id="wt-name-inp2" value="${_esc(WT.userName)}" maxlength="20" placeholder="Your name"
+      style="flex:1;padding:5px 9px;border-radius:6px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);color:#fff;font-size:.75rem;font-family:inherit;outline:none">
+    <button id="wt-name-save2"
+      style="padding:5px 9px;border-radius:6px;background:rgba(230,57,70,.7);color:#fff;font-size:.72rem;font-weight:700;cursor:pointer;border:none;white-space:nowrap">Save</button>
+  `;
+  cp.appendChild(nameRow);
+  nameRow.querySelector('#wt-name-save2').onclick = () => {
+    const v = (nameRow.querySelector('#wt-name-inp2')?.value || '').trim();
+    if (!v) return;
+    WT.userName = v;
+    localStorage.setItem('wt_name', v);
+    WT.presenceRef?.update({ name: v });
+    _showToast(`Name: "${v}"`, '✅');
+  };
+
+  // Messages area
+  const msgs = document.createElement('div');
+  msgs.id = 'chatMessages';
+  msgs.style.cssText = 'flex:1;overflow-y:auto;padding:10px;display:flex;flex-direction:column;gap:6px;font-size:.81rem;color:#9898b0';
+  msgs.innerHTML = '<span style="font-style:italic;color:#55556a">Say hi! 👋</span>';
+  cp.appendChild(msgs);
+
+  // Input row
+  const row = document.createElement('div');
+  row.style.cssText = 'display:flex;gap:6px;padding:10px;border-top:1px solid rgba(255,255,255,.08);flex-shrink:0';
+  row.innerHTML = `
+    <input id="wt-chat-inp2" type="text" placeholder="Type a message…" maxlength="200"
+      style="flex:1;padding:8px 10px;border-radius:8px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);color:#fff;font-size:.82rem;font-family:inherit;outline:none">
+    <button id="wt-chat-send2"
+      style="padding:8px 12px;border-radius:8px;background:#e63946;color:#fff;font-size:.85rem;font-weight:700;cursor:pointer;border:none;flex-shrink:0">➤</button>
+  `;
+  cp.appendChild(row);
+
+  const inp  = row.querySelector('#wt-chat-inp2');
+  const send = row.querySelector('#wt-chat-send2');
+
+  function doSend() {
+    const msg = (inp.value || '').trim();
+    if (!msg) return;
+    if (WT.roomCode) {
+      sendChatMessage(msg);
+    } else {
+      _appendChatMessage({ userId: WT.userId, name: WT.userName, text: msg, ts: _ts() });
+    }
+    inp.value = '';
+    inp.focus();
+  }
+
+  send.addEventListener('click', doSend);
+  inp.addEventListener('keydown', e => { if(e.key==='Enter'){e.preventDefault();doSend();} });
+  inp.addEventListener('focus', () => { inp.style.borderColor='rgba(230,57,70,.4)'; });
+  inp.addEventListener('blur',  () => { inp.style.borderColor='rgba(255,255,255,.12)'; });
+  window._sendChat = doSend;
+
+  // Show the panel
+  cp.classList.add('show');
 }
 
 function _saveWTName() {
