@@ -580,9 +580,9 @@ function _injectStyles() {
   s.textContent = `
     /* Room HUD */
     #wt-hud {
-      position:absolute; top:0; left:0; right:0; z-index:20;
-      background:linear-gradient(180deg,rgba(0,0,0,.82) 0%,transparent 100%);
-      padding:10px 14px 22px;
+      position:absolute; bottom:0; left:0; right:0; z-index:20;
+      background:linear-gradient(0deg,rgba(0,0,0,.75) 0%,transparent 100%);
+      padding:22px 14px 10px;
       display:flex; align-items:center; gap:10px;
       pointer-events:none;
     }
@@ -607,11 +607,12 @@ function _injectStyles() {
     }
     #wt-leave-btn {
       pointer-events:auto;
-      background:rgba(255,255,255,.12); border:1px solid rgba(255,255,255,.18);
-      color:#fff; font-size:.68rem; font-weight:700; padding:4px 10px;
+      background:rgba(20,20,20,.75); border:1px solid rgba(255,255,255,.25);
+      color:#fff; font-size:.68rem; font-weight:700; padding:5px 12px;
       border-radius:20px; cursor:pointer; transition:all 140ms;
+      backdrop-filter:blur(6px);
     }
-    #wt-leave-btn:hover { background:rgba(230,57,70,.7); }
+    #wt-leave-btn:hover { background:rgba(230,57,70,.8); border-color:transparent; }
 
     /* Viewer panel */
     #wt-viewer-panel {
