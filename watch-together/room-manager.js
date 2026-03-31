@@ -411,55 +411,119 @@ function _subscribeChat(code) {
 }
 
 /* ═══ SEND CHAT ══════════════════════════════════════════════════ */
-function sendChatMessage(text) {
+function sendChatMessage(text, extra={}) {
   text = (text||'').trim();
-  if (!text || !WT.db || !WT.roomCode) return;
-  WT.db.ref(`rooms/${WT.roomCode}/messages`).push({
-    userId: WT.userId,
-    name:   WT.userName,
-    text:   text,
-    ts:     _ts(),
-  });
+  const hasMedia = extra.gif || extra.img;
+  if (!text && !hasMedia) return;
+  if (!WT.db || !WT.roomCode) return;
+  const msg = { userId:WT.userId, name:WT.userName, text:text||'', ts:_ts() };
+  if (extra.replyTo) msg.replyTo = extra.replyTo;
+  if (extra.gif)     msg.gif     = extra.gif;
+  if (extra.img)     msg.img     = extra.img;
+  WT.db.ref(`rooms/${WT.roomCode}/messages`).push(msg);
 }
 
-function _appendChatMessage(msg) {
+// Store messages by Firebase key for reply lookup
+const WT_MSG_CACHE = {};
+
+function _appendChatMessage(msg, fbKey) {
   const box = _wtQs('#chatMessages');
   if (!box) return;
+  if (fbKey) WT_MSG_CACHE[fbKey] = msg;
 
   const isSelf   = msg.userId === WT.userId;
   const isSystem = msg.userId === 'system';
   const d        = document.createElement('div');
+  d.dataset.msgId = fbKey || '';
 
-  d.style.cssText = `
-    margin-bottom:8px;
-    padding:7px 10px;
-    border-radius:10px;
-    font-size:.81rem;
-    line-height:1.45;
-    max-width:90%;
-    word-break:break-word;
-    background:${isSystem ? 'rgba(16,185,129,.12)' : isSelf ? 'rgba(230,57,70,.18)' : 'rgba(255,255,255,.07)'};
-    border:1px solid ${isSystem ? 'rgba(16,185,129,.2)' : isSelf ? 'rgba(230,57,70,.25)' : 'rgba(255,255,255,.08)'};
-    align-self:${isSelf ? 'flex-end' : 'flex-start'};
-    ${isSystem ? 'text-align:center;width:100%;font-style:italic;color:rgba(16,185,129,.9)' : ''}
-  `;
+  d.style.cssText = [
+    'position:relative',
+    'padding:7px 10px 7px',
+    'border-radius:10px',
+    'font-size:.81rem',
+    'line-height:1.45',
+    'max-width:92%',
+    'word-break:break-word',
+    `background:${isSystem?'rgba(16,185,129,.12)':isSelf?'rgba(230,57,70,.15)':'rgba(255,255,255,.06)'}`,
+    `border:1px solid ${isSystem?'rgba(16,185,129,.2)':isSelf?'rgba(230,57,70,.22)':'rgba(255,255,255,.08)'}`,
+    `align-self:${isSelf?'flex-end':isSystem?'center':'flex-start'}`,
+    isSystem?'text-align:center;font-style:italic;color:rgba(16,185,129,.9);width:90%':''
+  ].join(';');
 
-  if (!isSystem) {
-    d.innerHTML = `<span style="font-weight:700;font-size:.73rem;display:block;margin-bottom:3px;color:${isSelf?'#ff6b6b':'#9898b0'}">${_esc(msg.name)}${msg.userId===WT.db.ref(`rooms/${WT.roomCode}/meta`).key?'<span style="background:#e63946;color:#fff;padding:1px 4px;border-radius:3px;font-size:.58rem;margin-left:4px">HOST</span>':''}</span>${_esc(msg.text)}`;
-  } else {
+  if (isSystem) {
     d.textContent = msg.text;
+  } else {
+    let inner = '';
+
+    // Reply preview
+    if (msg.replyTo) {
+      inner += `<div style="border-left:2px solid rgba(230,57,70,.6);padding:3px 7px;margin-bottom:5px;border-radius:0 4px 4px 0;background:rgba(0,0,0,.25);font-size:.72rem;color:#9898b0;cursor:pointer" onclick="_scrollToMsg('${_esc(msg.replyTo.id)}')">
+        <span style="color:#ff6b6b;font-weight:700">${_esc(msg.replyTo.name)}</span>
+        <span style="display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:170px">${msg.replyTo.img?'📷 Photo':msg.replyTo.gif?'🎞 GIF':_esc(msg.replyTo.text||'')} </span>
+      </div>`;
+    }
+
+    // Sender name
+    inner += `<span style="font-weight:700;font-size:.72rem;display:block;margin-bottom:3px;color:${isSelf?'#ff6b6b':'#6ec6ff'}">${_esc(msg.name)}</span>`;
+
+    // GIF
+    if (msg.gif) {
+      inner += `<img src="${_esc(msg.gif)}" alt="gif" style="max-width:100%;border-radius:6px;display:block;margin-bottom:${msg.text?'4px':'0'}" loading="lazy">`;
+    }
+
+    // Image
+    if (msg.img) {
+      inner += `<img src="${_esc(msg.img)}" alt="img" style="max-width:100%;border-radius:6px;display:block;cursor:pointer;margin-bottom:${msg.text?'4px':'0'}" loading="lazy" onclick="window.open(this.src)">`;
+    }
+
+    // Text
+    if (msg.text) inner += `<span>${_esc(msg.text)}</span>`;
+
+    // Reply button (on hover)
+    inner += `<button class="wt-reply-btn" data-msg-id="${fbKey||''}" title="Reply"
+      style="position:absolute;top:4px;right:${isSelf?'auto':'4px'};${isSelf?'left:4px':'right:4px'};
+      background:rgba(0,0,0,.5);border:none;color:#fff;border-radius:50%;
+      width:22px;height:22px;font-size:.65rem;cursor:pointer;
+      display:none;align-items:center;justify-content:center;line-height:1" onclick="_setReply('${fbKey||''}',${JSON.stringify({
+        id:fbKey||'', name:_esc(msg.name), text:(msg.text||''
+      ).slice(0,60), img:msg.img||null, gif:msg.gif||null}).replace(/'/g,'&#39;')})">↩</button>`;
+
+    d.innerHTML = inner;
   }
+
+  // Show/hide reply btn on hover
+  d.addEventListener('mouseenter', () => { const b=d.querySelector('.wt-reply-btn'); if(b) b.style.display='flex'; });
+  d.addEventListener('mouseleave', () => { const b=d.querySelector('.wt-reply-btn'); if(b) b.style.display='none'; });
+  // Touch support
+  d.addEventListener('touchstart', () => { const b=d.querySelector('.wt-reply-btn'); if(b) b.style.display='flex'; },{passive:true});
 
   box.appendChild(d);
-
-  // Trim chat
   WT.chatCount++;
-  if (WT.chatCount > CHAT_LIMIT) {
-    box.firstChild?.remove();
-    WT.chatCount--;
-  }
-
+  if (WT.chatCount > CHAT_LIMIT) { box.firstChild?.remove(); WT.chatCount--; }
   box.scrollTop = box.scrollHeight;
+}
+
+function _scrollToMsg(id) {
+  const el = document.querySelector(`[data-msg-id="${id}"]`);
+  if (el) { el.scrollIntoView({behavior:'smooth',block:'center'}); el.style.outline='2px solid rgba(230,57,70,.5)'; setTimeout(()=>el.style.outline='',1200); }
+}
+
+// Current reply state
+let WT_REPLY = null;
+
+function _setReply(id, data) {
+  WT_REPLY = { id, ...data };
+  const bar = _wtQs('#wt-reply-bar');
+  if (!bar) return;
+  bar.style.display = 'flex';
+  bar.querySelector('#wt-reply-preview').textContent = `↩ ${data.name}: ${data.img?'📷 Photo':data.gif?'🎞 GIF':data.text}`;
+  _wtQs('#wt-chat-inp2')?.focus();
+}
+
+function _clearReply() {
+  WT_REPLY = null;
+  const bar = _wtQs('#wt-reply-bar');
+  if (bar) bar.style.display = 'none';
 }
 
 function _esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
@@ -677,81 +741,230 @@ function _rebuildChatPanel() {
   const cp = _wtQs('#chatPanel');
   if (!cp) return;
 
-  // Wipe everything and rebuild from scratch
   cp.innerHTML = '';
-  cp.style.cssText = 'position:absolute;right:0;top:0;height:100%;width:260px;background:rgba(14,14,20,.97);border-left:1px solid rgba(255,255,255,.08);display:flex;flex-direction:column;z-index:5;transform:none';
+  cp.style.cssText = 'position:absolute;right:0;top:0;height:100%;width:270px;background:rgba(12,12,18,.98);border-left:1px solid rgba(255,255,255,.08);display:flex;flex-direction:column;z-index:5;transform:none';
 
-  // Header
+  // ── Header ──
   const hd = document.createElement('div');
-  hd.style.cssText = 'padding:12px 14px;border-bottom:1px solid rgba(255,255,255,.08);font-weight:700;font-size:.88rem;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;color:#fff';
+  hd.style.cssText = 'padding:10px 12px;border-bottom:1px solid rgba(255,255,255,.08);font-weight:700;font-size:.86rem;display:flex;align-items:center;gap:6px;flex-shrink:0;color:#fff';
   hd.innerHTML = `
     <button onclick="toggleChatPanel()" title="Hide chat"
-      style="width:28px;height:28px;border-radius:50%;background:rgba(255,255,255,.1);border:none;color:#fff;cursor:pointer;font-size:.8rem;display:flex;align-items:center;justify-content:center;flex-shrink:0">✕</button>
+      style="width:26px;height:26px;border-radius:50%;background:rgba(255,255,255,.1);border:none;color:#fff;cursor:pointer;font-size:.75rem;display:flex;align-items:center;justify-content:center;flex-shrink:0">✕</button>
     <span style="flex:1;text-align:center">💬 Live Chat</span>
-    <span style="width:28px"></span>
+    <span style="width:26px"></span>
   `;
   cp.appendChild(hd);
 
-  // Name row
+  // ── Name row ──
   const nameRow = document.createElement('div');
-  nameRow.style.cssText = 'padding:7px 10px;border-bottom:1px solid rgba(255,255,255,.06);display:flex;align-items:center;gap:6px;flex-shrink:0';
+  nameRow.style.cssText = 'padding:6px 10px;border-bottom:1px solid rgba(255,255,255,.05);display:flex;align-items:center;gap:5px;flex-shrink:0';
   nameRow.innerHTML = `
-    <input id="wt-name-inp2" value="${_esc(WT.userName)}" maxlength="20" placeholder="Your name"
-      style="flex:1;padding:5px 9px;border-radius:6px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);color:#fff;font-size:.75rem;font-family:inherit;outline:none">
-    <button id="wt-name-save2"
-      style="padding:5px 9px;border-radius:6px;background:rgba(230,57,70,.7);color:#fff;font-size:.72rem;font-weight:700;cursor:pointer;border:none;white-space:nowrap">Save</button>
+    <span style="font-size:.68rem;color:#55556a;white-space:nowrap">Name:</span>
+    <input id="wt-name-inp2" value="${_esc(WT.userName)}" maxlength="20"
+      style="flex:1;padding:4px 8px;border-radius:5px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.09);color:#fff;font-size:.74rem;font-family:inherit;outline:none;min-width:0">
+    <button id="wt-name-save2" style="padding:4px 8px;border-radius:5px;background:rgba(230,57,70,.65);color:#fff;font-size:.7rem;font-weight:700;cursor:pointer;border:none;white-space:nowrap">OK</button>
   `;
   cp.appendChild(nameRow);
   nameRow.querySelector('#wt-name-save2').onclick = () => {
-    const v = (nameRow.querySelector('#wt-name-inp2')?.value || '').trim();
+    const v = (nameRow.querySelector('#wt-name-inp2')?.value||'').trim();
     if (!v) return;
-    WT.userName = v;
-    localStorage.setItem('wt_name', v);
-    WT.presenceRef?.update({ name: v });
-    _showToast(`Name: "${v}"`, '✅');
+    WT.userName = v; localStorage.setItem('wt_name',v);
+    WT.presenceRef?.update({name:v});
+    _showToast(`Name: "${v}"`,'✅');
   };
 
-  // Messages area
+  // ── Messages ──
   const msgs = document.createElement('div');
   msgs.id = 'chatMessages';
-  msgs.style.cssText = 'flex:1;overflow-y:auto;padding:10px;display:flex;flex-direction:column;gap:6px;font-size:.81rem;color:#9898b0';
-  msgs.innerHTML = '<span style="font-style:italic;color:#55556a">Say hi! 👋</span>';
+  msgs.style.cssText = 'flex:1;overflow-y:auto;padding:8px 8px 4px;display:flex;flex-direction:column;gap:5px;font-size:.81rem;color:#9898b0;scroll-behavior:smooth';
+  msgs.innerHTML = '<span style="font-style:italic;color:#55556a;text-align:center;padding:10px 0">Say hi! 👋</span>';
   cp.appendChild(msgs);
 
-  // Input row
+  // ── Reply bar ──
+  const replyBar = document.createElement('div');
+  replyBar.id = 'wt-reply-bar';
+  replyBar.style.cssText = 'display:none;align-items:center;gap:6px;padding:5px 10px;background:rgba(230,57,70,.1);border-top:1px solid rgba(230,57,70,.2);flex-shrink:0';
+  replyBar.innerHTML = `
+    <span id="wt-reply-preview" style="flex:1;font-size:.72rem;color:#ff6b6b;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"></span>
+    <button onclick="_clearReply()" style="background:none;border:none;color:#9898b0;cursor:pointer;font-size:.85rem;flex-shrink:0">✕</button>
+  `;
+  cp.appendChild(replyBar);
+
+  // ── GIF search panel (hidden) ──
+  const gifPanel = document.createElement('div');
+  gifPanel.id = 'wt-gif-panel';
+  gifPanel.style.cssText = 'display:none;flex-direction:column;border-top:1px solid rgba(255,255,255,.08);background:rgba(10,10,14,.98);flex-shrink:0;max-height:200px';
+  gifPanel.innerHTML = `
+    <div style="display:flex;gap:6px;padding:6px 8px;border-bottom:1px solid rgba(255,255,255,.06)">
+      <input id="wt-gif-search" placeholder="Search GIFs…" style="flex:1;padding:5px 8px;border-radius:6px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);color:#fff;font-size:.78rem;font-family:inherit;outline:none">
+      <button onclick="_wtSearchGif()" style="padding:5px 9px;border-radius:6px;background:#e63946;color:#fff;font-size:.75rem;cursor:pointer;border:none;font-weight:700">Go</button>
+    </div>
+    <div id="wt-gif-results" style="display:grid;grid-template-columns:1fr 1fr;gap:4px;padding:6px 8px;overflow-y:auto;max-height:160px"></div>
+  `;
+  cp.appendChild(gifPanel);
+  gifPanel.querySelector('#wt-gif-search').addEventListener('keydown',e=>{ if(e.key==='Enter') _wtSearchGif(); });
+
+  // ── Emoji picker (hidden) ──
+  const emojiPanel = document.createElement('div');
+  emojiPanel.id = 'wt-emoji-panel';
+  emojiPanel.style.cssText = 'display:none;flex-wrap:wrap;gap:2px;padding:8px;border-top:1px solid rgba(255,255,255,.08);background:rgba(10,10,14,.98);max-height:130px;overflow-y:auto;flex-shrink:0';
+  const EMOJIS = ['😀','😂','🥹','😍','🥰','😘','😎','🤩','😭','😱','😡','🥺','😏','🤔','🤣','😴','🫡','🫶','❤️','🔥','💯','👍','👎','👏','🙌','🤝','✌️','🫂','💀','👀','🎉','🎬','🍿','💔','❤️‍🔥','💕','🥂','😤','🤯','🥴','😵','🤮','🤧','🫠','🙂‍↔️','😶','🫣','🤭','🥱','😮','🫢'];
+  EMOJIS.forEach(em => {
+    const b = document.createElement('button');
+    b.textContent = em;
+    b.style.cssText = 'background:none;border:none;font-size:1.2rem;cursor:pointer;padding:2px;border-radius:4px;transition:background 100ms';
+    b.onmouseenter = ()=>b.style.background='rgba(255,255,255,.1)';
+    b.onmouseleave = ()=>b.style.background='none';
+    b.onclick = () => {
+      const inp = _wtQs('#wt-chat-inp2');
+      if (inp) { inp.value += em; inp.focus(); }
+      _toggleEmojiPanel(false);
+    };
+    emojiPanel.appendChild(b);
+  });
+  cp.appendChild(emojiPanel);
+
+  // ── Toolbar row (emoji, gif, image) ──
+  const toolbar = document.createElement('div');
+  toolbar.style.cssText = 'display:flex;align-items:center;gap:4px;padding:5px 8px 0;flex-shrink:0';
+  toolbar.innerHTML = `
+    <button id="wt-emoji-btn" title="Emoji"
+      style="background:none;border:none;font-size:1.15rem;cursor:pointer;padding:4px 5px;border-radius:6px;color:#9898b0;transition:all 120ms">😊</button>
+    <button id="wt-gif-btn" title="GIF"
+      style="background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);color:#9898b0;font-size:.68rem;font-weight:800;padding:3px 7px;border-radius:5px;cursor:pointer;letter-spacing:.05em;transition:all 120ms">GIF</button>
+    <label id="wt-img-btn" title="Send image" style="background:none;border:none;font-size:1.1rem;cursor:pointer;padding:4px 5px;border-radius:6px;color:#9898b0;transition:all 120ms">
+      📷<input type="file" accept="image/*" style="display:none" id="wt-img-inp">
+    </label>
+    <span style="flex:1"></span>
+    <span style="font-size:.64rem;color:#55556a" id="wt-char-count">0/200</span>
+  `;
+  cp.appendChild(toolbar);
+
+  // ── Input row ──
   const row = document.createElement('div');
-  row.style.cssText = 'display:flex;gap:6px;padding:10px;border-top:1px solid rgba(255,255,255,.08);flex-shrink:0';
+  row.style.cssText = 'display:flex;gap:5px;padding:6px 8px 8px;flex-shrink:0';
   row.innerHTML = `
     <input id="wt-chat-inp2" type="text" placeholder="Type a message…" maxlength="200"
-      style="flex:1;padding:8px 10px;border-radius:8px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);color:#fff;font-size:.82rem;font-family:inherit;outline:none">
+      style="flex:1;padding:8px 10px;border-radius:8px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.1);color:#fff;font-size:.82rem;font-family:inherit;outline:none;min-width:0">
     <button id="wt-chat-send2"
-      style="padding:8px 12px;border-radius:8px;background:#e63946;color:#fff;font-size:.85rem;font-weight:700;cursor:pointer;border:none;flex-shrink:0">➤</button>
+      style="padding:8px 11px;border-radius:8px;background:#e63946;color:#fff;font-size:.85rem;font-weight:700;cursor:pointer;border:none;flex-shrink:0;transition:all 130ms">➤</button>
   `;
   cp.appendChild(row);
 
   const inp  = row.querySelector('#wt-chat-inp2');
   const send = row.querySelector('#wt-chat-send2');
 
-  function doSend() {
-    const msg = (inp.value || '').trim();
-    if (!msg) return;
+  // Char counter
+  inp.addEventListener('input', () => {
+    const cc = _wtQs('#wt-char-count');
+    if (cc) { cc.textContent=`${inp.value.length}/200`; cc.style.color=inp.value.length>180?'#ff6b6b':'#55556a'; }
+    // Close panels on type
+    _toggleGifPanel(false); _toggleEmojiPanel(false);
+  });
+
+  function doSend(extra={}) {
+    const msg = (inp.value||'').trim();
+    if (!msg && !extra.gif && !extra.img) return;
+    const payload = { ...extra };
+    if (WT_REPLY) { payload.replyTo = WT_REPLY; _clearReply(); }
     if (WT.roomCode) {
-      sendChatMessage(msg);
+      sendChatMessage(msg, payload);
     } else {
-      _appendChatMessage({ userId: WT.userId, name: WT.userName, text: msg, ts: _ts() });
+      _appendChatMessage({ userId:WT.userId, name:WT.userName, text:msg, ts:_ts(), ...payload });
     }
     inp.value = '';
+    const cc = _wtQs('#wt-char-count'); if(cc) cc.textContent='0/200';
     inp.focus();
   }
 
-  send.addEventListener('click', doSend);
-  inp.addEventListener('keydown', e => { if(e.key==='Enter'){e.preventDefault();doSend();} });
-  inp.addEventListener('focus', () => { inp.style.borderColor='rgba(230,57,70,.4)'; });
-  inp.addEventListener('blur',  () => { inp.style.borderColor='rgba(255,255,255,.12)'; });
-  window._sendChat = doSend;
+  send.addEventListener('click', ()=>doSend());
+  send.onmouseenter = ()=>send.style.background='#ff6b6b';
+  send.onmouseleave = ()=>send.style.background='#e63946';
+  inp.addEventListener('keydown', e=>{ if(e.key==='Enter'){e.preventDefault();doSend();} });
+  inp.addEventListener('focus', ()=>inp.style.borderColor='rgba(230,57,70,.35)');
+  inp.addEventListener('blur',  ()=>inp.style.borderColor='rgba(255,255,255,.1)');
+  window._sendChat = ()=>doSend();
 
-  // Show the panel
+  // Emoji toggle
+  toolbar.querySelector('#wt-emoji-btn').onclick = ()=>_toggleEmojiPanel();
+  toolbar.querySelector('#wt-gif-btn').onclick   = ()=>_toggleGifPanel();
+
+  // Image upload
+  toolbar.querySelector('#wt-img-inp').addEventListener('change', async e => {
+    const file = e.target.files[0];
+    if (!file) return;
+    if (file.size > 800*1024) { _showToast('Image too large (max 800KB)','⚠️'); return; }
+    const reader = new FileReader();
+    reader.onload = () => {
+      _showToast('Sending image…','📷',1500);
+      doSend({ img: reader.result });
+    };
+    reader.readAsDataURL(file);
+    e.target.value = '';
+  });
+
   cp.classList.add('show');
+}
+
+// ── Emoji / GIF panel toggles ──
+function _toggleEmojiPanel(force) {
+  const ep = _wtQs('#wt-emoji-panel');
+  const gp = _wtQs('#wt-gif-panel');
+  if (!ep) return;
+  const open = force !== undefined ? force : ep.style.display==='none';
+  ep.style.display = open ? 'flex' : 'none';
+  if (open && gp) gp.style.display='none';
+}
+
+function _toggleGifPanel(force) {
+  const gp = _wtQs('#wt-gif-panel');
+  const ep = _wtQs('#wt-emoji-panel');
+  if (!gp) return;
+  const open = force !== undefined ? force : gp.style.display==='none';
+  gp.style.display = open ? 'flex' : 'none';
+  if (open && ep) ep.style.display='none';
+  if (open) _wtQs('#wt-gif-search')?.focus();
+}
+
+async function _wtSearchGif() {
+  const q = (_wtQs('#wt-gif-search')?.value||'').trim();
+  const results = _wtQs('#wt-gif-results');
+  if (!results) return;
+  results.innerHTML = '<span style="font-size:.75rem;color:#55556a;grid-column:1/-1;text-align:center;padding:10px">Loading…</span>';
+  try {
+    // Tenor v2 API — free, no key needed for basic usage
+    const url = q
+      ? `https://tenor.googleapis.com/v2/search?q=${encodeURIComponent(q)}&key=AIzaSyAyimkuYQYF_FXVALexPzkcsvZnUpdated&client_key=flixora&limit=12`
+      : `https://tenor.googleapis.com/v2/featured?key=AIzaSyAyimkuYQYF_FXVALexPzkcsvZnUpdated&client_key=flixora&limit=12`;
+    const res  = await fetch(url);
+    const data = await res.json();
+    const gifs = data?.results || [];
+    if (!gifs.length) { results.innerHTML='<span style="font-size:.75rem;color:#55556a;grid-column:1/-1;text-align:center;padding:10px">No results</span>'; return; }
+    results.innerHTML = '';
+    gifs.forEach(g => {
+      const gifUrl = g.media_formats?.tinygif?.url || g.media_formats?.gif?.url;
+      if (!gifUrl) return;
+      const img = document.createElement('img');
+      img.src = gifUrl; img.loading='lazy';
+      img.style.cssText='width:100%;border-radius:5px;cursor:pointer;object-fit:cover;max-height:70px';
+      img.title = g.content_description||'GIF';
+      img.onclick = () => {
+        _toggleGifPanel(false);
+        const inp = _wtQs('#wt-chat-inp2');
+        const doS = window._sendChat;
+        // Send gif directly
+        const msg = (inp?.value||'').trim();
+        const payload = { gif: gifUrl };
+        if (WT_REPLY) { payload.replyTo=WT_REPLY; _clearReply(); }
+        if (WT.roomCode) { sendChatMessage(msg, payload); } else { _appendChatMessage({userId:WT.userId,name:WT.userName,text:msg,ts:_ts(),...payload}); }
+        if (inp) { inp.value=''; inp.focus(); }
+      };
+      results.appendChild(img);
+    });
+  } catch(e) {
+    results.innerHTML='<span style="font-size:.75rem;color:#ff6b6b;grid-column:1/-1;text-align:center;padding:8px">GIF load failed</span>';
+    console.error('[WT GIF]',e);
+  }
 }
 
 function _saveWTName() {
