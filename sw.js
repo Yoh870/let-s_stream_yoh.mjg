@@ -1,61 +1,136 @@
-/* ═══════════════════════════════════════════════════
-   StreamFlix — Service Worker
-   Enables: offline support, install prompt, caching
-═══════════════════════════════════════════════════ */
+/* ═══════════════════════════════════════════
+   FLIXORA Service Worker v5.0
+   Cache-first for static assets, network-first
+   for TMDB API calls. Offline fallback page.
+═══════════════════════════════════════════ */
 
-const CACHE  = 'streamflix-v1';
-const ASSETS = [
-  '/let-s_stream_yoh.mjg/',
-  '/let-s_stream_yoh.mjg/index.html',
-  '/let-s_stream_yoh.mjg/app.js',
-  '/let-s_stream_yoh.mjg/manifest.json',
+const CACHE_NAME    = 'flixora-v5';
+const TMDB_CACHE    = 'flixora-tmdb-v5';
+const IMG_CACHE     = 'flixora-img-v5';
+const TMDB_CACHE_TTL = 5 * 60 * 1000; // 5 min
+
+/* Assets to pre-cache on install */
+const PRECACHE_ASSETS = [
+  '/',
+  '/index.html',
+  '/app.js',
+  '/manifest.json',
 ];
 
-/* ── Install: cache core files ─────────────────── */
-self.addEventListener('install', e => {
-  e.waitUntil(
-    caches.open(CACHE).then(cache => cache.addAll(ASSETS)).catch(() => {})
-  );
+/* ── INSTALL ─────────────────────────────── */
+self.addEventListener('install', event => {
   self.skipWaiting();
-});
-
-/* ── Activate: clear old caches ────────────────── */
-self.addEventListener('activate', e => {
-  e.waitUntil(
-    caches.keys().then(keys =>
-      Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k)))
-    )
+  event.waitUntil(
+    caches.open(CACHE_NAME).then(cache => {
+      return cache.addAll(PRECACHE_ASSETS).catch(e => {
+        console.warn('[SW] Precache failed:', e.message);
+      });
+    })
   );
-  self.clients.claim();
 });
 
-/* ── Fetch: network-first, fallback to cache ───── */
-self.addEventListener('fetch', e => {
-  /* Skip non-GET and cross-origin API calls (TMDB, video embeds) */
-  if (e.request.method !== 'GET') return;
-  const url = new URL(e.request.url);
-  if (url.hostname.includes('themoviedb.org') ||
-      url.hostname.includes('vidsrc')         ||
-      url.hostname.includes('embed.su')       ||
-      url.hostname.includes('vidlink')        ||
-      url.hostname.includes('autoembed')      ||
-      url.hostname.includes('2embed')         ||
-      url.hostname.includes('multiembed')     ||
-      url.hostname.includes('unsplash.com')   ||
-      url.hostname.includes('image.tmdb.org')) {
-    return; /* let browser handle API & image requests normally */
+/* ── ACTIVATE ────────────────────────────── */
+self.addEventListener('activate', event => {
+  event.waitUntil(
+    caches.keys().then(keys =>
+      Promise.all(
+        keys.filter(k => k !== CACHE_NAME && k !== TMDB_CACHE && k !== IMG_CACHE)
+            .map(k => caches.delete(k))
+      )
+    ).then(() => self.clients.claim())
+  );
+});
+
+/* ── FETCH ───────────────────────────────── */
+self.addEventListener('fetch', event => {
+  const { request } = event;
+  const url = new URL(request.url);
+
+  // Skip non-GET
+  if (request.method !== 'GET') return;
+
+  // TMDB API — network first with TMDB cache
+  if (url.hostname === 'api.themoviedb.org') {
+    event.respondWith(networkFirstTMDB(request));
+    return;
   }
 
-  e.respondWith(
-    fetch(e.request)
-      .then(res => {
-        /* Cache fresh responses for our own files */
-        if (res.ok && url.hostname === self.location.hostname) {
-          const copy = res.clone();
-          caches.open(CACHE).then(c => c.put(e.request, copy));
-        }
-        return res;
-      })
-      .catch(() => caches.match(e.request)) /* offline fallback */
-  );
+  // TMDB images — cache first
+  if (url.hostname === 'image.tmdb.org') {
+    event.respondWith(cacheFirstImages(request));
+    return;
+  }
+
+  // Google Fonts — cache first
+  if (url.hostname.includes('fonts.g') || url.hostname.includes('fonts.googleapis')) {
+    event.respondWith(cacheFirst(request, CACHE_NAME));
+    return;
+  }
+
+  // App shell — stale-while-revalidate
+  if (url.origin === self.location.origin) {
+    event.respondWith(staleWhileRevalidate(request));
+    return;
+  }
 });
+
+/* ── STRATEGIES ──────────────────────────── */
+
+async function networkFirstTMDB(request) {
+  const cache = await caches.open(TMDB_CACHE);
+  try {
+    const response = await fetch(request.clone(), { signal: AbortSignal.timeout(8000) });
+    if (response.ok) {
+      const cloned = response.clone();
+      cache.put(request, cloned);
+    }
+    return response;
+  } catch (e) {
+    const cached = await cache.match(request);
+    if (cached) return cached;
+    return new Response(JSON.stringify({ success: false, status_message: 'Offline' }), {
+      headers: { 'Content-Type': 'application/json' }
+    });
+  }
+}
+
+async function cacheFirstImages(request) {
+  const cache = await caches.open(IMG_CACHE);
+  const cached = await cache.match(request);
+  if (cached) return cached;
+  try {
+    const response = await fetch(request);
+    if (response.ok) cache.put(request, response.clone());
+    return response;
+  } catch (e) {
+    // Return transparent 1x1 SVG as placeholder
+    return new Response(
+      '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1 1"></svg>',
+      { headers: { 'Content-Type': 'image/svg+xml' } }
+    );
+  }
+}
+
+async function cacheFirst(request, cacheName) {
+  const cache = await caches.open(cacheName);
+  const cached = await cache.match(request);
+  if (cached) return cached;
+  try {
+    const response = await fetch(request);
+    if (response.ok) cache.put(request, response.clone());
+    return response;
+  } catch (e) {
+    return new Response('Offline', { status: 503 });
+  }
+}
+
+async function staleWhileRevalidate(request) {
+  const cache = await caches.open(CACHE_NAME);
+  const cached = await cache.match(request);
+  const networkFetch = fetch(request).then(response => {
+    if (response.ok) cache.put(request, response.clone());
+    return response;
+  }).catch(() => null);
+
+  return cached || await networkFetch || new Response('Offline', { status: 503 });
+}

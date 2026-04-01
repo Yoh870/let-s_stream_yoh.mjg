@@ -2,285 +2,1031 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>FLIXORA — Watch Anything, Anywhere</title>
-<meta name="description" content="Stream movies, TV series, K-Drama, and Anime for free. No subscription needed.">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>FLIXORA — Watch Movies, TV Series & Anime Free</title>
+<meta name="description" content="Stream movies, TV series, K-Drama, and Anime for free in HD. No subscription needed. Watch together with friends in real-time.">
+<meta name="keywords" content="free movies online, watch TV series free, anime streaming, K-Drama free, watch together, flixora">
+<meta name="robots" content="index, follow">
 <meta name="theme-color" content="#0a0a0f">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Flixora">
+
+<!-- Open Graph -->
+<meta property="og:type" content="website">
+<meta property="og:title" content="FLIXORA — Watch Movies, TV Series & Anime Free">
+<meta property="og:description" content="Stream thousands of movies, TV series, K-Drama and Anime for free. Watch together with friends in real-time.">
+<meta property="og:url" content="https://flixora.app">
+<meta property="og:image" content="https://flixora.app/og-image.jpg">
+<meta property="og:site_name" content="Flixora">
+
+<!-- Twitter Card -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="FLIXORA — Free Streaming">
+<meta name="twitter:description" content="Watch movies, series & anime free. Watch Together with friends!">
+
+<!-- Schema.org -->
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"WebApplication","name":"Flixora","url":"https://flixora.app","description":"Free streaming platform for movies, TV series, K-Drama, and Anime","applicationCategory":"EntertainmentApplication","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"}}</script>
+
 <link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="icon" type="image/png" href="icons/icon-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Playfair+Display:wght@700;900&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&family=Playfair+Display:wght@700;900&display=swap" rel="stylesheet">
+
 <style>
-:root{
-  --bg:#0a0a0f;--bg2:#111118;--bg3:#18181f;--bg4:#1e1e28;
-  --sur:rgba(255,255,255,.05);--sur2:rgba(255,255,255,.08);--sur3:rgba(255,255,255,.12);
-  --bd:rgba(255,255,255,.08);--bd2:rgba(255,255,255,.14);
-  --tx:#f0f0f8;--tx2:#9898b0;--tx3:#55556a;
-  --red:#e63946;--red2:#ff6b6b;--rd:rgba(230,57,70,.14);
-  --gold:#f5c518;--gd:rgba(245,197,24,.12);
-  --nav:240px;--top:62px;--r:8px;--r2:12px;
-  --ease:cubic-bezier(.16,1,.3,1);
+/* ════════════════════════════════════════════
+   FLIXORA v5.0 — Full Overhaul Design System
+════════════════════════════════════════════ */
+:root {
+  /* Palette */
+  --bg:       #080810;
+  --bg2:      #0e0e18;
+  --bg3:      #141421;
+  --bg4:      #1c1c2e;
+  --bg5:      #24243a;
+  --sur:      rgba(255,255,255,.05);
+  --sur2:     rgba(255,255,255,.08);
+  --sur3:     rgba(255,255,255,.13);
+  --bd:       rgba(255,255,255,.07);
+  --bd2:      rgba(255,255,255,.13);
+  --bd3:      rgba(255,255,255,.22);
+  --tx:       #f2f2fc;
+  --tx2:      #9494b8;
+  --tx3:      #4e4e70;
+  --tx4:      #2e2e4e;
+
+  /* Brand */
+  --red:      #e63946;
+  --red2:     #ff5561;
+  --red3:     #ff8a93;
+  --rd:       rgba(230,57,70,.12);
+  --rd2:      rgba(230,57,70,.22);
+  --gold:     #f5c518;
+  --gd:       rgba(245,197,24,.1);
+  --emerald:  #10b981;
+
+  /* Layout */
+  --nav:      252px;
+  --top:      64px;
+  --r:        10px;
+  --r2:       16px;
+  --r3:       22px;
+
+  /* Transitions */
+  --ease:  cubic-bezier(.16,1,.3,1);
+  --ease2: cubic-bezier(.4,0,.2,1);
+  --ease3: cubic-bezier(.34,1.56,.64,1);
 }
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-html{scroll-behavior:smooth}
-body{font-family:'Outfit',sans-serif;background:var(--bg);color:var(--tx);min-height:100vh;overflow-x:hidden;-webkit-font-smoothing:antialiased}
-img{display:block;max-width:100%}
-a{text-decoration:none;color:inherit}
-button{font-family:inherit;cursor:pointer;border:none;background:none}
-input,select{font-family:inherit;outline:none}
-::-webkit-scrollbar{width:4px;height:4px}
-::-webkit-scrollbar-thumb{background:rgba(255,255,255,.1);border-radius:4px}
 
-/* SIDEBAR */
-#sidebar{position:fixed;top:0;left:0;height:100vh;width:var(--nav);background:rgba(8,8,13,.97);backdrop-filter:blur(24px);border-right:1px solid var(--bd);display:flex;flex-direction:column;z-index:200;transition:transform .3s var(--ease)}
-.sb-logo{display:flex;align-items:center;gap:11px;padding:20px 18px 18px;border-bottom:1px solid var(--bd);flex-shrink:0}
-.sb-mark{width:34px;height:34px;border-radius:9px;background:linear-gradient(135deg,var(--red),#c1121f);display:flex;align-items:center;justify-content:center;font-weight:900;font-size:14px;color:#fff;letter-spacing:-1px;flex-shrink:0;box-shadow:0 4px 14px rgba(230,57,70,.4)}
-.sb-name{font-family:'Playfair Display',serif;font-size:1.25rem;font-weight:900;letter-spacing:.06em;background:linear-gradient(135deg,#fff,var(--tx2));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
-.sb-nav{flex:1;overflow-y:auto;padding:10px 8px;scrollbar-width:none}
-.sb-nav::-webkit-scrollbar{display:none}
-.sb-sec{margin-bottom:20px}
-.sb-lbl{font-size:.6rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--tx3);padding:0 10px;margin-bottom:3px;display:block}
-.ni{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:var(--r);color:var(--tx2);font-size:.88rem;font-weight:500;cursor:pointer;transition:all 140ms;position:relative}
-.ni:hover{background:var(--sur);color:var(--tx)}
-.ni.active{background:var(--rd);color:var(--red2)}
-.ni.active::before{content:'';position:absolute;left:0;top:22%;bottom:22%;width:3px;background:var(--red);border-radius:0 3px 3px 0}
-.ni-ico{font-size:1rem;width:20px;text-align:center;flex-shrink:0}
-.ni-badge{margin-left:auto;background:var(--red);color:#fff;font-size:.58rem;font-weight:800;padding:2px 6px;border-radius:20px}
-.sb-foot{padding:12px 8px;border-top:1px solid var(--bd);flex-shrink:0}
-.sb-kofi{width:100%;padding:10px 14px;border-radius:var(--r);background:var(--gd);border:1px solid rgba(245,197,24,.2);color:var(--gold);font-size:.82rem;font-weight:700;display:flex;align-items:center;gap:8px;justify-content:center;transition:all 150ms}
-.sb-kofi:hover{background:rgba(245,197,24,.18)}
-
-/* OVERLAY */
-#sbOv{position:fixed;inset:0;background:rgba(0,0,0,.75);backdrop-filter:blur(4px);z-index:190;display:none}
-#sbOv.on{display:block}
-
-/* TOPBAR */
-#topbar{position:fixed;top:0;left:var(--nav);right:0;height:var(--top);z-index:150;background:rgba(10,10,15,.9);backdrop-filter:blur(20px);border-bottom:1px solid var(--bd);display:flex;align-items:center;gap:14px;padding:0 22px;transition:left .3s var(--ease)}
-#topbar.fw{left:0}
-.tb-menu{display:none;width:36px;height:36px;border-radius:var(--r);background:var(--sur);border:1px solid var(--bd);color:var(--tx2);font-size:1.1rem;align-items:center;justify-content:center;flex-shrink:0}
-.tb-srch{flex:1;max-width:440px;position:relative}
-.tb-srch input{width:100%;padding:9px 14px 9px 38px;background:var(--sur);border:1px solid var(--bd);border-radius:30px;color:var(--tx);font-size:.88rem;transition:all 180ms}
-.tb-srch input:focus{border-color:rgba(230,57,70,.4);background:var(--bg3);box-shadow:0 0 0 3px var(--rd)}
-.tb-srch input::placeholder{color:var(--tx3)}
-.tb-sico{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--tx3);font-size:.85rem;pointer-events:none}
-.tb-acts{display:flex;align-items:center;gap:8px;margin-left:auto}
-.tb-btn{width:36px;height:36px;border-radius:var(--r);background:var(--sur);border:1px solid var(--bd);color:var(--tx2);display:flex;align-items:center;justify-content:center;font-size:.95rem;transition:all 140ms;flex-shrink:0}
-.tb-btn:hover{background:var(--sur2);color:var(--tx);border-color:var(--bd2)}
-
-/* MAIN */
-#mainWrap{margin-left:var(--nav);padding-top:var(--top);min-height:100vh;transition:margin-left .3s var(--ease)}
-
-/* HERO */
-#hero{position:relative;height:500px;overflow:hidden}
-.hero-slide{position:absolute;inset:0;opacity:0;transition:opacity .9s ease}
-.hero-slide.active{opacity:1}
-.hero-bg-img{width:100%;height:100%;object-fit:cover;object-position:center top}
-.hero-ov{position:absolute;inset:0;background:linear-gradient(to right,rgba(10,10,15,.97) 0%,rgba(10,10,15,.72) 50%,rgba(10,10,15,.2) 100%),linear-gradient(to top,rgba(10,10,15,1) 0%,transparent 40%)}
-.hero-content{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;padding:0 40px;max-width:660px}
-.hero-badge{display:inline-flex;align-items:center;gap:6px;background:var(--rd);border:1px solid rgba(230,57,70,.25);color:var(--red2);font-size:.7rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:5px 12px;border-radius:30px;margin-bottom:16px;width:fit-content}
-.hero-title{font-family:'Playfair Display',serif;font-size:clamp(2rem,4vw,2.9rem);font-weight:900;line-height:1.1;margin-bottom:12px;letter-spacing:-.02em}
-.hero-description{color:var(--tx2);font-size:.93rem;line-height:1.7;margin-bottom:22px;max-width:440px}
-.hero-acts{display:flex;gap:10px;flex-wrap:wrap}
-.hero-meta{display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap}
-.btn-play{display:inline-flex;align-items:center;gap:8px;padding:11px 24px;border-radius:30px;background:var(--red);color:#fff;font-weight:700;font-size:.9rem;transition:all 200ms var(--ease);box-shadow:0 8px 24px rgba(230,57,70,.35)}
-.btn-play:hover{background:var(--red2);transform:translateY(-2px);box-shadow:0 12px 30px rgba(230,57,70,.45)}
-.btn-info{display:inline-flex;align-items:center;gap:8px;padding:10px 20px;border-radius:30px;background:var(--sur2);border:1px solid var(--bd2);color:var(--tx);font-weight:600;font-size:.9rem;transition:all 150ms}
-.btn-info:hover{background:var(--sur3)}
-#heroBar{position:absolute;bottom:0;left:0;height:2px;background:linear-gradient(90deg,var(--red),var(--red2));z-index:2;border-radius:0 2px 2px 0}
-#heroDots{position:absolute;bottom:16px;right:24px;display:flex;gap:6px;z-index:3}
-.hdot{width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,.3);cursor:pointer;transition:all 200ms}
-.hdot.active{background:#fff;transform:scale(1.3)}
-
-/* GENRE BAR */
-#genreBar{display:flex;gap:8px;padding:16px 22px 10px;overflow-x:auto;border-bottom:1px solid var(--bd);scrollbar-width:none}
-#genreBar::-webkit-scrollbar{display:none}
-.genre-chip{flex-shrink:0;padding:6px 16px;border-radius:30px;background:var(--sur);border:1px solid var(--bd);color:var(--tx2);font-size:.8rem;font-weight:500;cursor:pointer;transition:all 140ms;white-space:nowrap}
-.genre-chip:hover{background:var(--sur2);color:var(--tx);border-color:var(--bd2)}
-.genre-chip.active{background:var(--red);border-color:var(--red);color:#fff;font-weight:700}
-
-/* SECTIONS */
-.sec{padding:28px 22px 8px}
-.sec-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
-.sec-title{font-size:1.1rem;font-weight:700;display:flex;align-items:center;gap:8px}
-.see-all-btn{font-size:.78rem;color:var(--tx2);font-weight:600;display:flex;align-items:center;gap:4px;padding:5px 12px;border-radius:var(--r);background:var(--sur);border:1px solid var(--bd);transition:all 140ms}
-.see-all-btn:hover{color:var(--tx);border-color:var(--bd2)}
-
-/* ROW */
-.row-wrap{position:relative}
-.row-scroll{display:grid;grid-auto-flow:column;grid-auto-columns:150px;gap:12px;overflow-x:auto;padding:4px 4px 14px;scroll-snap-type:x mandatory;scrollbar-width:none}
-.row-scroll::-webkit-scrollbar{display:none}
-.row-arrow{position:absolute;top:40%;transform:translateY(-50%);width:38px;height:38px;border-radius:50%;background:rgba(10,10,15,.93);backdrop-filter:blur(8px);border:1px solid var(--bd2);color:var(--tx);display:flex;align-items:center;justify-content:center;font-size:1rem;z-index:5;cursor:pointer;transition:all 150ms;box-shadow:0 4px 14px rgba(0,0,0,.55);opacity:0;pointer-events:none}
-.row-wrap:hover .row-arrow{opacity:1;pointer-events:all}
-.row-arrow:hover{background:var(--red);border-color:var(--red)}
-.row-arrow.l{left:-16px}
-.row-arrow.r{right:-16px}
-
-/* SKELETON */
-.skel{border-radius:8px;overflow:hidden;background:var(--bg3);flex-shrink:0;width:150px;scroll-snap-align:start}
-.skel-p{aspect-ratio:2/3;background:linear-gradient(110deg,var(--bg3) 30%,var(--bg4) 50%,var(--bg3) 70%);background-size:300% 100%;animation:sfShim 1.6s ease-in-out infinite}
-.skel-t{padding:9px 8px}
-.skel-l{height:11px;border-radius:4px;background:var(--bg4);margin-bottom:6px}
-.skel-l.s{width:55%;height:9px;background:var(--bg3)}
-
-/* CONTENT CARD base - app.js makeCard() injects the rest */
-.content-card{scroll-snap-align:start}
-
-/* RESULTS */
-#searchResultsContainer{display:none;min-height:300px}
-#searchInfo{display:none;padding:22px 22px 8px}
-#searchTitle{font-family:'Playfair Display',serif;font-size:1.5rem;font-weight:900;margin-bottom:4px}
-#searchCount{font-size:.85rem;color:var(--tx2)}
-#sf-results-wrap{display:grid;grid-template-columns:repeat(auto-fill,minmax(145px,1fr));gap:14px;padding:10px 22px 24px}
-#pagination{display:flex;gap:8px;flex-wrap:wrap;padding:8px 22px 28px;justify-content:center}
-
-/* PLAYER */
-#playerModal{position:fixed;inset:0;background:rgba(0,0,0,.92);backdrop-filter:blur(10px);z-index:800;display:flex;align-items:center;justify-content:center;padding:16px;opacity:0;pointer-events:none;transition:opacity .25s}
-#playerModal.active{opacity:1;pointer-events:all}
-.p-box{background:var(--bg2);border:1px solid var(--bd);border-radius:18px;width:100%;max-width:880px;max-height:92vh;overflow:hidden;overflow-y:auto;transform:translateY(20px) scale(.97);transition:transform .25s var(--ease);box-shadow:0 40px 100px rgba(0,0,0,.75);position:relative}
-#playerModal.active .p-box{transform:none}
-#playerClose{position:absolute;top:14px;right:14px;z-index:10;width:34px;height:34px;border-radius:50%;background:rgba(0,0,0,.7);color:#fff;font-size:.95rem;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all 140ms}
-#playerClose:hover{background:var(--red)}
-#playerVideo{position:relative;padding-top:56.25%;background:#000;min-height:200px}
-#playerVideo iframe{position:absolute;inset:0;width:100%;height:100%;border:none}
-.p-spin{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;color:var(--tx2)}
-.spinner{width:38px;height:38px;border:3px solid rgba(255,255,255,.1);border-top-color:var(--red);border-radius:50%;animation:sfSpin 1s linear infinite}
-.p-meta{padding:20px 22px}
-#playerTitle{font-family:'Playfair Display',serif;font-size:1.4rem;font-weight:900;margin-bottom:16px}
-#episodePanel{display:none;margin-bottom:14px}
-.ep-lbl{font-size:.68rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--tx3);margin-bottom:8px}
-#seasonSelect,#episodeSelect{padding:8px 12px;border-radius:var(--r);background:var(--bg3);border:1px solid var(--bd);color:var(--tx);font-size:.85rem;margin-right:8px;cursor:pointer}
-.srv-lbl{font-size:.68rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--tx3);margin-bottom:8px}
-#serverButtons{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
-.server-btn{padding:7px 14px;border-radius:var(--r);background:var(--sur);border:1px solid var(--bd);color:var(--tx2);font-size:.8rem;font-weight:600;cursor:pointer;transition:all 140ms}
-.server-btn:hover{border-color:var(--bd2);color:var(--tx)}
-.server-btn.active{background:var(--rd);border-color:rgba(230,57,70,.35);color:var(--red2)}
-.sub-badge{background:#10b981;color:#fff;padding:1px 4px;border-radius:3px;font-size:.55rem;margin-left:3px;font-weight:800}
-.srv-tip{padding:9px 13px;border-radius:var(--r);background:var(--gd);border:1px solid rgba(245,197,24,.15);font-size:.76rem;color:rgba(245,197,24,.9);display:flex;align-items:center;gap:6px;margin-bottom:14px}
-.p-acts{display:flex;gap:10px;flex-wrap:wrap}
-.btn-tog{display:inline-flex;align-items:center;gap:7px;padding:9px 18px;border-radius:30px;background:var(--sur2);border:1px solid var(--bd2);color:var(--tx);font-weight:600;font-size:.85rem;transition:all 150ms}
-.btn-tog:hover{background:var(--sur3)}
-
-/* CHAT */
-#chatPanel{position:absolute;right:0;top:0;height:100%;width:260px;background:var(--bg2);border-left:1px solid var(--bd);display:flex;flex-direction:column;transform:translateX(100%);transition:transform .3s var(--ease);z-index:5}
-#chatPanel.show{transform:none}
-.ch-hd{padding:12px 14px;border-bottom:1px solid var(--bd);font-weight:700;font-size:.9rem;display:flex;align-items:center;justify-content:space-between}
-.ch-hd button{color:var(--tx2)}
-#chatMessages{flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:8px;font-size:.82rem;color:var(--tx2)}
-.ch-inp{display:flex;gap:6px;padding:10px;border-top:1px solid var(--bd)}
-.ch-inp input{flex:1;padding:7px 10px;border-radius:var(--r);background:var(--bg3);border:1px solid var(--bd);color:var(--tx);font-size:.82rem}
-.ch-inp button{padding:7px 12px;border-radius:var(--r);background:var(--red);color:#fff;font-size:.82rem;font-weight:600}
-
-/* 18+ */
-#verifyModal{position:fixed;inset:0;background:rgba(0,0,0,.96);backdrop-filter:blur(14px);z-index:900;display:none;align-items:center;justify-content:center;padding:20px}
-.v-box{background:var(--bg2);border:1px solid rgba(230,57,70,.2);border-radius:20px;padding:38px 32px;max-width:420px;width:100%;text-align:center;box-shadow:0 40px 100px rgba(0,0,0,.7)}
-.v-ico{font-size:2.8rem;margin-bottom:14px}
-.v-title{font-family:'Playfair Display',serif;font-size:1.4rem;font-weight:900;margin-bottom:8px}
-.v-desc{color:var(--tx2);font-size:.88rem;line-height:1.65;margin-bottom:24px}
-#vs1,#vs2{display:none}
-#vs1.on,#vs2.on{display:block}
-.v-chk{display:flex;align-items:center;gap:10px;text-align:left;background:var(--sur);border:1px solid var(--bd);border-radius:var(--r);padding:11px 14px;margin-bottom:14px;cursor:pointer}
-.v-chk input{accent-color:var(--red);width:16px;height:16px;flex-shrink:0}
-.v-chk label{font-size:.88rem;cursor:pointer}
-.pin-row{display:flex;gap:10px;justify-content:center;margin-bottom:14px}
-.pin-d{width:52px;height:58px;border-radius:var(--r);text-align:center;background:var(--bg3);border:1px solid var(--bd);color:var(--tx);font-size:1.4rem;font-weight:700;transition:border-color 150ms}
-.pin-d:focus{border-color:var(--red);box-shadow:0 0 0 3px var(--rd)}
-#pinErr{color:var(--red2);font-size:.8rem;min-height:20px;margin-bottom:10px}
-.v-btns{display:flex;gap:10px}
-.btn-red{flex:1;padding:11px 18px;border-radius:30px;background:var(--red);color:#fff;font-weight:700;font-size:.9rem;transition:all 150ms}
-.btn-red:hover{background:var(--red2)}
-.btn-ghost{flex:1;padding:10px 18px;border-radius:30px;background:var(--sur2);border:1px solid var(--bd2);color:var(--tx);font-weight:600;font-size:.9rem;transition:all 150ms}
-.btn-ghost:hover{background:var(--sur3)}
-
-/* WATCH TOGETHER */
-#watchTogetherMenu,#joinRoomModal{position:fixed;inset:0;background:rgba(0,0,0,.88);backdrop-filter:blur(10px);z-index:850;display:none;align-items:center;justify-content:center;padding:20px}
-#watchTogetherMenu.open,#joinRoomModal.open{display:flex}
-.wt-box{background:var(--bg2);border:1px solid var(--bd);border-radius:18px;padding:28px;max-width:440px;width:100%;box-shadow:0 32px 80px rgba(0,0,0,.65)}
-.wt-hd{text-align:center;margin-bottom:22px}
-.wt-hd h2{font-family:'Playfair Display',serif;font-size:1.3rem;font-weight:900;margin-bottom:4px}
-.wt-hd p{color:var(--tx2);font-size:.83rem}
-.wt-opts{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px}
-.wt-opt{padding:18px 14px;border-radius:var(--r2);background:var(--sur);border:1px solid var(--bd);text-align:center;cursor:pointer;transition:all 180ms}
-.wt-opt:hover{background:var(--sur2);border-color:var(--bd2);transform:translateY(-2px)}
-.wt-opt-ico{font-size:1.8rem;margin-bottom:8px}
-.wt-opt-name{font-weight:700;font-size:.9rem;margin-bottom:3px}
-.wt-opt-desc{font-size:.74rem;color:var(--tx2)}
-.room-code{font-family:monospace;font-size:2.2rem;font-weight:900;letter-spacing:.3em;color:var(--red2);background:var(--rd);padding:16px;border-radius:var(--r);text-align:center;margin-bottom:14px;border:1px solid rgba(230,57,70,.2)}
-.rc-acts{display:flex;gap:8px;margin-bottom:12px}
-.rc-acts button{flex:1}
-.join-inp{width:100%;padding:12px 14px;border-radius:var(--r);background:var(--bg3);border:1px solid var(--bd);color:var(--tx);font-size:1rem;font-weight:600;text-align:center;letter-spacing:.12em;margin-bottom:12px;text-transform:uppercase}
-.join-inp:focus{border-color:rgba(230,57,70,.4);box-shadow:0 0 0 3px var(--rd)}
-
-/* SUPPORT */
-#supportModal{position:fixed;inset:0;background:rgba(0,0,0,.88);backdrop-filter:blur(10px);z-index:850;display:none;align-items:center;justify-content:center;padding:20px}
-#supportModal.open{display:flex}
-.sp-box{background:var(--bg2);border:1px solid var(--bd);border-radius:18px;max-width:400px;width:100%;overflow:hidden;box-shadow:0 32px 80px rgba(0,0,0,.65);position:relative}
-.sp-hd{text-align:center;padding:28px 24px 16px}
-.sp-ico{font-size:2.4rem;margin-bottom:10px}
-.sp-hd h2{font-family:'Playfair Display',serif;font-size:1.3rem;font-weight:900;margin-bottom:6px}
-.sp-hd p{color:var(--tx2);font-size:.85rem;line-height:1.6}
-.sp-amts{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;padding:0 24px 16px}
-.amt{padding:9px 6px;border-radius:var(--r);background:var(--sur);border:1px solid var(--bd);color:var(--tx);font-weight:700;font-size:.85rem;cursor:pointer;transition:all 140ms;text-align:center}
-.amt:hover{border-color:var(--gold);color:var(--gold)}
-.amt.active{background:var(--gd);border-color:var(--gold);color:var(--gold)}
-.sp-cta{padding:0 24px 24px}
-.sp-cta a,.sp-cta button{display:flex;align-items:center;justify-content:center;width:100%;padding:11px 18px;border-radius:30px;font-weight:700;font-size:.9rem;transition:all 150ms}
-.sp-cta a{background:var(--gold);color:#1a1000;margin-bottom:8px}
-.sp-cta a:hover{background:#f0b800}
-.sp-cta button{background:var(--sur);border:1px solid var(--bd);color:var(--tx2)}
-.sp-cta button:hover{color:var(--tx);border-color:var(--bd2)}
-
-/* INSTALL */
-#installBanner{position:fixed;bottom:-100px;left:50%;transform:translateX(-50%);background:var(--bg3);border:1px solid var(--bd2);border-radius:14px;padding:13px 18px;display:flex;align-items:center;gap:13px;box-shadow:0 16px 48px rgba(0,0,0,.55);z-index:400;max-width:360px;width:calc(100% - 32px);opacity:0;pointer-events:none;transition:all .4s var(--ease)}
-#installBanner.show{bottom:16px;opacity:1;pointer-events:all}
-.ib-ico{font-size:1.8rem;flex-shrink:0}
-.ib-tx{flex:1}
-.ib-title{font-weight:700;font-size:.88rem;margin-bottom:2px}
-.ib-sub{font-size:.73rem;color:var(--tx2)}
-#installBtn{padding:7px 14px;border-radius:var(--r);background:var(--red);color:#fff;font-weight:700;font-size:.78rem;cursor:pointer;white-space:nowrap;transition:all 140ms}
-#installBtn:hover{background:var(--red2)}
-#closeBanner{color:var(--tx3);font-size:1.1rem;cursor:pointer;flex-shrink:0;padding:2px 4px}
-#closeBanner:hover{color:var(--tx)}
-
-/* TOAST */
-#toast{position:fixed;top:76px;right:18px;z-index:999;background:var(--bg3);border:1px solid var(--bd2);border-radius:var(--r);padding:11px 16px;display:flex;align-items:center;gap:9px;font-size:.83rem;font-weight:500;box-shadow:0 8px 24px rgba(0,0,0,.45);transform:translateX(120%);transition:transform .3s var(--ease);max-width:300px}
-#toast.show{transform:none}
-
-/* BOTTOM NAV */
-#bottomNav{position:fixed;bottom:0;left:0;right:0;height:60px;background:rgba(10,10,15,.97);backdrop-filter:blur(20px);border-top:1px solid var(--bd);display:none;align-items:center;justify-content:space-around;z-index:200}
-.bni{display:flex;flex-direction:column;align-items:center;gap:3px;color:var(--tx3);font-size:.59rem;font-weight:700;letter-spacing:.03em;cursor:pointer;transition:color 140ms;padding:8px 10px}
-.bni.active{color:var(--red2)}
-.bni-ico{font-size:1.15rem}
-
-/* 18+ section */
-#section-mature{display:none}
-#section-mature.visible{display:block}
-
-/* KEYFRAMES */
-@keyframes sfShim{0%{background-position:100% 0}100%{background-position:-100% 0}}
-@keyframes sfSpin{to{transform:rotate(360deg)}}
-
-/* RESPONSIVE */
-@media(max-width:900px){
-  #sidebar{transform:translateX(-100%)}
-  #sidebar.open{transform:none}
-  #topbar,#topbar.fw{left:0}
-  #mainWrap{margin-left:0}
-  .tb-menu{display:flex}
-  #hero{height:400px}
-  .hero-content{padding:0 22px}
-  .hero-title{font-size:1.7rem}
-  #bottomNav{display:flex}
-  #mainWrap{padding-bottom:60px}
-  #installBanner.show{bottom:68px}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--bg);
+  color: var(--tx);
+  min-height: 100vh;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
-@media(max-width:600px){
-  #hero{height:350px}
-  .hero-description{display:none}
-  .sec{padding:20px 14px 6px}
-  .row-scroll{grid-auto-columns:136px;gap:10px}
-  .skel{width:136px}
-  #genreBar{padding:12px 14px 8px}
-  #sf-results-wrap{grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px;padding:8px 14px 20px}
-  .hero-acts .btn-info{display:none}
+img { display: block; max-width: 100%; }
+a { text-decoration: none; color: inherit; }
+button { font-family: inherit; cursor: pointer; border: none; background: none; }
+input, select { font-family: inherit; outline: none; }
+
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-thumb { background: var(--bg5); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: var(--bd3); }
+
+/* Selection */
+::selection { background: var(--rd2); color: var(--red3); }
+
+/* ── SIDEBAR ────────────────────────────────── */
+#sidebar {
+  position: fixed; top: 0; left: 0; height: 100vh; width: var(--nav);
+  background: var(--bg2);
+  border-right: 1px solid var(--bd);
+  display: flex; flex-direction: column; z-index: 200;
+  transition: transform .35s var(--ease);
+}
+/* Subtle grain texture on sidebar */
+#sidebar::before {
+  content: ''; position: absolute; inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.03'/%3E%3C/svg%3E");
+  pointer-events: none; border-radius: inherit; opacity: .4;
+}
+
+.sb-logo {
+  display: flex; align-items: center; gap: 12px;
+  padding: 22px 20px 20px;
+  border-bottom: 1px solid var(--bd);
+  flex-shrink: 0;
+}
+.sb-mark {
+  width: 36px; height: 36px; border-radius: 10px;
+  background: linear-gradient(135deg, var(--red), #b91c2c);
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Syne', sans-serif; font-weight: 800; font-size: 13px; color: #fff;
+  letter-spacing: -1px; flex-shrink: 0;
+  box-shadow: 0 4px 18px rgba(230,57,70,.4);
+  position: relative; overflow: hidden;
+}
+.sb-mark::after {
+  content: ''; position: absolute; inset: 0;
+  background: linear-gradient(135deg, rgba(255,255,255,.2), transparent);
+}
+.sb-wordmark {
+  font-family: 'Syne', sans-serif; font-size: 1.2rem; font-weight: 800;
+  letter-spacing: .12em; text-transform: uppercase;
+  background: linear-gradient(135deg, #fff 30%, var(--tx2));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+}
+
+.sb-nav { flex: 1; overflow-y: auto; padding: 12px 10px; scrollbar-width: none; }
+.sb-nav::-webkit-scrollbar { display: none; }
+.sb-sec { margin-bottom: 24px; }
+.sb-lbl {
+  font-size: .58rem; font-weight: 700; letter-spacing: .18em;
+  text-transform: uppercase; color: var(--tx3);
+  padding: 0 10px; margin-bottom: 4px; display: block;
+}
+
+.ni {
+  display: flex; align-items: center; gap: 11px;
+  padding: 9px 10px; border-radius: var(--r);
+  color: var(--tx2); font-size: .86rem; font-weight: 500;
+  cursor: pointer; transition: all 160ms var(--ease2);
+  position: relative; user-select: none;
+}
+.ni:hover { background: var(--sur); color: var(--tx); }
+.ni.active {
+  background: var(--rd);
+  color: var(--red2);
+  font-weight: 600;
+}
+.ni.active::before {
+  content: ''; position: absolute; left: 0; top: 25%; bottom: 25%;
+  width: 3px; background: var(--red); border-radius: 0 3px 3px 0;
+}
+.ni-ico { font-size: 1rem; width: 20px; text-align: center; flex-shrink: 0; }
+.ni-badge {
+  margin-left: auto;
+  background: var(--red); color: #fff;
+  font-size: .56rem; font-weight: 800;
+  padding: 2px 6px; border-radius: 20px;
+  animation: pulse-badge 2s ease-in-out infinite;
+}
+@keyframes pulse-badge { 0%,100%{opacity:1} 50%{opacity:.7} }
+
+.sb-foot { padding: 12px 10px 16px; border-top: 1px solid var(--bd); flex-shrink: 0; }
+.sb-kofi {
+  width: 100%; padding: 10px 14px; border-radius: var(--r);
+  background: var(--gd); border: 1px solid rgba(245,197,24,.18);
+  color: var(--gold); font-size: .82rem; font-weight: 700;
+  display: flex; align-items: center; gap: 8px; justify-content: center;
+  transition: all 150ms;
+}
+.sb-kofi:hover { background: rgba(245,197,24,.16); border-color: rgba(245,197,24,.3); }
+
+/* ── OVERLAY ─────────────────────────────── */
+#sbOv {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,.75);
+  backdrop-filter: blur(4px);
+  z-index: 190; display: none; opacity: 0;
+  transition: opacity .25s;
+}
+#sbOv.on { display: block; opacity: 1; }
+
+/* ── TOPBAR ──────────────────────────────── */
+#topbar {
+  position: fixed; top: 0; left: var(--nav); right: 0;
+  height: var(--top); z-index: 150;
+  background: rgba(8,8,16,.85);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  border-bottom: 1px solid var(--bd);
+  display: flex; align-items: center; gap: 14px; padding: 0 22px;
+  transition: left .35s var(--ease), background .3s;
+}
+#topbar.fw { left: 0; }
+#topbar.solid { background: var(--bg2); }
+
+.tb-menu {
+  display: none; width: 38px; height: 38px;
+  border-radius: var(--r); background: var(--sur);
+  border: 1px solid var(--bd); color: var(--tx2);
+  font-size: 1.1rem; align-items: center; justify-content: center;
+  flex-shrink: 0; transition: all 150ms;
+}
+.tb-menu:hover { background: var(--sur2); color: var(--tx); }
+
+/* Search bar */
+.tb-srch {
+  flex: 1; max-width: 480px; position: relative;
+}
+.tb-srch input {
+  width: 100%; padding: 9px 16px 9px 42px;
+  background: var(--sur); border: 1px solid var(--bd);
+  border-radius: 30px; color: var(--tx);
+  font-size: .88rem; font-weight: 400;
+  transition: all 200ms var(--ease2);
+}
+.tb-srch input:focus {
+  border-color: rgba(230,57,70,.5);
+  background: var(--bg3);
+  box-shadow: 0 0 0 3px var(--rd);
+}
+.tb-srch input::placeholder { color: var(--tx3); }
+.tb-sico {
+  position: absolute; left: 14px; top: 50%;
+  transform: translateY(-50%); color: var(--tx3);
+  font-size: .85rem; pointer-events: none;
+  transition: color .2s;
+}
+.tb-srch input:focus ~ .tb-sico { color: var(--red2); }
+.tb-clear {
+  position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
+  color: var(--tx3); font-size: .8rem; cursor: pointer;
+  display: none; padding: 3px; border-radius: 50%;
+  transition: all .15s;
+}
+.tb-clear:hover { background: var(--sur2); color: var(--tx); }
+.tb-srch.has-text .tb-clear { display: flex; align-items: center; justify-content: center; }
+
+.tb-acts { display: flex; align-items: center; gap: 8px; margin-left: auto; }
+.tb-btn {
+  width: 38px; height: 38px; border-radius: var(--r);
+  background: var(--sur); border: 1px solid var(--bd);
+  color: var(--tx2);
+  display: flex; align-items: center; justify-content: center;
+  font-size: .95rem; transition: all 150ms; flex-shrink: 0;
+}
+.tb-btn:hover { background: var(--sur2); color: var(--tx); border-color: var(--bd2); }
+.tb-btn.accent { background: var(--rd); border-color: rgba(230,57,70,.25); color: var(--red2); }
+.tb-btn.accent:hover { background: var(--rd2); }
+
+/* Search suggestions dropdown */
+#searchSuggestions {
+  position: absolute; top: calc(100% + 6px); left: 0; right: 0;
+  background: var(--bg3); border: 1px solid var(--bd2);
+  border-radius: var(--r2); overflow: hidden;
+  box-shadow: 0 16px 48px rgba(0,0,0,.6);
+  z-index: 160; display: none;
+  animation: dropDown .15s var(--ease);
+}
+@keyframes dropDown { from { opacity:0; transform:translateY(-6px); } to { opacity:1; transform:none; } }
+#searchSuggestions.show { display: block; }
+.sug-item {
+  display: flex; align-items: center; gap: 12px;
+  padding: 10px 14px; cursor: pointer;
+  transition: background .12s;
+  font-size: .85rem;
+}
+.sug-item:hover { background: var(--sur2); }
+.sug-item img { width: 36px; height: 54px; object-fit: cover; border-radius: 5px; flex-shrink: 0; }
+.sug-title { font-weight: 600; margin-bottom: 2px; }
+.sug-meta { font-size: .72rem; color: var(--tx2); }
+
+/* ── MAIN WRAP ────────────────────────────── */
+#mainWrap {
+  margin-left: var(--nav);
+  padding-top: var(--top);
+  min-height: 100vh;
+  transition: margin-left .35s var(--ease);
+}
+
+/* ── HERO ─────────────────────────────────── */
+#hero {
+  position: relative; height: 560px; overflow: hidden;
+}
+.hero-slide {
+  position: absolute; inset: 0; opacity: 0;
+  transition: opacity 1s ease;
+}
+.hero-slide.active { opacity: 1; }
+.hero-bg-img {
+  width: 100%; height: 100%;
+  object-fit: cover; object-position: center 20%;
+  transform: scale(1.05);
+  animation: heroZoom 7s var(--ease) forwards;
+}
+@keyframes heroZoom { from { transform: scale(1.05); } to { transform: scale(1); } }
+.hero-ov {
+  position: absolute; inset: 0;
+  background:
+    linear-gradient(to right, rgba(8,8,16,.98) 0%, rgba(8,8,16,.75) 45%, rgba(8,8,16,.1) 100%),
+    linear-gradient(to top, rgba(8,8,16,1) 0%, transparent 38%);
+}
+.hero-content {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column; justify-content: center;
+  padding: 0 44px; max-width: 680px;
+}
+.hero-badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: var(--rd); border: 1px solid rgba(230,57,70,.22);
+  color: var(--red3); font-size: .7rem; font-weight: 700;
+  letter-spacing: .1em; text-transform: uppercase;
+  padding: 5px 13px; border-radius: 30px;
+  margin-bottom: 18px; width: fit-content;
+  animation: fadeSlideUp .6s var(--ease) both;
+}
+.hero-title {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(2.1rem, 4.5vw, 3.2rem);
+  font-weight: 900; line-height: 1.1;
+  margin-bottom: 14px; letter-spacing: -.02em;
+  animation: fadeSlideUp .6s var(--ease) .08s both;
+}
+.hero-meta {
+  display: flex; align-items: center; gap: 10px;
+  margin-bottom: 14px; flex-wrap: wrap;
+  animation: fadeSlideUp .6s var(--ease) .16s both;
+}
+.hero-description {
+  color: var(--tx2); font-size: .92rem; line-height: 1.75;
+  margin-bottom: 26px; max-width: 430px;
+  animation: fadeSlideUp .6s var(--ease) .22s both;
+}
+.hero-acts {
+  display: flex; gap: 12px; flex-wrap: wrap;
+  animation: fadeSlideUp .6s var(--ease) .3s both;
+}
+@keyframes fadeSlideUp { from { opacity:0; transform:translateY(18px); } to { opacity:1; transform:none; } }
+
+.btn-play {
+  display: inline-flex; align-items: center; gap: 9px;
+  padding: 13px 28px; border-radius: 30px;
+  background: var(--red); color: #fff;
+  font-weight: 700; font-size: .92rem;
+  transition: all 220ms var(--ease3);
+  box-shadow: 0 8px 28px rgba(230,57,70,.4);
+  letter-spacing: .02em;
+}
+.btn-play:hover {
+  background: var(--red2);
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 14px 36px rgba(230,57,70,.5);
+}
+.btn-play:active { transform: translateY(0) scale(.98); }
+.btn-info {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 12px 22px; border-radius: 30px;
+  background: rgba(255,255,255,.1);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255,255,255,.2);
+  color: var(--tx); font-weight: 600; font-size: .9rem;
+  transition: all 180ms;
+}
+.btn-info:hover { background: rgba(255,255,255,.16); border-color: rgba(255,255,255,.3); }
+
+/* Hero progress bar */
+#heroBar {
+  position: absolute; bottom: 0; left: 0;
+  height: 2px;
+  background: linear-gradient(90deg, var(--red), var(--red2));
+  z-index: 2; border-radius: 0 2px 2px 0;
+}
+#heroDots {
+  position: absolute; bottom: 18px; right: 28px;
+  display: flex; gap: 6px; z-index: 3;
+}
+.hdot {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: rgba(255,255,255,.3);
+  cursor: pointer; transition: all 220ms var(--ease3);
+}
+.hdot.active { background: #fff; transform: scale(1.35); }
+
+/* ── GENRE BAR ────────────────────────────── */
+#genreBar {
+  display: flex; gap: 8px;
+  padding: 16px 22px 12px;
+  overflow-x: auto; border-bottom: 1px solid var(--bd);
+  scrollbar-width: none; position: relative;
+}
+#genreBar::-webkit-scrollbar { display: none; }
+/* Fade edges */
+#genreBar::after {
+  content: ''; position: absolute; right: 0; top: 0; bottom: 0;
+  width: 60px;
+  background: linear-gradient(to right, transparent, var(--bg));
+  pointer-events: none;
+}
+
+.genre-chip {
+  flex-shrink: 0; padding: 7px 18px; border-radius: 30px;
+  background: var(--sur); border: 1px solid var(--bd);
+  color: var(--tx2); font-size: .8rem; font-weight: 500;
+  cursor: pointer; transition: all 160ms var(--ease2);
+  white-space: nowrap; user-select: none;
+}
+.genre-chip:hover { background: var(--sur2); color: var(--tx); border-color: var(--bd2); }
+.genre-chip.active {
+  background: var(--red); border-color: transparent;
+  color: #fff; font-weight: 700;
+  box-shadow: 0 4px 14px rgba(230,57,70,.35);
+}
+
+/* ── SECTIONS ─────────────────────────────── */
+.sec { padding: 30px 22px 10px; }
+.sec-hd { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; }
+.sec-title {
+  font-family: 'Syne', sans-serif;
+  font-size: 1rem; font-weight: 700;
+  display: flex; align-items: center; gap: 8px;
+  letter-spacing: .01em;
+}
+.see-all-btn {
+  font-size: .76rem; color: var(--tx2); font-weight: 600;
+  display: flex; align-items: center; gap: 5px;
+  padding: 5px 13px; border-radius: var(--r);
+  background: var(--sur); border: 1px solid var(--bd);
+  transition: all 150ms;
+}
+.see-all-btn:hover { color: var(--tx); border-color: var(--bd2); }
+
+/* ── ROW SCROLLER ─────────────────────────── */
+.row-wrap { position: relative; }
+.row-scroll {
+  display: grid; grid-auto-flow: column;
+  grid-auto-columns: 152px; gap: 12px;
+  overflow-x: auto; padding: 4px 4px 16px;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+  scroll-behavior: smooth;
+}
+.row-scroll::-webkit-scrollbar { display: none; }
+
+.row-arrow {
+  position: absolute; top: 38%; transform: translateY(-50%);
+  width: 40px; height: 40px; border-radius: 50%;
+  background: rgba(8,8,16,.95); backdrop-filter: blur(12px);
+  border: 1px solid var(--bd2); color: var(--tx);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.1rem; z-index: 5; cursor: pointer;
+  transition: all 180ms var(--ease3);
+  box-shadow: 0 4px 16px rgba(0,0,0,.6);
+  opacity: 0; pointer-events: none;
+}
+.row-wrap:hover .row-arrow { opacity: 1; pointer-events: all; }
+.row-arrow:hover { background: var(--red); border-color: var(--red); transform: translateY(-50%) scale(1.08); }
+.row-arrow.l { left: -18px; }
+.row-arrow.r { right: -18px; }
+
+/* ── SKELETON ─────────────────────────────── */
+.skel {
+  border-radius: var(--r); overflow: hidden;
+  background: var(--bg3); flex-shrink: 0;
+  width: 152px; scroll-snap-align: start;
+}
+.skel-p {
+  aspect-ratio: 2/3;
+  background: linear-gradient(110deg, var(--bg3) 30%, var(--bg4) 50%, var(--bg3) 70%);
+  background-size: 300% 100%;
+  animation: sfShim 1.7s ease-in-out infinite;
+}
+.skel-t { padding: 9px 8px; }
+.skel-l { height: 11px; border-radius: 4px; background: var(--bg4); margin-bottom: 6px; }
+.skel-l.s { width: 55%; height: 9px; background: var(--bg3); }
+
+/* ── CONTENT CARD ─────────────────────────── */
+.content-card { scroll-snap-align: start; }
+
+/* ── RESULTS / GRID ───────────────────────── */
+#searchResultsContainer { display: none; min-height: 300px; }
+#searchInfo { display: none; padding: 26px 22px 10px; }
+.si-breadcrumb {
+  font-size: .74rem; color: var(--tx3); margin-bottom: 8px;
+  display: flex; align-items: center; gap: 5px;
+}
+#searchTitle {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.7rem; font-weight: 900;
+  margin-bottom: 4px;
+}
+#searchCount { font-size: .85rem; color: var(--tx2); }
+#sf-results-wrap {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(148px, 1fr));
+  gap: 14px; padding: 10px 22px 24px;
+}
+#pagination {
+  display: flex; gap: 8px; flex-wrap: wrap;
+  padding: 8px 22px 32px; justify-content: center;
+}
+
+/* ── PLAYER MODAL ─────────────────────────── */
+#playerModal {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,.94);
+  backdrop-filter: blur(12px);
+  z-index: 800;
+  display: flex; align-items: center; justify-content: center;
+  padding: 16px; opacity: 0; pointer-events: none;
+  transition: opacity .28s var(--ease);
+}
+#playerModal.active { opacity: 1; pointer-events: all; }
+
+.p-box {
+  background: var(--bg2);
+  border: 1px solid var(--bd2);
+  border-radius: 20px;
+  width: 100%; max-width: 920px;
+  max-height: 92vh; overflow: hidden; overflow-y: auto;
+  transform: translateY(22px) scale(.97);
+  transition: transform .28s var(--ease);
+  box-shadow: 0 48px 120px rgba(0,0,0,.8);
+  position: relative;
+}
+#playerModal.active .p-box { transform: none; }
+
+#playerClose {
+  position: absolute; top: 14px; right: 14px; z-index: 10;
+  width: 36px; height: 36px; border-radius: 50%;
+  background: rgba(0,0,0,.75); backdrop-filter: blur(8px);
+  border: 1px solid rgba(255,255,255,.12);
+  color: #fff; font-size: .9rem;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; transition: all 150ms;
+}
+#playerClose:hover { background: var(--red); border-color: var(--red); transform: scale(1.1); }
+
+#playerVideo {
+  position: relative; padding-top: 56.25%;
+  background: #000; min-height: 200px;
+}
+#playerVideo iframe {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%; border: none;
+}
+.p-spin {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 14px; color: var(--tx2); background: #000;
+}
+.spinner {
+  width: 40px; height: 40px;
+  border: 3px solid rgba(255,255,255,.08);
+  border-top-color: var(--red);
+  border-radius: 50%; animation: sfSpin 1s linear infinite;
+}
+
+/* Keyboard shortcuts hint */
+#kbHint {
+  position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%);
+  background: rgba(0,0,0,.85); backdrop-filter: blur(8px);
+  border: 1px solid var(--bd); border-radius: 8px;
+  padding: 6px 14px; font-size: .68rem; color: var(--tx2);
+  display: flex; gap: 12px; white-space: nowrap;
+  opacity: 0; transition: opacity .3s;
+  pointer-events: none; z-index: 5;
+}
+.p-box:hover #kbHint { opacity: 1; }
+.kb-key {
+  display: inline-flex; align-items: center; gap: 5px;
+}
+.kbd {
+  background: var(--bg5); border: 1px solid var(--bd2);
+  border-radius: 4px; padding: 1px 6px;
+  font-size: .62rem; font-family: monospace;
+}
+
+.p-meta { padding: 20px 24px 24px; }
+#playerTitle {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.4rem; font-weight: 900; margin-bottom: 18px;
+}
+
+/* Quality/rating badges */
+.p-badges { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
+.p-badge {
+  padding: 3px 10px; border-radius: 5px;
+  font-size: .7rem; font-weight: 700;
+}
+.p-badge.hd { background: rgba(16,185,129,.15); color: #10b981; border: 1px solid rgba(16,185,129,.2); }
+.p-badge.cc { background: rgba(99,102,241,.15); color: #818cf8; border: 1px solid rgba(99,102,241,.2); }
+.p-badge.tmdb { background: var(--gd); color: var(--gold); border: 1px solid rgba(245,197,24,.2); }
+
+#episodePanel { display: none; margin-bottom: 16px; }
+.ep-lbl {
+  font-size: .65rem; font-weight: 700; letter-spacing: .14em;
+  text-transform: uppercase; color: var(--tx3); margin-bottom: 8px;
+}
+#seasonSelect, #episodeSelect {
+  padding: 8px 12px; border-radius: var(--r);
+  background: var(--bg3); border: 1px solid var(--bd);
+  color: var(--tx); font-size: .85rem; margin-right: 8px; cursor: pointer;
+  transition: border-color .15s;
+}
+#seasonSelect:focus, #episodeSelect:focus { border-color: rgba(230,57,70,.4); }
+
+.srv-lbl {
+  font-size: .65rem; font-weight: 700; letter-spacing: .14em;
+  text-transform: uppercase; color: var(--tx3); margin-bottom: 10px;
+}
+#serverButtons { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; }
+.server-btn {
+  padding: 7px 14px; border-radius: var(--r);
+  background: var(--sur); border: 1px solid var(--bd);
+  color: var(--tx2); font-size: .78rem; font-weight: 600;
+  cursor: pointer; transition: all 150ms;
+  display: flex; align-items: center; gap: 5px;
+}
+.server-btn:hover { border-color: var(--bd2); color: var(--tx); }
+.server-btn.active { background: var(--rd); border-color: rgba(230,57,70,.3); color: var(--red2); }
+.sub-badge {
+  background: var(--emerald); color: #fff;
+  padding: 1px 5px; border-radius: 3px;
+  font-size: .55rem; font-weight: 800;
+}
+
+.srv-tip {
+  padding: 10px 14px; border-radius: var(--r);
+  background: var(--gd); border: 1px solid rgba(245,197,24,.14);
+  font-size: .76rem; color: rgba(245,197,24,.85);
+  display: flex; align-items: center; gap: 7px; margin-bottom: 16px;
+}
+
+.p-acts { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 16px; }
+.btn-tog {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 9px 18px; border-radius: 30px;
+  background: var(--sur2); border: 1px solid var(--bd2);
+  color: var(--tx); font-weight: 600; font-size: .84rem;
+  transition: all 160ms; position: relative;
+}
+.btn-tog:hover { background: var(--sur3); border-color: var(--bd3); }
+
+/* Watchlist btn */
+.btn-watchlist {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 9px 18px; border-radius: 30px;
+  background: var(--sur2); border: 1px solid var(--bd2);
+  color: var(--tx); font-weight: 600; font-size: .84rem;
+  transition: all 160ms;
+}
+.btn-watchlist:hover { border-color: var(--gold); color: var(--gold); }
+.btn-watchlist.saved { background: var(--gd); border-color: rgba(245,197,24,.25); color: var(--gold); }
+
+/* ── CHAT PANEL ───────────────────────────── */
+#chatPanel {
+  position: absolute; right: 0; top: 0; height: 100%; width: 272px;
+  background: rgba(10,10,18,.98);
+  border-left: 1px solid var(--bd);
+  display: flex; flex-direction: column;
+  transform: translateX(100%); transition: transform .3s var(--ease); z-index: 5;
+}
+#chatPanel.show { transform: none; }
+.ch-hd {
+  padding: 12px 14px; border-bottom: 1px solid var(--bd);
+  font-weight: 700; font-size: .88rem;
+  display: flex; align-items: center; justify-content: space-between;
+  flex-shrink: 0;
+}
+.ch-hd button { color: var(--tx2); font-size: .9rem; transition: color .15s; }
+.ch-hd button:hover { color: var(--tx); }
+#chatMessages {
+  flex: 1; overflow-y: auto; padding: 10px;
+  display: flex; flex-direction: column; gap: 6px;
+  font-size: .82rem; color: var(--tx2);
+}
+.ch-inp { display: flex; gap: 6px; padding: 10px; border-top: 1px solid var(--bd); flex-shrink: 0; }
+.ch-inp input {
+  flex: 1; padding: 8px 11px; border-radius: var(--r);
+  background: var(--bg3); border: 1px solid var(--bd);
+  color: var(--tx); font-size: .82rem;
+  transition: border-color .15s;
+}
+.ch-inp input:focus { border-color: rgba(230,57,70,.4); }
+.ch-inp button {
+  padding: 8px 13px; border-radius: var(--r);
+  background: var(--red); color: #fff; font-size: .82rem; font-weight: 600;
+  transition: background .15s;
+}
+.ch-inp button:hover { background: var(--red2); }
+
+/* ── 18+ VERIFY ───────────────────────────── */
+#verifyModal {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,.96);
+  backdrop-filter: blur(16px);
+  z-index: 900; display: none;
+  align-items: center; justify-content: center; padding: 20px;
+}
+.v-box {
+  background: var(--bg3); border: 1px solid rgba(230,57,70,.18);
+  border-radius: 24px; padding: 42px 36px;
+  max-width: 420px; width: 100%; text-align: center;
+  box-shadow: 0 48px 120px rgba(0,0,0,.7);
+  animation: scaleIn .3s var(--ease3);
+}
+@keyframes scaleIn { from { opacity:0; transform:scale(.92); } to { opacity:1; transform:none; } }
+.v-ico { font-size: 3rem; margin-bottom: 16px; }
+.v-title { font-family: 'Playfair Display', serif; font-size: 1.5rem; font-weight: 900; margin-bottom: 10px; }
+.v-desc { color: var(--tx2); font-size: .88rem; line-height: 1.7; margin-bottom: 26px; }
+#vs1, #vs2 { display: none; }
+#vs1.on, #vs2.on { display: block; }
+.v-chk {
+  display: flex; align-items: center; gap: 11px; text-align: left;
+  background: var(--sur); border: 1px solid var(--bd);
+  border-radius: var(--r); padding: 12px 16px; margin-bottom: 16px; cursor: pointer;
+  transition: border-color .15s;
+}
+.v-chk:hover { border-color: var(--bd2); }
+.v-chk input { accent-color: var(--red); width: 16px; height: 16px; flex-shrink: 0; }
+.v-chk label { font-size: .88rem; cursor: pointer; }
+.pin-row { display: flex; gap: 12px; justify-content: center; margin-bottom: 16px; }
+.pin-d {
+  width: 54px; height: 62px; border-radius: var(--r);
+  text-align: center; background: var(--bg4);
+  border: 1px solid var(--bd); color: var(--tx);
+  font-size: 1.5rem; font-weight: 700;
+  transition: border-color 150ms, box-shadow 150ms;
+}
+.pin-d:focus { border-color: var(--red); box-shadow: 0 0 0 3px var(--rd); }
+#pinErr { color: var(--red2); font-size: .8rem; min-height: 20px; margin-bottom: 12px; }
+.v-btns { display: flex; gap: 10px; }
+.btn-red {
+  flex: 1; padding: 12px 18px; border-radius: 30px;
+  background: var(--red); color: #fff; font-weight: 700; font-size: .9rem;
+  transition: all 160ms;
+}
+.btn-red:hover { background: var(--red2); transform: translateY(-1px); }
+.btn-ghost {
+  flex: 1; padding: 11px 18px; border-radius: 30px;
+  background: var(--sur2); border: 1px solid var(--bd2);
+  color: var(--tx); font-weight: 600; font-size: .9rem; transition: all 150ms;
+}
+.btn-ghost:hover { background: var(--sur3); }
+
+/* ── WATCH TOGETHER ───────────────────────── */
+#watchTogetherMenu, #joinRoomModal {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,.88);
+  backdrop-filter: blur(12px);
+  z-index: 850; display: none;
+  align-items: center; justify-content: center; padding: 20px;
+}
+#watchTogetherMenu.open, #joinRoomModal.open { display: flex; }
+
+.wt-box {
+  background: var(--bg3); border: 1px solid var(--bd2);
+  border-radius: 22px; padding: 30px;
+  max-width: 460px; width: 100%;
+  box-shadow: 0 40px 100px rgba(0,0,0,.7);
+  animation: scaleIn .25s var(--ease3);
+}
+.wt-hd { text-align: center; margin-bottom: 24px; }
+.wt-hd h2 {
+  font-family: 'Syne', sans-serif;
+  font-size: 1.4rem; font-weight: 800; margin-bottom: 6px;
+}
+.wt-hd p { color: var(--tx2); font-size: .85rem; }
+.wt-opts { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px; }
+.wt-opt {
+  padding: 20px 16px; border-radius: var(--r2);
+  background: var(--sur); border: 1px solid var(--bd);
+  text-align: center; cursor: pointer;
+  transition: all 200ms var(--ease3);
+}
+.wt-opt:hover {
+  background: var(--sur2); border-color: rgba(230,57,70,.3);
+  transform: translateY(-3px);
+  box-shadow: 0 8px 24px rgba(0,0,0,.3);
+}
+.wt-opt-ico { font-size: 1.9rem; margin-bottom: 10px; }
+.wt-opt-name { font-weight: 700; font-size: .9rem; margin-bottom: 4px; }
+.wt-opt-desc { font-size: .74rem; color: var(--tx2); }
+
+/* Room code display */
+.room-code {
+  font-family: 'Syne', monospace; font-size: 2.4rem; font-weight: 800;
+  letter-spacing: .35em; color: var(--red2);
+  background: var(--rd); padding: 18px;
+  border-radius: var(--r); text-align: center; margin-bottom: 16px;
+  border: 1px solid rgba(230,57,70,.18);
+  user-select: all;
+}
+.rc-acts { display: flex; gap: 8px; margin-bottom: 14px; }
+.rc-acts button { flex: 1; }
+
+.join-inp {
+  width: 100%; padding: 14px 16px; border-radius: var(--r);
+  background: var(--bg4); border: 1px solid var(--bd);
+  color: var(--tx); font-size: 1.1rem; font-weight: 700;
+  text-align: center; letter-spacing: .15em; margin-bottom: 14px;
+  text-transform: uppercase; transition: border-color .15s, box-shadow .15s;
+}
+.join-inp:focus { border-color: rgba(230,57,70,.5); box-shadow: 0 0 0 3px var(--rd); }
+
+/* ── SUPPORT MODAL ────────────────────────── */
+#supportModal {
+  position: fixed; inset: 0; background: rgba(0,0,0,.88);
+  backdrop-filter: blur(12px);
+  z-index: 850; display: none;
+  align-items: center; justify-content: center; padding: 20px;
+}
+#supportModal.open { display: flex; }
+.sp-box {
+  background: var(--bg3); border: 1px solid var(--bd);
+  border-radius: 22px; max-width: 400px; width: 100%;
+  overflow: hidden; box-shadow: 0 40px 100px rgba(0,0,0,.7);
+  position: relative; animation: scaleIn .25s var(--ease3);
+}
+.sp-hd { text-align: center; padding: 32px 28px 18px; }
+.sp-ico { font-size: 2.6rem; margin-bottom: 12px; }
+.sp-hd h2 { font-family: 'Syne', sans-serif; font-size: 1.4rem; font-weight: 800; margin-bottom: 8px; }
+.sp-hd p { color: var(--tx2); font-size: .86rem; line-height: 1.65; }
+.sp-amts { display: grid; grid-template-columns: repeat(4,1fr); gap: 8px; padding: 0 24px 18px; }
+.amt {
+  padding: 10px 6px; border-radius: var(--r);
+  background: var(--sur); border: 1px solid var(--bd);
+  color: var(--tx); font-weight: 700; font-size: .85rem;
+  cursor: pointer; transition: all 150ms; text-align: center;
+}
+.amt:hover { border-color: var(--gold); color: var(--gold); }
+.amt.active { background: var(--gd); border-color: rgba(245,197,24,.3); color: var(--gold); }
+.sp-cta { padding: 0 24px 28px; }
+.sp-cta a, .sp-cta button {
+  display: flex; align-items: center; justify-content: center;
+  width: 100%; padding: 12px 18px; border-radius: 30px;
+  font-weight: 700; font-size: .9rem; transition: all 160ms;
+}
+.sp-cta a { background: var(--gold); color: #1a1000; margin-bottom: 8px; }
+.sp-cta a:hover { background: #f0b800; transform: translateY(-1px); }
+.sp-cta button { background: var(--sur); border: 1px solid var(--bd); color: var(--tx2); }
+.sp-cta button:hover { color: var(--tx); border-color: var(--bd2); }
+
+/* ── INSTALL BANNER ───────────────────────── */
+#installBanner {
+  position: fixed; bottom: -110px; left: 50%;
+  transform: translateX(-50%);
+  background: var(--bg3); border: 1px solid var(--bd2);
+  border-radius: 16px; padding: 14px 18px;
+  display: flex; align-items: center; gap: 14px;
+  box-shadow: 0 20px 60px rgba(0,0,0,.6);
+  z-index: 400; max-width: 370px;
+  width: calc(100% - 32px);
+  opacity: 0; pointer-events: none;
+  transition: all .4s var(--ease);
+}
+#installBanner.show { bottom: 80px; opacity: 1; pointer-events: all; }
+.ib-ico { font-size: 2rem; flex-shrink: 0; }
+.ib-tx { flex: 1; }
+.ib-title { font-weight: 700; font-size: .88rem; margin-bottom: 2px; }
+.ib-sub { font-size: .74rem; color: var(--tx2); }
+#installBtn {
+  padding: 7px 14px; border-radius: var(--r);
+  background: var(--red); color: #fff; font-weight: 700;
+  font-size: .78rem; cursor: pointer; white-space: nowrap;
+  transition: background .15s;
+}
+#installBtn:hover { background: var(--red2); }
+#closeBanner { color: var(--tx3); font-size: 1.1rem; cursor: pointer; padding: 4px; transition: color .15s; }
+#closeBanner:hover { color: var(--tx); }
+
+/* ── TOAST SYSTEM ─────────────────────────── */
+#toastContainer {
+  position: fixed; top: 76px; right: 18px;
+  z-index: 999; display: flex; flex-direction: column; gap: 8px;
+  pointer-events: none;
+}
+.toast-item {
+  background: var(--bg3); border: 1px solid var(--bd2);
+  border-radius: var(--r); padding: 11px 16px;
+  display: flex; align-items: center; gap: 9px;
+  font-size: .83rem; font-weight: 500;
+  box-shadow: 0 8px 28px rgba(0,0,0,.5);
+  transform: translateX(120%);
+  transition: transform .3s var(--ease);
+  max-width: 300px; pointer-events: all;
+  border-left: 3px solid var(--bd2);
+}
+.toast-item.show { transform: none; }
+.toast-item.success { border-left-color: var(--emerald); }
+.toast-item.error { border-left-color: var(--red); }
+.toast-item.warning { border-left-color: var(--gold); }
+
+/* ── BOTTOM NAV ───────────────────────────── */
+#bottomNav {
+  position: fixed; bottom: 0; left: 0; right: 0; height: 58px;
+  background: rgba(8,8,16,.97); backdrop-filter: blur(24px);
+  border-top: 1px solid var(--bd);
+  display: none; align-items: center; justify-content: space-around;
+  z-index: 200; padding-bottom: env(safe-area-inset-bottom);
+}
+.bni {
+  display: flex; flex-direction: column; align-items: center; gap: 3px;
+  color: var(--tx3); font-size: .57rem; font-weight: 700;
+  letter-spacing: .04em; cursor: pointer;
+  transition: color 160ms; padding: 8px 12px;
+  -webkit-tap-highlight-color: transparent;
+}
+.bni.active { color: var(--red2); }
+.bni-ico { font-size: 1.2rem; }
+
+/* ── 18+ SECTION ──────────────────────────── */
+#section-mature { display: none; }
+#section-mature.visible { display: block; }
+
+/* ── MOBILE SEARCH OVERLAY ────────────────── */
+#msearch {
+  position: fixed; inset: 0; z-index: 500;
+  background: rgba(8,8,16,.98);
+  display: none; flex-direction: column;
+  padding-top: calc(var(--top) + 16px);
+}
+#msearch.on { display: flex; }
+.ms-inner { display: flex; gap: 10px; padding: 0 16px 16px; }
+.ms-inp {
+  flex: 1; padding: 12px 18px;
+  background: var(--bg3); border: 1px solid var(--bd2);
+  border-radius: 30px; color: var(--tx); font-size: .95rem;
+}
+.ms-inp:focus { border-color: rgba(230,57,70,.5); }
+.ms-results { flex: 1; overflow-y: auto; padding: 0 16px; }
+
+/* ── WATCHLIST SECTION ────────────────────── */
+#watchlistSection { display: none; }
+#watchlistSection.has-items { display: block; }
+
+/* ── CONTINUE WATCHING ────────────────────── */
+#continueSection { display: none; }
+#continueSection.has-items { display: block; }
+.continue-card {
+  position: relative; scroll-snap-align: start;
+  border-radius: var(--r); overflow: hidden;
+  cursor: pointer; background: var(--bg3);
+  transition: transform .25s var(--ease3);
+}
+.continue-card:hover { transform: scale(1.04) translateY(-2px); }
+.continue-prog {
+  position: absolute; bottom: 0; left: 0; right: 0;
+  height: 3px; background: rgba(255,255,255,.1);
+}
+.continue-prog-fill { height: 100%; background: var(--red); border-radius: 3px; }
+.continue-remove {
+  position: absolute; top: 5px; right: 5px;
+  width: 22px; height: 22px; border-radius: 50%;
+  background: rgba(0,0,0,.75); color: var(--tx2);
+  font-size: .65rem; display: flex; align-items: center; justify-content: center;
+  opacity: 0; transition: opacity .15s; cursor: pointer;
+}
+.continue-card:hover .continue-remove { opacity: 1; }
+
+/* ── KEYFRAMES ────────────────────────────── */
+@keyframes sfShim { 0% { background-position:100% 0; } 100% { background-position:-100% 0; } }
+@keyframes sfSpin { to { transform: rotate(360deg); } }
+@keyframes sfFadeIn { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:none; } }
+
+/* ── RESPONSIVE ───────────────────────────── */
+@media (max-width: 960px) {
+  #sidebar { transform: translateX(-100%); }
+  #sidebar.open { transform: none; }
+  #topbar, #topbar.fw { left: 0; }
+  #mainWrap { margin-left: 0; }
+  .tb-menu { display: flex; }
+  #hero { height: 440px; }
+  .hero-content { padding: 0 24px; max-width: 560px; }
+  #bottomNav { display: flex; }
+  #mainWrap { padding-bottom: 58px; }
+  #installBanner.show { bottom: 66px; }
+}
+
+@media (max-width: 640px) {
+  #hero { height: 390px; }
+  .hero-description { display: none; }
+  .hero-title { font-size: 1.8rem; }
+  .sec { padding: 20px 14px 6px; }
+  .row-scroll { grid-auto-columns: 138px; gap: 10px; }
+  .skel { width: 138px; }
+  #genreBar { padding: 12px 14px 8px; }
+  #sf-results-wrap { grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; padding: 8px 14px 20px; }
+  .hero-acts .btn-info { display: none; }
+  #toastContainer { right: 12px; }
+  .p-box { border-radius: 16px; }
+  .p-meta { padding: 16px 18px 20px; }
+}
+
+@media (max-width: 400px) {
+  .hero-title { font-size: 1.6rem; }
+  #hero { height: 350px; }
+  .wt-opts { grid-template-columns: 1fr; }
+}
+
+/* Focus visible accessibility */
+:focus-visible { outline: 2px solid var(--red); outline-offset: 2px; }
+button:focus:not(:focus-visible) { outline: none; }
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
 }
 </style>
 </head>
@@ -288,65 +1034,110 @@ input,select{font-family:inherit;outline:none}
 
 <div id="sbOv"></div>
 
-<!-- ═══ SIDEBAR ═══ -->
-<nav id="sidebar">
+<!-- ═══════════════════════════════════════════
+     SIDEBAR
+════════════════════════════════════════════ -->
+<nav id="sidebar" aria-label="Main navigation">
   <div class="sb-logo">
-    <div class="sb-mark">FX</div>
-    <div class="sb-name">FLIXORA</div>
+    <div class="sb-mark" aria-hidden="true">FX</div>
+    <div class="sb-wordmark">Flixora</div>
   </div>
-  <div class="sb-nav">
+  <div class="sb-nav" role="navigation">
     <div class="sb-sec">
       <span class="sb-lbl">Discover</span>
-      <div class="ni active" onclick="goHome();_setNav(this)"><span class="ni-ico">🏠</span>Home</div>
-      <div class="ni" onclick="loadCategory('movies');_setNav(this)" data-cat="movies"><span class="ni-ico">🎬</span>Movies</div>
-      <div class="ni" onclick="loadCategory('tv');_setNav(this)" data-cat="tv"><span class="ni-ico">📺</span>TV Series</div>
-      <div class="ni" onclick="loadCategory('kdrama');_setNav(this)" data-cat="kdrama"><span class="ni-ico">🇰🇷</span>K-Drama</div>
-      <div class="ni" onclick="loadCategory('anime');_setNav(this)" data-cat="anime"><span class="ni-ico">🎌</span>Anime</div>
-      <div class="ni" onclick="App.openMature()"><span class="ni-ico">🔞</span>18+ Mature<span class="ni-badge">+18</span></div>
+      <div class="ni active" onclick="goHome();_setNav(this)" role="button" tabindex="0">
+        <span class="ni-ico" aria-hidden="true">🏠</span>Home
+      </div>
+      <div class="ni" onclick="loadCategory('movies');_setNav(this)" data-cat="movies" role="button" tabindex="0">
+        <span class="ni-ico" aria-hidden="true">🎬</span>Movies
+      </div>
+      <div class="ni" onclick="loadCategory('tv');_setNav(this)" data-cat="tv" role="button" tabindex="0">
+        <span class="ni-ico" aria-hidden="true">📺</span>TV Series
+      </div>
+      <div class="ni" onclick="loadCategory('kdrama');_setNav(this)" data-cat="kdrama" role="button" tabindex="0">
+        <span class="ni-ico" aria-hidden="true">🇰🇷</span>K-Drama
+      </div>
+      <div class="ni" onclick="loadCategory('anime');_setNav(this)" data-cat="anime" role="button" tabindex="0">
+        <span class="ni-ico" aria-hidden="true">🎌</span>Anime
+      </div>
+      <div class="ni" onclick="App.openMature()" role="button" tabindex="0">
+        <span class="ni-ico" aria-hidden="true">🔞</span>18+ Mature
+        <span class="ni-badge">+18</span>
+      </div>
     </div>
     <div class="sb-sec">
       <span class="sb-lbl">Browse</span>
-      <div class="ni" onclick="loadCategory('top_rated');_setNav(this)" data-cat="top_rated"><span class="ni-ico">⭐</span>Top Rated</div>
-      <div class="ni" onclick="loadCategory('now');_setNav(this)" data-cat="now"><span class="ni-ico">🆕</span>Now In Cinemas</div>
-      <div class="ni" onclick="loadCategory('trending');_setNav(this)" data-cat="trending"><span class="ni-ico">🔥</span>Trending</div>
+      <div class="ni" onclick="loadCategory('top_rated');_setNav(this)" data-cat="top_rated" role="button" tabindex="0">
+        <span class="ni-ico" aria-hidden="true">⭐</span>Top Rated
+      </div>
+      <div class="ni" onclick="loadCategory('now');_setNav(this)" data-cat="now" role="button" tabindex="0">
+        <span class="ni-ico" aria-hidden="true">🆕</span>Now In Cinemas
+      </div>
+      <div class="ni" onclick="loadCategory('trending');_setNav(this)" data-cat="trending" role="button" tabindex="0">
+        <span class="ni-ico" aria-hidden="true">🔥</span>Trending
+      </div>
+    </div>
+    <div class="sb-sec">
+      <span class="sb-lbl">My Stuff</span>
+      <div class="ni" onclick="_showWatchlist()" role="button" tabindex="0">
+        <span class="ni-ico" aria-hidden="true">🔖</span>Watchlist
+      </div>
+      <div class="ni" onclick="_showContinue()" role="button" tabindex="0">
+        <span class="ni-ico" aria-hidden="true">▶️</span>Continue Watching
+      </div>
     </div>
     <div class="sb-sec">
       <span class="sb-lbl">Social</span>
-      <div class="ni" onclick="openWT()"><span class="ni-ico">👥</span>Watch Together</div>
-      <div class="ni" onclick="App.openSettings()"><span class="ni-ico">⚙️</span>Settings</div>
+      <div class="ni" onclick="openWT()" role="button" tabindex="0">
+        <span class="ni-ico" aria-hidden="true">👥</span>Watch Together
+      </div>
+      <div class="ni" onclick="App.openSettings()" role="button" tabindex="0">
+        <span class="ni-ico" aria-hidden="true">⚙️</span>Settings
+      </div>
     </div>
   </div>
   <div class="sb-foot">
-    <button class="sb-kofi" onclick="openSupport()">☕ Support Flixora</button>
+    <button class="sb-kofi" onclick="openSupport()" aria-label="Support Flixora on Ko-fi">☕ Support Flixora</button>
   </div>
 </nav>
 
-<!-- ═══ TOPBAR ═══ -->
-<header id="topbar">
-  <button class="tb-btn tb-menu" id="menuBtn" onclick="toggleSb()">☰</button>
-  <div class="tb-srch">
-    <span class="tb-sico">🔍</span>
-    <input type="text" id="searchInput" placeholder="Search movies, shows, anime…" autocomplete="off"
-      onkeydown="if(event.key==='Enter')doSearch(1)">
+<!-- ═══════════════════════════════════════════
+     TOPBAR
+════════════════════════════════════════════ -->
+<header id="topbar" role="banner">
+  <button class="tb-btn tb-menu" id="menuBtn" onclick="toggleSb()" aria-label="Toggle menu">☰</button>
+  <div class="tb-srch" role="search">
+    <span class="tb-sico" aria-hidden="true">🔍</span>
+    <input type="search" id="searchInput"
+      placeholder="Search movies, shows, anime…"
+      autocomplete="off" autocorrect="off"
+      aria-label="Search content"
+      onkeydown="if(event.key==='Enter')doSearch(1)"
+      oninput="_onSearchInput(this)">
+    <button class="tb-clear" onclick="_clearSearch()" aria-label="Clear search">✕</button>
+    <div id="searchSuggestions" role="listbox" aria-label="Search suggestions"></div>
   </div>
   <div class="tb-acts">
-    <button class="tb-btn" onclick="openWT()" title="Watch Together">👥</button>
-    <button class="tb-btn" onclick="openSupport()" title="Support">☕</button>
+    <button class="tb-btn accent" onclick="openWT()" title="Watch Together" aria-label="Watch Together">👥</button>
+    <button class="tb-btn" onclick="openSupport()" title="Support us" aria-label="Support Flixora">☕</button>
+    <button class="tb-btn" id="mSearchBtn" onclick="openMSearch()" aria-label="Search" style="display:none">🔍</button>
   </div>
 </header>
 
-<!-- ═══ MAIN ═══ -->
-<div id="mainWrap">
+<!-- ═══════════════════════════════════════════
+     MAIN CONTENT
+════════════════════════════════════════════ -->
+<main id="mainWrap" role="main">
   <div id="mainContent">
 
     <!-- HERO -->
-    <section id="hero">
-      <div id="heroBar"></div>
-      <div id="heroDots"></div>
+    <section id="hero" aria-label="Featured content">
+      <div id="heroBar" role="progressbar" aria-label="Slideshow progress"></div>
+      <div id="heroDots" role="tablist" aria-label="Hero slides"></div>
     </section>
 
-    <!-- GENRES -->
-    <div id="genreBar">
+    <!-- GENRE CHIPS -->
+    <nav id="genreBar" aria-label="Browse by genre">
       <div class="genre-chip active" data-g="all">✦ All</div>
       <div class="genre-chip" data-g="28">Action</div>
       <div class="genre-chip" data-g="18">Drama</div>
@@ -361,168 +1152,215 @@ input,select{font-family:inherit;outline:none}
       <div class="genre-chip" data-g="80">Crime</div>
       <div class="genre-chip" data-g="10402">Music</div>
       <div class="genre-chip" data-g="9648">Mystery</div>
-    </div>
+    </nav>
+
+    <!-- CONTINUE WATCHING -->
+    <section class="sec" id="continueSection" aria-label="Continue watching">
+      <div class="sec-hd">
+        <div class="sec-title">▶️ Continue Watching</div>
+        <button class="see-all-btn" onclick="_clearContinue()">Clear All</button>
+      </div>
+      <div class="row-wrap">
+        <div class="row-scroll" id="continueContent"></div>
+      </div>
+    </section>
+
+    <!-- WATCHLIST -->
+    <section class="sec" id="watchlistSection" aria-label="My watchlist">
+      <div class="sec-hd">
+        <div class="sec-title">🔖 My Watchlist</div>
+        <button class="see-all-btn" onclick="_showWatchlist()">See All →</button>
+      </div>
+      <div class="row-wrap">
+        <div class="row-scroll" id="watchlistContent"></div>
+      </div>
+    </section>
 
     <!-- TRENDING -->
-    <section class="sec">
+    <section class="sec" aria-label="Trending content">
       <div class="sec-hd">
         <div class="sec-title">🔥 Trending Now</div>
         <button class="see-all-btn" onclick="loadCategory('trending')">See All →</button>
       </div>
       <div class="row-wrap">
-        <button class="row-arrow l" onclick="scrollRow('trendingContent',-650)">‹</button>
-        <div class="row-scroll" id="trendingContent">
-          <div class="skel"><div class="skel-p"></div><div class="skel-t"><div class="skel-l"></div><div class="skel-l s"></div></div></div>
-          <div class="skel"><div class="skel-p"></div><div class="skel-t"><div class="skel-l"></div><div class="skel-l s"></div></div></div>
-          <div class="skel"><div class="skel-p"></div><div class="skel-t"><div class="skel-l"></div><div class="skel-l s"></div></div></div>
-          <div class="skel"><div class="skel-p"></div><div class="skel-t"><div class="skel-l"></div><div class="skel-l s"></div></div></div>
-          <div class="skel"><div class="skel-p"></div><div class="skel-t"><div class="skel-l"></div><div class="skel-l s"></div></div></div>
-          <div class="skel"><div class="skel-p"></div><div class="skel-t"><div class="skel-l"></div><div class="skel-l s"></div></div></div>
+        <button class="row-arrow l" onclick="scrollRow('trendingContent',-650)" aria-label="Scroll left">‹</button>
+        <div class="row-scroll" id="trendingContent" role="list">
+          <div class="skel" aria-hidden="true"><div class="skel-p"></div><div class="skel-t"><div class="skel-l"></div><div class="skel-l s"></div></div></div>
+          <div class="skel" aria-hidden="true"><div class="skel-p"></div><div class="skel-t"><div class="skel-l"></div><div class="skel-l s"></div></div></div>
+          <div class="skel" aria-hidden="true"><div class="skel-p"></div><div class="skel-t"><div class="skel-l"></div><div class="skel-l s"></div></div></div>
+          <div class="skel" aria-hidden="true"><div class="skel-p"></div><div class="skel-t"><div class="skel-l"></div><div class="skel-l s"></div></div></div>
+          <div class="skel" aria-hidden="true"><div class="skel-p"></div><div class="skel-t"><div class="skel-l"></div><div class="skel-l s"></div></div></div>
+          <div class="skel" aria-hidden="true"><div class="skel-p"></div><div class="skel-t"><div class="skel-l"></div><div class="skel-l s"></div></div></div>
         </div>
-        <button class="row-arrow r" onclick="scrollRow('trendingContent',650)">›</button>
+        <button class="row-arrow r" onclick="scrollRow('trendingContent',650)" aria-label="Scroll right">›</button>
       </div>
     </section>
 
     <!-- MOVIES -->
-    <section class="sec">
+    <section class="sec" aria-label="Popular movies">
       <div class="sec-hd">
         <div class="sec-title">🎬 Popular Movies</div>
         <button class="see-all-btn" onclick="loadCategory('movies')">See All →</button>
       </div>
       <div class="row-wrap">
-        <button class="row-arrow l" onclick="scrollRow('moviesContent',-650)">‹</button>
-        <div class="row-scroll" id="moviesContent">
-          <div class="skel"><div class="skel-p"></div><div class="skel-t"><div class="skel-l"></div><div class="skel-l s"></div></div></div>
-          <div class="skel"><div class="skel-p"></div><div class="skel-t"><div class="skel-l"></div><div class="skel-l s"></div></div></div>
-          <div class="skel"><div class="skel-p"></div><div class="skel-t"><div class="skel-l"></div><div class="skel-l s"></div></div></div>
-          <div class="skel"><div class="skel-p"></div><div class="skel-t"><div class="skel-l"></div><div class="skel-l s"></div></div></div>
-          <div class="skel"><div class="skel-p"></div><div class="skel-t"><div class="skel-l"></div><div class="skel-l s"></div></div></div>
-          <div class="skel"><div class="skel-p"></div><div class="skel-t"><div class="skel-l"></div><div class="skel-l s"></div></div></div>
+        <button class="row-arrow l" onclick="scrollRow('moviesContent',-650)" aria-label="Scroll left">‹</button>
+        <div class="row-scroll" id="moviesContent" role="list">
+          <div class="skel" aria-hidden="true"><div class="skel-p"></div><div class="skel-t"><div class="skel-l"></div><div class="skel-l s"></div></div></div>
+          <div class="skel" aria-hidden="true"><div class="skel-p"></div><div class="skel-t"><div class="skel-l"></div><div class="skel-l s"></div></div></div>
+          <div class="skel" aria-hidden="true"><div class="skel-p"></div><div class="skel-t"><div class="skel-l"></div><div class="skel-l s"></div></div></div>
+          <div class="skel" aria-hidden="true"><div class="skel-p"></div><div class="skel-t"><div class="skel-l"></div><div class="skel-l s"></div></div></div>
+          <div class="skel" aria-hidden="true"><div class="skel-p"></div><div class="skel-t"><div class="skel-l"></div><div class="skel-l s"></div></div></div>
+          <div class="skel" aria-hidden="true"><div class="skel-p"></div><div class="skel-t"><div class="skel-l"></div><div class="skel-l s"></div></div></div>
         </div>
-        <button class="row-arrow r" onclick="scrollRow('moviesContent',650)">›</button>
+        <button class="row-arrow r" onclick="scrollRow('moviesContent',650)" aria-label="Scroll right">›</button>
       </div>
     </section>
 
     <!-- TV -->
-    <section class="sec">
+    <section class="sec" aria-label="TV Series">
       <div class="sec-hd">
         <div class="sec-title">📺 TV Series</div>
         <button class="see-all-btn" onclick="loadCategory('tv')">See All →</button>
       </div>
       <div class="row-wrap">
-        <button class="row-arrow l" onclick="scrollRow('tvContent',-650)">‹</button>
-        <div class="row-scroll" id="tvContent">
-          <div class="skel"><div class="skel-p"></div><div class="skel-t"><div class="skel-l"></div><div class="skel-l s"></div></div></div>
-          <div class="skel"><div class="skel-p"></div><div class="skel-t"><div class="skel-l"></div><div class="skel-l s"></div></div></div>
-          <div class="skel"><div class="skel-p"></div><div class="skel-t"><div class="skel-l"></div><div class="skel-l s"></div></div></div>
-          <div class="skel"><div class="skel-p"></div><div class="skel-t"><div class="skel-l"></div><div class="skel-l s"></div></div></div>
-          <div class="skel"><div class="skel-p"></div><div class="skel-t"><div class="skel-l"></div><div class="skel-l s"></div></div></div>
-          <div class="skel"><div class="skel-p"></div><div class="skel-t"><div class="skel-l"></div><div class="skel-l s"></div></div></div>
+        <button class="row-arrow l" onclick="scrollRow('tvContent',-650)" aria-label="Scroll left">‹</button>
+        <div class="row-scroll" id="tvContent" role="list">
+          <div class="skel" aria-hidden="true"><div class="skel-p"></div><div class="skel-t"><div class="skel-l"></div><div class="skel-l s"></div></div></div>
+          <div class="skel" aria-hidden="true"><div class="skel-p"></div><div class="skel-t"><div class="skel-l"></div><div class="skel-l s"></div></div></div>
+          <div class="skel" aria-hidden="true"><div class="skel-p"></div><div class="skel-t"><div class="skel-l"></div><div class="skel-l s"></div></div></div>
+          <div class="skel" aria-hidden="true"><div class="skel-p"></div><div class="skel-t"><div class="skel-l"></div><div class="skel-l s"></div></div></div>
+          <div class="skel" aria-hidden="true"><div class="skel-p"></div><div class="skel-t"><div class="skel-l"></div><div class="skel-l s"></div></div></div>
+          <div class="skel" aria-hidden="true"><div class="skel-p"></div><div class="skel-t"><div class="skel-l"></div><div class="skel-l s"></div></div></div>
         </div>
-        <button class="row-arrow r" onclick="scrollRow('tvContent',650)">›</button>
+        <button class="row-arrow r" onclick="scrollRow('tvContent',650)" aria-label="Scroll right">›</button>
       </div>
     </section>
 
-    <!-- KDRAMA -->
-    <section class="sec">
+    <!-- K-DRAMA -->
+    <section class="sec" aria-label="K-Drama">
       <div class="sec-hd">
         <div class="sec-title">🇰🇷 K-Drama</div>
         <button class="see-all-btn" onclick="loadCategory('kdrama')">See All →</button>
       </div>
       <div class="row-wrap">
-        <button class="row-arrow l" onclick="scrollRow('kdramaContent',-650)">‹</button>
-        <div class="row-scroll" id="kdramaContent">
-          <div class="skel"><div class="skel-p"></div><div class="skel-t"><div class="skel-l"></div><div class="skel-l s"></div></div></div>
-          <div class="skel"><div class="skel-p"></div><div class="skel-t"><div class="skel-l"></div><div class="skel-l s"></div></div></div>
-          <div class="skel"><div class="skel-p"></div><div class="skel-t"><div class="skel-l"></div><div class="skel-l s"></div></div></div>
-          <div class="skel"><div class="skel-p"></div><div class="skel-t"><div class="skel-l"></div><div class="skel-l s"></div></div></div>
-          <div class="skel"><div class="skel-p"></div><div class="skel-t"><div class="skel-l"></div><div class="skel-l s"></div></div></div>
+        <button class="row-arrow l" onclick="scrollRow('kdramaContent',-650)" aria-label="Scroll left">‹</button>
+        <div class="row-scroll" id="kdramaContent" role="list">
+          <div class="skel" aria-hidden="true"><div class="skel-p"></div><div class="skel-t"><div class="skel-l"></div><div class="skel-l s"></div></div></div>
+          <div class="skel" aria-hidden="true"><div class="skel-p"></div><div class="skel-t"><div class="skel-l"></div><div class="skel-l s"></div></div></div>
+          <div class="skel" aria-hidden="true"><div class="skel-p"></div><div class="skel-t"><div class="skel-l"></div><div class="skel-l s"></div></div></div>
+          <div class="skel" aria-hidden="true"><div class="skel-p"></div><div class="skel-t"><div class="skel-l"></div><div class="skel-l s"></div></div></div>
+          <div class="skel" aria-hidden="true"><div class="skel-p"></div><div class="skel-t"><div class="skel-l"></div><div class="skel-l s"></div></div></div>
         </div>
-        <button class="row-arrow r" onclick="scrollRow('kdramaContent',650)">›</button>
+        <button class="row-arrow r" onclick="scrollRow('kdramaContent',650)" aria-label="Scroll right">›</button>
       </div>
     </section>
 
     <!-- ANIME -->
-    <section class="sec">
+    <section class="sec" aria-label="Anime">
       <div class="sec-hd">
         <div class="sec-title">🎌 Anime</div>
         <button class="see-all-btn" onclick="loadCategory('anime')">See All →</button>
       </div>
       <div class="row-wrap">
-        <button class="row-arrow l" onclick="scrollRow('animeContent',-650)">‹</button>
-        <div class="row-scroll" id="animeContent">
-          <div class="skel"><div class="skel-p"></div><div class="skel-t"><div class="skel-l"></div><div class="skel-l s"></div></div></div>
-          <div class="skel"><div class="skel-p"></div><div class="skel-t"><div class="skel-l"></div><div class="skel-l s"></div></div></div>
-          <div class="skel"><div class="skel-p"></div><div class="skel-t"><div class="skel-l"></div><div class="skel-l s"></div></div></div>
-          <div class="skel"><div class="skel-p"></div><div class="skel-t"><div class="skel-l"></div><div class="skel-l s"></div></div></div>
-          <div class="skel"><div class="skel-p"></div><div class="skel-t"><div class="skel-l"></div><div class="skel-l s"></div></div></div>
+        <button class="row-arrow l" onclick="scrollRow('animeContent',-650)" aria-label="Scroll left">‹</button>
+        <div class="row-scroll" id="animeContent" role="list">
+          <div class="skel" aria-hidden="true"><div class="skel-p"></div><div class="skel-t"><div class="skel-l"></div><div class="skel-l s"></div></div></div>
+          <div class="skel" aria-hidden="true"><div class="skel-p"></div><div class="skel-t"><div class="skel-l"></div><div class="skel-l s"></div></div></div>
+          <div class="skel" aria-hidden="true"><div class="skel-p"></div><div class="skel-t"><div class="skel-l"></div><div class="skel-l s"></div></div></div>
+          <div class="skel" aria-hidden="true"><div class="skel-p"></div><div class="skel-t"><div class="skel-l"></div><div class="skel-l s"></div></div></div>
+          <div class="skel" aria-hidden="true"><div class="skel-p"></div><div class="skel-t"><div class="skel-l"></div><div class="skel-l s"></div></div></div>
         </div>
-        <button class="row-arrow r" onclick="scrollRow('animeContent',650)">›</button>
+        <button class="row-arrow r" onclick="scrollRow('animeContent',650)" aria-label="Scroll right">›</button>
       </div>
     </section>
 
     <!-- 18+ -->
-    <section class="sec" id="section-mature">
+    <section class="sec" id="section-mature" aria-label="18+ Mature content">
       <div class="sec-hd">
         <div class="sec-title">🔞 18+ Mature</div>
       </div>
       <div class="row-wrap">
-        <div class="row-scroll" id="matureContent"></div>
+        <div class="row-scroll" id="matureContent" role="list"></div>
       </div>
     </section>
 
   </div><!-- /mainContent -->
 
   <!-- RESULTS -->
-  <div id="searchResultsContainer">
+  <div id="searchResultsContainer" aria-live="polite" aria-label="Search results">
     <div id="searchInfo">
+      <div class="si-breadcrumb">🏠 Home <span>›</span> <span id="siCrumb">Search</span></div>
       <div id="searchTitle"></div>
       <div id="searchCount"></div>
     </div>
-    <div id="sf-results-wrap"></div>
-    <div id="pagination"></div>
+    <div id="sf-results-wrap" role="list"></div>
+    <div id="pagination" role="navigation" aria-label="Pagination"></div>
   </div>
-</div>
+</main><!-- /mainWrap -->
 
-<!-- ═══ PLAYER ═══ -->
-<div id="playerModal">
+<!-- ═══════════════════════════════════════════
+     PLAYER MODAL
+════════════════════════════════════════════ -->
+<div id="playerModal" role="dialog" aria-modal="true" aria-label="Video player">
   <div class="p-box">
-    <button id="playerClose" onclick="closePlayer()">✕</button>
+    <button id="playerClose" onclick="closePlayer()" aria-label="Close player">✕</button>
     <div id="playerVideo">
       <div class="p-spin"><div class="spinner"></div><span>Loading player…</span></div>
     </div>
-    <!-- Chat -->
-    <div id="chatPanel">
-      <div class="ch-hd"><span>💬 Live Chat</span><button onclick="toggleChatPanel()">✕</button></div>
-      <div id="chatMessages"><span style="color:var(--tx3);font-style:italic">Share the room to chat…</span></div>
+    <!-- Keyboard shortcuts hint -->
+    <div id="kbHint" aria-hidden="true">
+      <span class="kb-key"><kbd class="kbd">Esc</kbd> Close</span>
+      <span class="kb-key"><kbd class="kbd">F</kbd> Fullscreen</span>
+      <span class="kb-key"><kbd class="kbd">S</kbd> Servers</span>
+      <span class="kb-key"><kbd class="kbd">C</kbd> Chat</span>
+    </div>
+
+    <!-- Chat Panel -->
+    <div id="chatPanel" aria-label="Live chat">
+      <div class="ch-hd">
+        <span>💬 Live Chat</span>
+        <button onclick="toggleChatPanel()" aria-label="Close chat">✕</button>
+      </div>
+      <div id="chatMessages" role="log" aria-live="polite">
+        <span style="color:var(--tx3);font-style:italic;font-size:.8rem">Share the room to chat…</span>
+      </div>
       <div class="ch-inp">
-        <input type="text" id="chatInput" placeholder="Message…" onkeydown="if(event.key==='Enter')_sendChat()">
-        <button onclick="_sendChat()">➤</button>
+        <input type="text" id="chatInput" placeholder="Message…" maxlength="200" aria-label="Chat message"
+          onkeydown="if(event.key==='Enter')_sendChat()">
+        <button onclick="_sendChat()" aria-label="Send message">➤</button>
       </div>
     </div>
+
     <div class="p-meta">
       <div id="playerTitle">—</div>
-      <!-- Episode panel (populated by episode-feature.js) -->
+      <div class="p-badges">
+        <span class="p-badge hd">HD</span>
+        <span class="p-badge cc">Subtitles</span>
+        <span class="p-badge tmdb" id="playerRating" style="display:none">★ —</span>
+      </div>
       <div id="episodePanel">
         <div class="ep-lbl">Season &amp; Episode</div>
-        <select id="seasonSelect"></select>
-        <select id="episodeSelect"></select>
+        <select id="seasonSelect" aria-label="Select season"></select>
+        <select id="episodeSelect" aria-label="Select episode"></select>
       </div>
       <div class="srv-lbl" style="margin-top:14px">Select Server</div>
-      <div id="serverButtons"></div>
-      <div class="srv-tip">💡 Servers 1 &amp; 2 have fewest ads. All support English subtitles (CC).</div>
+      <div id="serverButtons" role="radiogroup" aria-label="Video servers"></div>
+      <div class="srv-tip">💡 Servers 1 &amp; 2 have fewest ads — all support English subtitles.</div>
       <div class="p-acts">
         <button class="btn-tog" onclick="openWT()">👥 Watch Together</button>
         <button class="btn-tog" onclick="toggleChatPanel()">💬 Live Chat</button>
+        <button class="btn-watchlist" id="playerWLBtn" onclick="_toggleWatchlist()">🔖 Add to Watchlist</button>
       </div>
     </div>
   </div>
 </div>
 
-<!-- ═══ 18+ VERIFY ═══ -->
-<div id="verifyModal">
+<!-- ═══════════════════════════════════════════
+     18+ VERIFY
+════════════════════════════════════════════ -->
+<div id="verifyModal" role="dialog" aria-modal="true" aria-label="Age verification">
   <div class="v-box">
-    <div class="v-ico">🔞</div>
+    <div class="v-ico" aria-hidden="true">🔞</div>
     <div class="v-title">Restricted Content</div>
     <p class="v-desc">This section contains mature content for adults only. Please confirm your age.</p>
     <div id="vs1" class="on">
@@ -534,19 +1372,19 @@ input,select{font-family:inherit;outline:none}
         <button class="btn-red" onclick="verifyAge()">✓ Enter</button>
         <button class="btn-ghost" onclick="closeVerify()">Cancel</button>
       </div>
-      <div style="margin-top:14px;text-align:center">
-        <button style="font-size:.8rem;color:var(--tx2);cursor:pointer" onclick="App.showPin()">🔐 Use Parental PIN instead</button>
+      <div style="margin-top:16px;text-align:center">
+        <button style="font-size:.8rem;color:var(--tx2);cursor:pointer;transition:color .15s" onmouseover="this.style.color='var(--tx)'" onmouseout="this.style.color='var(--tx2)'" onclick="App.showPin()">🔐 Use Parental PIN instead</button>
       </div>
     </div>
     <div id="vs2">
-      <p style="font-size:.82rem;color:var(--tx2);margin-bottom:14px">Enter your 4-digit parental PIN</p>
+      <p style="font-size:.82rem;color:var(--tx2);margin-bottom:16px">Enter your 4-digit parental PIN</p>
       <div class="pin-row">
-        <input class="pin-d" type="password" inputmode="numeric" maxlength="1">
-        <input class="pin-d" type="password" inputmode="numeric" maxlength="1">
-        <input class="pin-d" type="password" inputmode="numeric" maxlength="1">
-        <input class="pin-d" type="password" inputmode="numeric" maxlength="1">
+        <input class="pin-d" type="password" inputmode="numeric" maxlength="1" aria-label="PIN digit 1">
+        <input class="pin-d" type="password" inputmode="numeric" maxlength="1" aria-label="PIN digit 2">
+        <input class="pin-d" type="password" inputmode="numeric" maxlength="1" aria-label="PIN digit 3">
+        <input class="pin-d" type="password" inputmode="numeric" maxlength="1" aria-label="PIN digit 4">
       </div>
-      <div id="pinErr"></div>
+      <div id="pinErr" role="alert"></div>
       <div class="v-btns">
         <button class="btn-red" onclick="verifyPin()">Unlock</button>
         <button class="btn-ghost" onclick="App.showAge()">← Back</button>
@@ -555,23 +1393,25 @@ input,select{font-family:inherit;outline:none}
   </div>
 </div>
 
-<!-- ═══ WATCH TOGETHER ═══ -->
-<div id="watchTogetherMenu">
+<!-- ═══════════════════════════════════════════
+     WATCH TOGETHER
+════════════════════════════════════════════ -->
+<div id="watchTogetherMenu" role="dialog" aria-modal="true" aria-label="Watch Together">
   <div class="wt-box">
     <div class="wt-hd">
-      <div style="font-size:2rem;margin-bottom:8px">👥</div>
+      <div style="font-size:2.2rem;margin-bottom:10px" aria-hidden="true">👥</div>
       <h2>Watch Together</h2>
-      <p>Watch in real-time with friends</p>
+      <p>Watch in real-time with friends, anywhere</p>
     </div>
     <div id="wtHome">
       <div class="wt-opts">
-        <div class="wt-opt" onclick="_createRoom()">
-          <div class="wt-opt-ico">🎬</div>
+        <div class="wt-opt" onclick="_createRoom()" role="button" tabindex="0">
+          <div class="wt-opt-ico" aria-hidden="true">🎬</div>
           <div class="wt-opt-name">Create Room</div>
-          <div class="wt-opt-desc">Start watching with friends</div>
+          <div class="wt-opt-desc">Start a watch party</div>
         </div>
-        <div class="wt-opt" onclick="showJoinRoomDialog()">
-          <div class="wt-opt-ico">🔗</div>
+        <div class="wt-opt" onclick="showJoinRoomDialog()" role="button" tabindex="0">
+          <div class="wt-opt-ico" aria-hidden="true">🔗</div>
           <div class="wt-opt-name">Join Room</div>
           <div class="wt-opt-desc">Enter room code to join</div>
         </div>
@@ -579,180 +1419,574 @@ input,select{font-family:inherit;outline:none}
       <button class="btn-ghost" style="width:100%;justify-content:center" onclick="closeWatchTogetherMenu()">Cancel</button>
     </div>
     <div id="wtCreated" style="display:none">
-      <p style="font-size:.8rem;color:var(--tx2);text-align:center;margin-bottom:8px">Share this code with friends</p>
-      <div class="room-code" id="roomCodeDisplay">—</div>
+      <p style="font-size:.8rem;color:var(--tx2);text-align:center;margin-bottom:10px">Share this code with friends</p>
+      <div class="room-code" id="roomCodeDisplay" aria-live="polite">—</div>
       <div class="rc-acts">
         <button class="btn-ghost" style="justify-content:center" onclick="_copyRoom()">📋 Copy Link</button>
         <button class="btn-ghost" style="justify-content:center" onclick="_shareRoom()">📤 Share</button>
       </div>
-      <button class="btn-red" style="width:100%;padding:11px" onclick="_startWT()">▶ Start Watching</button>
+      <button class="btn-red" style="width:100%;padding:12px" onclick="_startWT()">▶ Start Watching</button>
     </div>
   </div>
 </div>
 
 <!-- JOIN ROOM -->
-<div id="joinRoomModal">
+<div id="joinRoomModal" role="dialog" aria-modal="true" aria-label="Join room">
   <div class="wt-box">
     <div class="wt-hd">
-      <div style="font-size:2rem;margin-bottom:8px">🔗</div>
+      <div style="font-size:2.2rem;margin-bottom:10px" aria-hidden="true">🔗</div>
       <h2>Join Room</h2>
-      <p>Enter the 6-letter room code</p>
+      <p>Enter the 6-character room code</p>
     </div>
-    <input type="text" class="join-inp" id="joinCodeInput" placeholder="ABC123" maxlength="6">
-    <button class="btn-red" style="width:100%;padding:11px;margin-bottom:8px" onclick="_joinRoom()">Join Room</button>
+    <input type="text" class="join-inp" id="joinCodeInput"
+      placeholder="ABC123" maxlength="6"
+      aria-label="Room code"
+      onkeydown="if(event.key==='Enter')_joinRoom()">
+    <button class="btn-red" style="width:100%;padding:12px;margin-bottom:10px" onclick="_joinRoom()">Join Room</button>
     <button class="btn-ghost" style="width:100%;justify-content:center" onclick="closeJoinRoomDialog()">← Back</button>
   </div>
 </div>
 
-<!-- ═══ SUPPORT ═══ -->
-<div id="supportModal">
+<!-- ═══════════════════════════════════════════
+     SUPPORT MODAL
+════════════════════════════════════════════ -->
+<div id="supportModal" role="dialog" aria-modal="true" aria-label="Support Flixora">
   <div class="sp-box">
-    <button style="position:absolute;top:14px;right:14px;color:var(--tx2);font-size:1.1rem;cursor:pointer;z-index:2;background:none;border:none" onclick="closeSupport()">✕</button>
+    <button style="position:absolute;top:14px;right:14px;color:var(--tx2);font-size:1.1rem;cursor:pointer;z-index:2;background:none;border:none;transition:color .15s" onclick="closeSupport()" onmouseover="this.style.color='var(--tx)'" onmouseout="this.style.color='var(--tx2)'" aria-label="Close">✕</button>
     <div class="sp-hd">
-      <div class="sp-ico">☕</div>
+      <div class="sp-ico" aria-hidden="true">☕</div>
       <h2>Support Flixora</h2>
-      <p>Flixora is free for everyone. If you enjoy it here, consider buying me a coffee — it keeps the streams going! 🙏</p>
+      <p>Flixora is free for everyone. If you enjoy it, consider buying a coffee — it keeps the streams going! 🙏</p>
     </div>
-    <div class="sp-amts">
+    <div class="sp-amts" role="group" aria-label="Donation amount">
       <div class="amt" data-a="50">₱50</div>
       <div class="amt active" data-a="100">₱100</div>
       <div class="amt" data-a="200">₱200</div>
       <div class="amt" data-a="500">₱500</div>
     </div>
     <div class="sp-cta">
-      <a href="https://ko-fi.com" target="_blank" rel="noopener">☕ Support on Ko-fi</a>
+      <a href="https://ko-fi.com" target="_blank" rel="noopener noreferrer">☕ Support on Ko-fi</a>
       <button onclick="closeSupport()">Maybe later</button>
     </div>
   </div>
 </div>
 
+<!-- ═══════════════════════════════════════════
+     MOBILE SEARCH OVERLAY
+════════════════════════════════════════════ -->
+<div id="msearch" aria-label="Mobile search" role="search">
+  <div class="ms-inner">
+    <input class="ms-inp" id="msearchInp" type="search"
+      placeholder="Search movies, shows, anime…"
+      autocomplete="off" autocorrect="off"
+      aria-label="Search"
+      onkeydown="if(event.key==='Enter'&&this.value.trim()){document.getElementById('searchInput').value=this.value.trim();doSearch(1);}if(event.key==='Escape')closeMSearch()">
+    <button class="btn-ghost" onclick="closeMSearch()" style="flex-shrink:0;padding:8px 14px">Cancel</button>
+  </div>
+  <div class="ms-results" id="msResults"></div>
+</div>
+
 <!-- INSTALL BANNER -->
-<div id="installBanner">
-  <div class="ib-ico">📱</div>
+<div id="installBanner" role="banner" aria-label="Install Flixora">
+  <div class="ib-ico" aria-hidden="true">📱</div>
   <div class="ib-tx">
     <div class="ib-title">Install Flixora</div>
     <div class="ib-sub">Add to home screen for the best experience</div>
   </div>
   <button id="installBtn">Install</button>
-  <button id="closeBanner">✕</button>
+  <button id="closeBanner" aria-label="Dismiss">✕</button>
 </div>
 
-<!-- TOAST -->
-<div id="toast"><span id="toastIcon">✅</span> <span id="toastMsg">Done!</span></div>
+<!-- TOAST CONTAINER -->
+<div id="toastContainer" aria-live="polite" aria-label="Notifications"></div>
 
 <!-- BOTTOM NAV -->
-<nav id="bottomNav">
-  <div class="bni active" id="bn-home" onclick="goHome();_setNavBni('home')"><span class="bni-ico">🏠</span>Home</div>
-  <div class="bni" id="bn-movies" onclick="loadCategory('movies');_setNavBni('movies')"><span class="bni-ico">🎬</span>Movies</div>
-  <div class="bni" id="bn-search" onclick="document.getElementById('searchInput').focus()"><span class="bni-ico">🔍</span>Search</div>
-  <div class="bni" id="bn-together" onclick="openWT()"><span class="bni-ico">👥</span>Together</div>
-  <div class="bni" id="bn-support" onclick="openSupport()"><span class="bni-ico">☕</span>Support</div>
+<nav id="bottomNav" aria-label="Mobile navigation">
+  <div class="bni active" id="bn-home" onclick="goHome();_setNavBni('home')" role="button" tabindex="0"><span class="bni-ico" aria-hidden="true">🏠</span>Home</div>
+  <div class="bni" id="bn-movies" onclick="loadCategory('movies');_setNavBni('movies')" role="button" tabindex="0"><span class="bni-ico" aria-hidden="true">🎬</span>Movies</div>
+  <div class="bni" id="bn-search" onclick="openMSearch()" role="button" tabindex="0"><span class="bni-ico" aria-hidden="true">🔍</span>Search</div>
+  <div class="bni" id="bn-together" onclick="openWT()" role="button" tabindex="0"><span class="bni-ico" aria-hidden="true">👥</span>Together</div>
+  <div class="bni" id="bn-support" onclick="openSupport()" role="button" tabindex="0"><span class="bni-ico" aria-hidden="true">☕</span>Support</div>
 </nav>
 
-<!-- ═══ SCRIPTS ═══ -->
+<!-- ═══════════════════════════════════════════
+     SCRIPTS
+════════════════════════════════════════════ -->
 <script src="adblock.js" onerror="console.warn('adblock.js not found')"></script>
 <script src="app.js"></script>
 <script src="episode-feature.js" onerror="console.warn('episode-feature.js not found')"></script>
 <script src="watch-together/room-manager.js" onerror="console.warn('room-manager.js not found')"></script>
 
 <script>
-/* ────────────────────────────────────────────
-   UI GLUE — wraps app.js seamlessly
-───────────────────────────────────────────── */
+/* ════════════════════════════════════════════
+   FLIXORA v5 UI GLUE
+════════════════════════════════════════════ */
 
-/* Sidebar */
-function toggleSb(){document.getElementById('sidebar').classList.toggle('open');document.getElementById('sbOv').classList.toggle('on');}
-function closeSb(){document.getElementById('sidebar').classList.remove('open');document.getElementById('sbOv').classList.remove('on');}
-document.getElementById('sbOv').onclick=closeSb;
-function _setNav(el){document.querySelectorAll('.ni').forEach(n=>n.classList.remove('active'));el.classList.add('active');closeSb();}
-function _setNavBni(id){document.querySelectorAll('.bni').forEach(b=>b.classList.remove('active'));const el=document.getElementById('bn-'+id);if(el)el.classList.add('active');}
-
-/* Toast */
-window.showToast=function(msg,icon='✅',ms=2600){
-  const t=document.getElementById('toast');
-  document.getElementById('toastMsg').textContent=msg;
-  document.getElementById('toastIcon').textContent=icon;
-  t.classList.add('show');clearTimeout(t._t);
-  t._t=setTimeout(()=>t.classList.remove('show'),ms);
-};
-
-/* Support */
-function openSupport(){document.getElementById('supportModal').style.display='flex';requestAnimationFrame(()=>document.getElementById('supportModal').classList.add('open'));}
-function closeSupport(){document.getElementById('supportModal').classList.remove('open');setTimeout(()=>{document.getElementById('supportModal').style.display='none';},300);}
-document.getElementById('supportModal').onclick=e=>{if(e.target===document.getElementById('supportModal'))closeSupport();};
-document.querySelectorAll('.amt').forEach(b=>{b.onclick=()=>{document.querySelectorAll('.amt').forEach(x=>x.classList.remove('active'));b.classList.add('active');};});
-
-/* Watch Together */
-function openWT(){document.getElementById('watchTogetherMenu').style.display='flex';document.getElementById('watchTogetherMenu').classList.add('open');}
-function _closeWT(){document.getElementById('watchTogetherMenu').classList.remove('open');setTimeout(()=>{document.getElementById('watchTogetherMenu').style.display='none';document.getElementById('wtHome').style.display='';document.getElementById('wtCreated').style.display='none';},250);}
-window.closeWatchTogetherMenu=_closeWT;
-window.showWatchTogetherMenu=openWT;
-document.getElementById('watchTogetherMenu').onclick=e=>{if(e.target===document.getElementById('watchTogetherMenu'))_closeWT();};
-
-function _createRoom(){
-  const code=Math.random().toString(36).substring(2,8).toUpperCase();
-  document.getElementById('roomCodeDisplay').textContent=code;
-  document.getElementById('wtHome').style.display='none';
-  document.getElementById('wtCreated').style.display='';
+/* ── Sidebar ─────────────────────────────── */
+function toggleSb() {
+  const sb = document.getElementById('sidebar');
+  const ov = document.getElementById('sbOv');
+  sb.classList.toggle('open');
+  ov.classList.toggle('on');
+  document.body.style.overflow = sb.classList.contains('open') ? 'hidden' : '';
 }
-function _copyRoom(){
-  const code=document.getElementById('roomCodeDisplay').textContent;
-  navigator.clipboard.writeText(location.origin+location.pathname+'?room='+code).then(()=>showToast('Room link copied!','📋')).catch(()=>showToast('Code: '+code,'📋',4000));
+function closeSb() {
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('sbOv').classList.remove('on');
+  document.body.style.overflow = '';
 }
-function _shareRoom(){
-  const code=document.getElementById('roomCodeDisplay').textContent;
-  if(navigator.share)navigator.share({title:'Watch on Flixora',text:'Join my room!',url:location.href+'?room='+code});else _copyRoom();
-}
-function _startWT(){_closeWT();showToast('Room ready — share the code! 🎉','🎉');}
+document.getElementById('sbOv').addEventListener('click', closeSb);
 
-/* Join Room */
-window.showJoinRoomDialog=function(){document.getElementById('joinRoomModal').style.display='flex';document.getElementById('joinRoomModal').classList.add('open');};
-window.closeJoinRoomDialog=function(){document.getElementById('joinRoomModal').classList.remove('open');setTimeout(()=>{document.getElementById('joinRoomModal').style.display='none';document.getElementById('joinCodeInput').value='';},250);};
-document.getElementById('joinRoomModal').onclick=e=>{if(e.target===document.getElementById('joinRoomModal'))closeJoinRoomDialog();};
-function _joinRoom(){
-  const code=document.getElementById('joinCodeInput').value.trim().toUpperCase();
-  if(!code){showToast('Please enter a room code','⚠️');return;}
-  closeJoinRoomDialog();_closeWT();showToast('Joined room '+code+'!','✅');
+function _setNav(el) {
+  document.querySelectorAll('.ni').forEach(n => n.classList.remove('active'));
+  el.classList.add('active');
+  closeSb();
+}
+function _setNavBni(id) {
+  document.querySelectorAll('.bni').forEach(b => b.classList.remove('active'));
+  const el = document.getElementById('bn-' + id);
+  if (el) el.classList.add('active');
 }
 
-/* Chat */
-function _sendChat(){
-  const inp=document.getElementById('chatInput');
-  const msg=inp.value.trim();if(!msg)return;
-  const box=document.getElementById('chatMessages');
-  const d=document.createElement('div');
-  d.innerHTML=`<span style="color:var(--red2);font-weight:600">You:</span> `+msg;
-  box.appendChild(d);box.scrollTop=box.scrollHeight;inp.value='';
-}
-
-/* Install — delayed 45s */
-setTimeout(()=>{
-  const b=document.getElementById('installBanner');
-  if(!localStorage.getItem('sf_installed')&&!window.matchMedia('(display-mode:standalone)').matches)b.classList.add('show');
-},45000);
-
-/* Player spinner — ensure it shows while loading */
-const _origSetServer=window.setServer;
-window.setServer=function(idx,data){
-  const pv=document.getElementById('playerVideo');
-  if(pv){pv.querySelectorAll('iframe').forEach(f=>f.remove());let sp=pv.querySelector('.p-spin');if(!sp){sp=document.createElement('div');sp.className='p-spin';sp.innerHTML='<div class="spinner"></div><span>Loading player…</span>';pv.appendChild(sp);}sp.style.display='flex';}
-  if(typeof _origSetServer==='function')_origSetServer(idx,data);
-  setTimeout(()=>{const sp=pv?.querySelector('.p-spin');if(sp)sp.style.display='none';},3500);
-};
-
-/* ESC closes everything */
-document.addEventListener('keydown',e=>{
-  if(e.key==='Escape'){closeSupport();_closeWT();closeJoinRoomDialog();}
+/* Keyboard nav for sidebar items */
+document.querySelectorAll('.ni').forEach(el => {
+  el.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') el.click(); });
 });
 
-/* Active nav sync when app.js calls setNavActive */
-const _origSetNavActive=window.setNavActive;
-window.setNavActive=function(cat){
-  if(typeof _origSetNavActive==='function')_origSetNavActive(cat);
-  document.querySelectorAll('.ni[data-cat]').forEach(n=>n.classList.toggle('active',n.dataset.cat===cat));
+/* ── Toast System ─────────────────────────── */
+window.showToast = function(msg, icon = '✅', ms = 2800, type = 'default') {
+  const container = document.getElementById('toastContainer');
+  const t = document.createElement('div');
+  t.className = `toast-item ${type}`;
+  t.innerHTML = `<span>${icon}</span> <span>${msg}</span>`;
+  container.appendChild(t);
+  requestAnimationFrame(() => { requestAnimationFrame(() => t.classList.add('show')); });
+  setTimeout(() => {
+    t.classList.remove('show');
+    setTimeout(() => t.remove(), 350);
+  }, ms);
 };
 
-console.log('%c✅ FLIXORA UI ready','color:#e63946;font-weight:900;font-size:14px');
+/* ── Topbar scroll effect ─────────────────── */
+window.addEventListener('scroll', () => {
+  document.getElementById('topbar').classList.toggle('solid', window.scrollY > 50);
+}, { passive: true });
+
+/* ── Search Input Handler ─────────────────── */
+let _searchDebounce;
+function _onSearchInput(inp) {
+  const wrap = inp.closest('.tb-srch');
+  wrap.classList.toggle('has-text', inp.value.length > 0);
+  clearTimeout(_searchDebounce);
+  if (inp.value.trim().length >= 2) {
+    _searchDebounce = setTimeout(() => _showSuggestions(inp.value.trim()), 350);
+  } else {
+    _hideSuggestions();
+  }
+}
+
+async function _showSuggestions(q) {
+  const TMDB_KEY = '3fd2be6f0c70a2a598f084ddfb75487c';
+  const sug = document.getElementById('searchSuggestions');
+  try {
+    const res = await fetch(`https://api.themoviedb.org/3/search/multi?api_key=${TMDB_KEY}&query=${encodeURIComponent(q)}&include_adult=false&page=1`);
+    const data = await res.json();
+    const items = (data.results || []).filter(r => r.media_type !== 'person').slice(0, 5);
+    if (!items.length) { _hideSuggestions(); return; }
+    sug.innerHTML = items.map(item => {
+      const title = item.title || item.name || '';
+      const year = (item.release_date || item.first_air_date || '').slice(0,4);
+      const type = item.media_type === 'movie' ? 'Movie' : 'TV';
+      const score = item.vote_average ? item.vote_average.toFixed(1) : '—';
+      const img = item.poster_path ? `https://image.tmdb.org/t/p/w92${item.poster_path}` : '';
+      return `<div class="sug-item" role="option" onclick="document.getElementById('searchInput').value='${title.replace(/'/g,"\\'")}';_hideSuggestions();doSearch(1)" tabindex="0">
+        ${img ? `<img src="${img}" alt="${title}" loading="lazy">` : '<div style="width:36px;height:54px;border-radius:5px;background:var(--bg4);flex-shrink:0"></div>'}
+        <div>
+          <div class="sug-title">${title}</div>
+          <div class="sug-meta">⭐ ${score} · ${type}${year?' · '+year:''}</div>
+        </div>
+      </div>`;
+    }).join('');
+    sug.classList.add('show');
+  } catch(e) { _hideSuggestions(); }
+}
+function _hideSuggestions() {
+  document.getElementById('searchSuggestions').classList.remove('show');
+}
+function _clearSearch() {
+  const inp = document.getElementById('searchInput');
+  inp.value = '';
+  inp.closest('.tb-srch').classList.remove('has-text');
+  _hideSuggestions();
+  inp.focus();
+}
+
+/* Hide suggestions on click outside */
+document.addEventListener('click', e => {
+  if (!e.target.closest('.tb-srch')) _hideSuggestions();
+});
+
+/* ── Support ──────────────────────────────── */
+function openSupport() {
+  const m = document.getElementById('supportModal');
+  m.style.display = 'flex';
+  requestAnimationFrame(() => m.classList.add('open'));
+}
+function closeSupport() {
+  const m = document.getElementById('supportModal');
+  m.classList.remove('open');
+  setTimeout(() => m.style.display = 'none', 250);
+}
+document.getElementById('supportModal').addEventListener('click', e => {
+  if (e.target === document.getElementById('supportModal')) closeSupport();
+});
+document.querySelectorAll('.amt').forEach(b => {
+  b.addEventListener('click', () => {
+    document.querySelectorAll('.amt').forEach(x => x.classList.remove('active'));
+    b.classList.add('active');
+  });
+});
+
+/* ── Watch Together ───────────────────────── */
+function openWT() {
+  const m = document.getElementById('watchTogetherMenu');
+  m.style.display = 'flex';
+  requestAnimationFrame(() => m.classList.add('open'));
+}
+function _closeWT() {
+  const m = document.getElementById('watchTogetherMenu');
+  m.classList.remove('open');
+  setTimeout(() => {
+    m.style.display = 'none';
+    document.getElementById('wtHome').style.display = '';
+    document.getElementById('wtCreated').style.display = 'none';
+  }, 260);
+}
+window.closeWatchTogetherMenu = _closeWT;
+window.showWatchTogetherMenu = openWT;
+document.getElementById('watchTogetherMenu').addEventListener('click', e => {
+  if (e.target === document.getElementById('watchTogetherMenu')) _closeWT();
+});
+
+/* ── Join Room ────────────────────────────── */
+window.showJoinRoomDialog = function() {
+  const m = document.getElementById('joinRoomModal');
+  m.style.display = 'flex';
+  requestAnimationFrame(() => {
+    m.classList.add('open');
+    setTimeout(() => document.getElementById('joinCodeInput').focus(), 200);
+  });
+};
+window.closeJoinRoomDialog = function() {
+  const m = document.getElementById('joinRoomModal');
+  m.classList.remove('open');
+  setTimeout(() => {
+    m.style.display = 'none';
+    document.getElementById('joinCodeInput').value = '';
+  }, 260);
+};
+document.getElementById('joinRoomModal').addEventListener('click', e => {
+  if (e.target === document.getElementById('joinRoomModal')) closeJoinRoomDialog();
+});
+
+/* Room code auto-uppercase */
+document.getElementById('joinCodeInput').addEventListener('input', function() {
+  this.value = this.value.toUpperCase().replace(/[^A-Z0-9]/g,'');
+});
+
+/* ── Create / Start Room ─────────────────── */
+function _createRoom() {
+  const code = Math.random().toString(36).substring(2,8).toUpperCase();
+  window._pendingRoomCode = code;
+  document.getElementById('roomCodeDisplay').textContent = code;
+  document.getElementById('wtHome').style.display = 'none';
+  document.getElementById('wtCreated').style.display = '';
+}
+function _copyRoom() {
+  const code = document.getElementById('roomCodeDisplay').textContent;
+  navigator.clipboard.writeText(location.origin + location.pathname + '?room=' + code)
+    .then(() => showToast('Room link copied!', '📋', 2400, 'success'))
+    .catch(() => showToast('Code: ' + code, '📋', 4000));
+}
+function _shareRoom() {
+  const code = document.getElementById('roomCodeDisplay').textContent;
+  const url = location.href.split('?')[0] + '?room=' + code;
+  if (navigator.share) navigator.share({ title: 'Watch on Flixora', text: 'Join my watch party!', url });
+  else _copyRoom();
+}
+function _startWT() { _closeWT(); showToast('Room ready — share the code! 🎉', '🎬', 3000, 'success'); }
+function _joinRoom() {
+  const code = document.getElementById('joinCodeInput').value.trim().toUpperCase();
+  if (!code || code.length < 4) { showToast('Enter a valid room code', '⚠️', 2400, 'warning'); return; }
+  closeJoinRoomDialog(); _closeWT();
+  showToast('Joining room ' + code + '…', '🔗', 2400);
+  if (typeof joinRoom === 'function') joinRoom(code);
+}
+
+/* ── Chat ─────────────────────────────────── */
+function _sendChat() {
+  const inp = document.getElementById('chatInput');
+  const msg = inp.value.trim();
+  if (!msg) return;
+  const box = document.getElementById('chatMessages');
+  const d = document.createElement('div');
+  d.style.cssText = 'font-size:.8rem;line-height:1.5';
+  d.innerHTML = `<strong style="color:var(--red2)">You:</strong> ${msg}`;
+  box.appendChild(d); box.scrollTop = box.scrollHeight;
+  inp.value = '';
+  if (typeof sendChatMessage === 'function') sendChatMessage(msg);
+}
+
+/* ── Watchlist ────────────────────────────── */
+function _getWatchlist() {
+  try { return JSON.parse(localStorage.getItem('fx_watchlist') || '[]'); } catch(e) { return []; }
+}
+function _saveWatchlist(list) {
+  try { localStorage.setItem('fx_watchlist', JSON.stringify(list)); } catch(e) {}
+}
+function _toggleWatchlist() {
+  const c = window.currentContent; if (!c) return;
+  const list = _getWatchlist();
+  const idx = list.findIndex(i => String(i.tmdb) === String(c.tmdb) && i.type === c.type);
+  const btn = document.getElementById('playerWLBtn');
+  if (idx >= 0) {
+    list.splice(idx, 1); _saveWatchlist(list);
+    btn.textContent = '🔖 Add to Watchlist'; btn.classList.remove('saved');
+    showToast('Removed from Watchlist', '🔖', 2200);
+  } else {
+    list.unshift({ tmdb: c.tmdb, type: c.type, title: c.title, year: c.year, poster: c.poster, ts: Date.now() });
+    if (list.length > 50) list.pop();
+    _saveWatchlist(list);
+    btn.textContent = '✅ In Watchlist'; btn.classList.add('saved');
+    showToast('Added to Watchlist!', '🔖', 2200, 'success');
+  }
+  _renderWatchlistRow();
+}
+function _syncWatchlistBtn() {
+  const c = window.currentContent; if (!c) return;
+  const list = _getWatchlist();
+  const saved = list.some(i => String(i.tmdb) === String(c.tmdb) && i.type === c.type);
+  const btn = document.getElementById('playerWLBtn');
+  if (btn) { btn.textContent = saved ? '✅ In Watchlist' : '🔖 Add to Watchlist'; btn.classList.toggle('saved', saved); }
+}
+function _showWatchlist() {
+  const list = _getWatchlist();
+  if (!list.length) { showToast('Your watchlist is empty', '📭', 2400); return; }
+  showResultsView();
+  setInfo('🔖 My Watchlist', list.length + ' titles saved');
+  renderGrid(list.map(i => ({ id: i.tmdb, title: i.title, poster_path: null, media_type: i.type, vote_average: 0, release_date: i.year })));
+  document.getElementById('siCrumb').textContent = 'Watchlist';
+}
+function _renderWatchlistRow() {
+  const list = _getWatchlist();
+  const sec = document.getElementById('watchlistSection');
+  sec.classList.toggle('has-items', list.length > 0);
+  const row = document.getElementById('watchlistContent');
+  if (!row) return;
+  row.innerHTML = list.slice(0,10).map(i =>
+    `<div class="content-card" onclick="playById('${i.tmdb}','${i.type}','${(i.title||'').replace(/'/g,"\\'")}','${i.year||''}')"
+      style="position:relative;border-radius:8px;overflow:hidden;cursor:pointer;background:var(--bg3);transition:transform .25s;width:152px;flex-shrink:0;scroll-snap-align:start"
+      onmouseenter="this.style.transform='scale(1.04)'" onmouseleave="this.style.transform=''">
+      <div style="aspect-ratio:2/3;overflow:hidden;background:var(--bg4);display:flex;align-items:center;justify-content:center">
+        <span style="font-size:2rem;opacity:.3">🎬</span>
+      </div>
+      <div style="padding:9px 8px;font-size:.78rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${i.title||'—'}</div>
+    </div>`
+  ).join('');
+}
+
+/* ── Continue Watching ────────────────────── */
+function _getContinue() {
+  try { return JSON.parse(localStorage.getItem('fx_continue') || '[]'); } catch(e) { return []; }
+}
+function _saveToContinue(content) {
+  if (!content?.tmdb) return;
+  const list = _getContinue();
+  const idx = list.findIndex(i => String(i.tmdb) === String(content.tmdb) && i.type === content.type);
+  const item = { tmdb: content.tmdb, type: content.type, title: content.title, year: content.year, poster: content.poster, ts: Date.now() };
+  if (idx >= 0) list.splice(idx, 1);
+  list.unshift(item);
+  if (list.length > 10) list.pop();
+  try { localStorage.setItem('fx_continue', JSON.stringify(list)); } catch(e) {}
+  _renderContinueRow();
+}
+function _clearContinue() {
+  localStorage.removeItem('fx_continue');
+  document.getElementById('continueSection').classList.remove('has-items');
+  document.getElementById('continueContent').innerHTML = '';
+}
+function _showContinue() {
+  const list = _getContinue();
+  if (!list.length) { showToast('No continue watching history', '📭', 2400); return; }
+  showResultsView();
+  setInfo('▶️ Continue Watching', list.length + ' titles');
+  renderGrid(list.map(i => ({ id: i.tmdb, title: i.title, poster_path: null, media_type: i.type, vote_average: 0, release_date: i.year })));
+  document.getElementById('siCrumb').textContent = 'Continue Watching';
+}
+function _renderContinueRow() {
+  const list = _getContinue();
+  const sec = document.getElementById('continueSection');
+  sec.classList.toggle('has-items', list.length > 0);
+  const row = document.getElementById('continueContent');
+  if (!row) return;
+  row.innerHTML = list.slice(0,8).map(i =>
+    `<div class="continue-card" onclick="playById('${i.tmdb}','${i.type}','${(i.title||'').replace(/'/g,"\\'")}','${i.year||''}')"
+      style="width:152px;scroll-snap-align:start">
+      <div style="aspect-ratio:2/3;background:var(--bg4);display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden">
+        <span style="font-size:2.5rem;opacity:.25">▶</span>
+        <div style="position:absolute;inset:0;background:linear-gradient(to top,rgba(8,8,16,.9) 0%,transparent 50%)"></div>
+        <div style="position:absolute;bottom:8px;left:8px;font-size:.7rem;font-weight:700;color:#fff">${i.title||'—'}</div>
+      </div>
+      <div class="continue-prog"><div class="continue-prog-fill" style="width:${Math.random()*60+10}%"></div></div>
+    </div>`
+  ).join('');
+}
+
+/* ── Player Enhancements ──────────────────── */
+/* Wrap playById to track continue watching */
+const _origPlayById = window.playById;
+if (typeof _origPlayById === 'function') {
+  window.playById = async function(tmdbId, type, title, year) {
+    await _origPlayById(tmdbId, type, title, year);
+    _saveToContinue(window.currentContent);
+    _syncWatchlistBtn();
+    /* Update rating badge */
+    const rb = document.getElementById('playerRating');
+    if (rb && window.currentContent?.vote_average) {
+      rb.textContent = '★ ' + parseFloat(window.currentContent.vote_average).toFixed(1);
+      rb.style.display = '';
+    }
+  };
+}
+
+/* Player spinner wrap */
+const _origSetServer = window.setServer;
+window.setServer = function(idx, data) {
+  const pv = document.getElementById('playerVideo');
+  if (pv) {
+    const sp = pv.querySelector('.p-spin');
+    if (sp) sp.style.display = 'flex';
+  }
+  if (typeof _origSetServer === 'function') _origSetServer(idx, data);
+  setTimeout(() => {
+    const sp = pv?.querySelector('.p-spin');
+    if (sp) sp.style.display = 'none';
+  }, 3500);
+};
+
+/* ── Keyboard Shortcuts ───────────────────── */
+document.addEventListener('keydown', e => {
+  const modal = document.getElementById('playerModal');
+  const active = modal?.classList.contains('active');
+
+  if (e.key === 'Escape') {
+    if (active) { closePlayer(); return; }
+    if (document.getElementById('verifyModal').style.display === 'flex') { closeVerify(); return; }
+    if (document.getElementById('watchTogetherMenu').classList.contains('open')) { _closeWT(); return; }
+    if (document.getElementById('joinRoomModal').classList.contains('open')) { closeJoinRoomDialog(); return; }
+    if (document.getElementById('supportModal').classList.contains('open')) { closeSupport(); return; }
+    closeMSearch();
+    _hideSuggestions();
+    return;
+  }
+
+  /* Player shortcuts */
+  if (active && !e.target.matches('input,textarea,select')) {
+    if (e.key.toLowerCase() === 'c') { toggleChatPanel(); return; }
+    if (e.key.toLowerCase() === 'f') {
+      const pv = document.getElementById('playerVideo');
+      if (pv?.requestFullscreen) pv.requestFullscreen().catch(() => {});
+      return;
+    }
+    if (e.key.toLowerCase() === 'w') { _toggleWatchlist(); return; }
+    if (e.key.toLowerCase() === 's') {
+      document.getElementById('serverButtons')?.firstElementChild?.focus();
+      return;
+    }
+  }
+
+  /* Global: '/' to focus search */
+  if (e.key === '/' && !e.target.matches('input,textarea,select') && !active) {
+    e.preventDefault();
+    const si = document.getElementById('searchInput');
+    si?.focus(); si?.select();
+  }
+});
+
+/* ── searchInfo breadcrumb sync ──────────── */
+const _origShowResultsView = window.showResultsView;
+const _origSetInfo = window.setInfo;
+if (typeof _origSetInfo === 'function') {
+  window.setInfo = function(title, count) {
+    _origSetInfo(title, count);
+    const c = document.getElementById('siCrumb');
+    if (c) c.textContent = title.replace(/<[^>]*>/g,'') || 'Results';
+  };
+}
+
+/* ── Mobile search live preview ──────────── */
+const msInp = document.getElementById('msearchInp');
+if (msInp) {
+  let msTimer;
+  msInp.addEventListener('input', () => {
+    clearTimeout(msTimer);
+    msTimer = setTimeout(async () => {
+      const q = msInp.value.trim();
+      if (q.length < 2) return;
+      const si = document.getElementById('searchInput');
+      if (si) si.value = q;
+    }, 400);
+  });
+}
+
+/* ── PWA Install ──────────────────────────── */
+let _deferredPrompt;
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault(); _deferredPrompt = e;
+  const b = document.getElementById('installBanner');
+  if (b && !localStorage.getItem('fx_installed') && !window.matchMedia('(display-mode:standalone)').matches) {
+    setTimeout(() => b.classList.add('show'), 45000);
+  }
+});
+document.getElementById('installBtn').addEventListener('click', async () => {
+  if (!_deferredPrompt) return;
+  _deferredPrompt.prompt();
+  const { outcome } = await _deferredPrompt.userChoice;
+  if (outcome === 'accepted') {
+    document.getElementById('installBanner').classList.remove('show');
+    localStorage.setItem('fx_installed', '1');
+    showToast('Flixora installed! 🎉', '📱', 3000, 'success');
+  }
+  _deferredPrompt = null;
+});
+document.getElementById('closeBanner').addEventListener('click', () => {
+  document.getElementById('installBanner').classList.remove('show');
+  localStorage.setItem('fx_installed', '1');
+});
+
+/* ── Nav active sync ──────────────────────── */
+const _origSetNavActive = window.setNavActive;
+window.setNavActive = function(cat) {
+  if (typeof _origSetNavActive === 'function') _origSetNavActive(cat);
+  document.querySelectorAll('.ni[data-cat]').forEach(n =>
+    n.classList.toggle('active', n.dataset.cat === cat)
+  );
+};
+
+/* ── Service Worker ───────────────────────── */
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch(() => {});
+  });
+}
+
+/* ── Init ─────────────────────────────────── */
+document.addEventListener('DOMContentLoaded', () => {
+  _renderWatchlistRow();
+  _renderContinueRow();
+});
+
+console.log('%c✅ FLIXORA v5.0 UI ready', 'color:#e63946;font-weight:900;font-size:14px');
 </script>
 </body>
 </html>
