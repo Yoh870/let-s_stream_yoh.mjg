@@ -1,6 +1,6 @@
-# 📱 StreamFlix App - Installation Guide
+# 📱 Flixora App - Installation Guide
 
-StreamFlix is now a **Progressive Web App (PWA)** that you can install on your phone and desktop!
+Flixora is now a **Progressive Web App (PWA)** that you can install on your phone and desktop!
 
 ## 🌟 Features
 - ✅ Works like a native app
@@ -18,7 +18,7 @@ StreamFlix is now a **Progressive Web App (PWA)** that you can install on your p
 
 ### Method 1: Chrome (Easiest)
 1. Open **Chrome browser** on your Android phone
-2. Go to your StreamFlix website
+2. Go to your Flixora website
 3. Tap the **menu (3 dots)** in top right
 4. Tap **"Add to Home screen"** or **"Install app"**
 5. Tap **"Install"** or **"Add"**
@@ -26,14 +26,14 @@ StreamFlix is now a **Progressive Web App (PWA)** that you can install on your p
 
 ### Method 2: Firefox
 1. Open **Firefox browser**
-2. Go to your StreamFlix website
+2. Go to your Flixora website
 3. Tap the **home icon** in address bar
 4. Tap **"Add to Home Screen"**
 5. Done!
 
 ### Method 3: Samsung Internet
 1. Open **Samsung Internet browser**
-2. Go to your StreamFlix website
+2. Go to your Flixora website
 3. Tap **menu** → **"Add page to"** → **"Home screen"**
 
 ---
@@ -42,7 +42,7 @@ StreamFlix is now a **Progressive Web App (PWA)** that you can install on your p
 
 ### Safari Only (iOS requires Safari for PWA)
 1. Open **Safari browser** on your iPhone
-2. Go to your StreamFlix website
+2. Go to your Flixora website
 3. Tap the **Share button** (square with arrow)
 4. Scroll down and tap **"Add to Home Screen"**
 5. Tap **"Add"** in top right
@@ -56,10 +56,10 @@ StreamFlix is now a **Progressive Web App (PWA)** that you can install on your p
 
 ### Chrome/Edge (Recommended)
 1. Open **Chrome** or **Edge** browser
-2. Go to your StreamFlix website
+2. Go to your Flixora website
 3. Look for **install icon** (⊕) in address bar (top right)
 4. Click it and then click **"Install"**
-5. OR: Click **menu (3 dots)** → **"Install StreamFlix"**
+5. OR: Click **menu (3 dots)** → **"Install Flixora"**
 6. App will open in its own window!
 
 ### Manual Method
@@ -68,7 +68,7 @@ StreamFlix is now a **Progressive Web App (PWA)** that you can install on your p
 3. Click **"Create"**
 
 **Where to find installed app:**
-- Windows Start Menu → Search "StreamFlix"
+- Windows Start Menu → Search "Flixora"
 - Desktop shortcut (if you checked that option)
 
 ---
@@ -77,8 +77,8 @@ StreamFlix is now a **Progressive Web App (PWA)** that you can install on your p
 
 ### Chrome/Safari
 1. Open **Chrome** or **Safari**
-2. Go to your StreamFlix website
-3. **Chrome:** Click install icon in address bar OR menu → "Install StreamFlix"
+2. Go to your Flixora website
+3. **Chrome:** Click install icon in address bar OR menu → "Install Flixora"
 4. **Safari:** File → "Add to Dock"
 5. App appears in Dock and Applications folder
 
@@ -88,27 +88,27 @@ StreamFlix is now a **Progressive Web App (PWA)** that you can install on your p
 
 ### Chrome/Chromium/Brave
 1. Open browser
-2. Go to your StreamFlix website
-3. Click **menu** → **"Install StreamFlix"**
+2. Go to your Flixora website
+3. Click **menu** → **"Install Flixora"**
 4. Or click the install icon in address bar
 
 ---
 
 ## 🚀 **DEPLOYING YOUR APP**
 
-To make your StreamFlix app accessible:
+To make your Flixora app accessible:
 
 ### Option 1: GitHub Pages (FREE & Easy)
 1. Create GitHub account
-2. Create new repository named "streamflix"
-3. Upload all files from `streamflix-app` folder
+2. Create new repository named "flixora"
+3. Upload all files from `flixora-app` folder
 4. Go to Settings → Pages
 5. Select "main" branch
-6. Your app will be at: `https://yourusername.github.io/streamflix`
+6. Your app will be at: `https://yourusername.github.io/flixora`
 
 ### Option 2: Netlify (FREE & Even Easier)
 1. Go to netlify.com
-2. Drag and drop the `streamflix-app` folder
+2. Drag and drop the `flixora-app` folder
 3. Done! You get a free URL
 
 ### Option 3: Vercel (FREE)
@@ -126,11 +126,11 @@ To make your StreamFlix app accessible:
 ## 📂 **FILES INCLUDED**
 
 ```
-streamflix-app/
+flixora-app/
 ├── index.html          # Main HTML file
 ├── app.js              # All functionality
 ├── manifest.json       # PWA manifest
-├── service-worker.js   # Offline support & caching
+├── sw.js   # Offline support & caching
 ├── icon-192.png        # App icon (small)
 ├── icon-512.png        # App icon (large)
 ├── screenshot.png      # App screenshot
@@ -171,12 +171,12 @@ streamflix-app/
 
 ### App is slow?
 - Clear app cache:
-  - Android: Settings → Apps → StreamFlix → Clear cache
+  - Android: Settings → Apps → Flixora → Clear cache
   - iOS: Delete and reinstall
   - Desktop: Browser settings → Clear cache
 
 ### Can't find installed app?
-- **Android:** Check app drawer, search "StreamFlix"
+- **Android:** Check app drawer, search "Flixora"
 - **iOS:** Check all home screens
 - **Windows:** Start menu or desktop
 - **Mac:** Applications folder or Dock
@@ -219,7 +219,7 @@ The app will auto-update when you deploy changes. Users just need to:
 
 ## 📱 **AFTER INSTALLATION**
 
-Once installed, StreamFlix will:
+Once installed, Flixora will:
 - Appear as a regular app icon
 - Open in full screen (no browser UI)
 - Feel like a native app
@@ -238,3 +238,19 @@ For issues or questions:
 - Try different device/browser
 
 **Happy Streaming!** 🎬✨
+
+---
+
+## 🗑️ LEGACY FILES (Safe to Delete)
+
+These files are superseded by `room-manager.js` and should be removed:
+
+| File | Replaced By |
+|------|-------------|
+| `chat-system.js` | `room-manager.js` (built-in chat) |
+| `firebase-config.js` | `room-manager.js` (built-in Firebase init) |
+| `sync-engine.js` | `room-manager.js` (built-in sync) |
+| `ui-components.js` | `room-manager.js` (built-in UI) |
+| `service-worker.js` | `sw.js` (improved version) |
+
+**Do NOT include these in `<script>` tags in index.html.**

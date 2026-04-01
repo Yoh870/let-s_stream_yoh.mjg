@@ -997,6 +997,9 @@ input, select { font-family: inherit; outline: none; }
   #bottomNav { display: flex; }
   #mainWrap { padding-bottom: 58px; }
   #installBanner.show { bottom: 66px; }
+  /* Hide desktop search bar, show mobile search icon */
+  .tb-srch { display: none; }
+  #mSearchBtn { display: flex !important; }
 }
 
 @media (max-width: 640px) {
@@ -1120,7 +1123,7 @@ button:focus:not(:focus-visible) { outline: none; }
   <div class="tb-acts">
     <button class="tb-btn accent" onclick="openWT()" title="Watch Together" aria-label="Watch Together">👥</button>
     <button class="tb-btn" onclick="openSupport()" title="Support us" aria-label="Support Flixora">☕</button>
-    <button class="tb-btn" id="mSearchBtn" onclick="openMSearch()" aria-label="Search" style="display:none">🔍</button>
+    <button class="tb-btn" id="mSearchBtn" onclick="openMSearch()" aria-label="Search">🔍</button>
   </div>
 </header>
 
@@ -1512,6 +1515,16 @@ button:focus:not(:focus-visible) { outline: none; }
 <!-- ═══════════════════════════════════════════
      SCRIPTS
 ════════════════════════════════════════════ -->
+<!-- ═══════════════════════════════════════════
+     SCRIPTS — Load order matters:
+     1. adblock.js  — must be first
+     2. app.js      — core, defines playById / setServer / tmdb()
+     3. episode-feature.js — wraps playById (TV episodes)
+     4. room-manager.js    — wraps playById + setServer (Watch Together)
+     NOTE: chat-system.js, firebase-config.js, sync-engine.js,
+           ui-components.js are LEGACY — do NOT include them here.
+           room-manager.js supersedes all of them.
+════════════════════════════════════════════ -->
 <script src="adblock.js" onerror="console.warn('adblock.js not found')"></script>
 <script src="app.js"></script>
 <script src="episode-feature.js" onerror="console.warn('episode-feature.js not found')"></script>
@@ -1520,6 +1533,10 @@ button:focus:not(:focus-visible) { outline: none; }
 <script>
 /* ════════════════════════════════════════════
    FLIXORA v5 UI GLUE
+   ⚠️  SECURITY NOTE: TMDB + Firebase keys are
+   exposed client-side. Restrict them:
+   • TMDB: dashboard.themoviedb.org → API → restrict by domain/referrer
+   • Firebase: console.firebase.google.com → Rules → require auth
 ════════════════════════════════════════════ */
 
 /* ── Sidebar ─────────────────────────────── */
@@ -1809,6 +1826,8 @@ function _saveToContinue(content) {
   if (list.length > 10) list.pop();
   try { localStorage.setItem('fx_continue', JSON.stringify(list)); } catch(e) {}
   _renderContinueRow();
+  // Show install banner after first content play — better engagement timing
+  _maybeShowInstallBanner();
 }
 function _clearContinue() {
   localStorage.removeItem('fx_continue');
@@ -1943,11 +1962,16 @@ if (msInp) {
 let _deferredPrompt;
 window.addEventListener('beforeinstallprompt', e => {
   e.preventDefault(); _deferredPrompt = e;
-  const b = document.getElementById('installBanner');
-  if (b && !localStorage.getItem('fx_installed') && !window.matchMedia('(display-mode:standalone)').matches) {
-    setTimeout(() => b.classList.add('show'), 45000);
-  }
+  // Banner is shown after first video play (see _saveToContinue hook below)
 });
+
+function _maybeShowInstallBanner() {
+  if (!_deferredPrompt) return;
+  if (localStorage.getItem('fx_installed')) return;
+  if (window.matchMedia('(display-mode:standalone)').matches) return;
+  const b = document.getElementById('installBanner');
+  if (b) setTimeout(() => b.classList.add('show'), 3000);
+}
 document.getElementById('installBtn').addEventListener('click', async () => {
   if (!_deferredPrompt) return;
   _deferredPrompt.prompt();
