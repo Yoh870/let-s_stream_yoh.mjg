@@ -276,6 +276,12 @@ async function leaveRoom(silent = false) {
   WT.presenceRef = null;
   WT.typingRef   = null;
 
+  /* Host = delete lahat ng messages + reactions sa Firebase */
+  if (WT.isHost && WT.db && WT.roomCode) {
+    try { await WT.db.ref(`rooms/${WT.roomCode}/messages`).remove(); } catch(_) {}
+    try { await WT.db.ref(`rooms/${WT.roomCode}/reactions`).remove(); } catch(_) {}
+  }
+
   const was = WT.roomCode;
   WT.roomCode     = null;
   WT.isHost       = false;
@@ -1230,6 +1236,9 @@ function _destroyHUD() {
     btn.textContent = '💬 Live Chat'; btn.classList.remove('wt-chat-toggle');
     btn.setAttribute('onclick', 'toggleChatPanel()');
   });
+  /* I-clear ang local message + reaction cache */
+  Object.keys(MSG_CACHE).forEach(k => delete MSG_CACHE[k]);
+  Object.keys(REACTION_CACHE).forEach(k => delete REACTION_CACHE[k]);
 }
 
 /* ─── VIEWER PANEL ───────────────────────────────────────────────── */
@@ -1491,3 +1500,16 @@ console.log(`%c👥 Watch Together v${WT_VER} — Full clean rewrite`, 'color:#1
 console.log('%c  ✅ Create/Join/Leave  ✅ Chat  ✅ Edit/Delete  ✅ Reply  ✅ GIF  ✅ Emoji', 'color:#6ec6ff;font-size:.82em');
 console.log('%c  ✅ Reactions  ✅ Typing  ✅ Unread  ✅ Flood guard  ✅ Search  ✅ Sound', 'color:#a8e6cf;font-size:.82em');
 console.log('%c  ✅ Swipe-reply  ✅ Smart scroll  ✅ Connection monitor  ✅ Reconnect', 'color:#a8e6cf;font-size:.82em');
+
+/* ── I-clear ang chat kapag na-close o na-refresh ang app ── */
+window.addEventListener('beforeunload', () => {
+  if (!WT.roomCode || !WT.db) return;
+  /* Host — delete lahat ng messages at reactions */
+  if (WT.isHost) {
+    try { WT.db.ref(`rooms/${WT.roomCode}/messages`).remove(); } catch(_) {}
+    try { WT.db.ref(`rooms/${WT.roomCode}/reactions`).remove(); } catch(_) {}
+  }
+  /* Lahat — alisin ang presence at typing */
+  try { WT.presenceRef?.remove(); } catch(_) {}
+  try { WT.typingRef?.remove();   } catch(_) {}
+});
