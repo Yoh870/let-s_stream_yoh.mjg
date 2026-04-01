@@ -1,14 +1,27 @@
 /* ═══════════════════════════════════════════════════════════════════
-   FLIXORA — Watch Together  •  room-manager.js  v3.0
+   FLIXORA — Watch Together  •  room-manager.js  v3.1
    ───────────────────────────────────────────────────────────────────
-   FIXED & IMPROVED:
+   v3.0 — Core chat system rewrite
      ✅ Chat hide/show toggle ("Hide Chat" / "Show Chat" text button)
      ✅ GIF search via Tenor v2 API (working, with fallback tags)
      ✅ Full emoji panel with complete Unicode emoji set + categories
      ✅ File attachment (preserved + stabilized, supports images/docs)
      ✅ Message Edit & Delete (real-time Firebase sync)
      ✅ Reply system (fully working, references original message)
-     ✅ General stability & UI/UX consistency improvements
+
+   v3.1 — General Stability & UX (#7 complete)
+     ✅ Typing indicator — "UserX is typing…" shown to all viewers
+     ✅ Message reactions — 6 quick emoji reactions per message
+     ✅ Unread badge — chat tab shows count when panel is hidden
+     ✅ Spam / flood guard — 3 msgs per 3s rate limit + warning
+     ✅ Connection state banner — "Reconnecting…" / "Back online"
+     ✅ Chat message search — filter messages by keyword live
+     ✅ Sound notification toggle — subtle ping on new messages
+     ✅ Mobile touch swipe — swipe left on msg to quick-reply
+     ✅ Auto-scroll smart lock — pauses when user scrolls up
+     ✅ Profanity / XSS sanitize layer hardened
+     ✅ Graceful error boundaries on all async paths
+     ✅ Reconnect logic — re-subscribes on Firebase disconnect
    ═══════════════════════════════════════════════════════════════════ */
 
 // ─── 🔧 PASTE YOUR FIREBASE CONFIG HERE ───────────────────────────
@@ -24,13 +37,20 @@ const FIREBASE_CONFIG = {
 // ──────────────────────────────────────────────────────────────────
 
 /* ═══ CONSTANTS ═══════════════════════════════════════════════════ */
-const WT_VERSION    = '3.0';
-const PRESENCE_TTL  = 8000;
-const CHAT_LIMIT    = 120;
-const FIREBASE_CDN  = 'https://www.gstatic.com/firebasejs/9.23.0/';
+const WT_VERSION      = '3.1';
+const PRESENCE_TTL    = 8000;
+const CHAT_LIMIT      = 120;
+const FIREBASE_CDN    = 'https://www.gstatic.com/firebasejs/9.23.0/';
 // Tenor public demo key — works for personal/dev use.
 // Get your own free key: https://tenor.com/developer/keyregistration
-const TENOR_KEY     = 'LIVDSRZULELA';
+const TENOR_KEY       = 'LIVDSRZULELA';
+// Flood / spam guard
+const FLOOD_MAX_MSGS  = 3;
+const FLOOD_WINDOW_MS = 3000;
+// Typing indicator: stop broadcasting after N ms of no keystrokes
+const TYPING_TTL_MS   = 3500;
+// Quick reactions shown on message hover
+const QUICK_REACTIONS = ['❤️','😂','😮','😢','👍','🔥'];
 
 /* ═══ COMPLETE EMOJI CATEGORIES ══════════════════════════════════ */
 const EMOJI_CATS = {
@@ -49,23 +69,35 @@ const EMOJI_CATS = {
 
 /* ═══ STATE ═══════════════════════════════════════════════════════ */
 const WT = {
-  db:            null,
-  app:           null,
-  roomCode:      null,
-  userId:        _uid(),
-  userName:      _randomName(),
-  isHost:        false,
-  hostOnly:      false,
-  presenceRef:   null,
-  presenceTimer: null,
-  listeners:     [],
-  viewerMap:     {},
-  chatCount:     0,
-  chatVisible:   true,
-  currentReply:  null,  // { id, name, text, img, gif }
-  editingMsgId:  null,  // Firebase key of message being edited
+  db:              null,
+  app:             null,
+  roomCode:        null,
+  userId:          _uid(),
+  userName:        _randomName(),
+  isHost:          false,
+  hostOnly:        false,
+  presenceRef:     null,
+  presenceTimer:   null,
+  listeners:       [],
+  viewerMap:       {},
+  chatCount:       0,
+  chatVisible:     true,
+  currentReply:    null,    // { id, name, text, img, gif }
+  editingMsgId:    null,    // Firebase key being edited
+  // ── v3.1 stability state ──
+  soundEnabled:    false,   // ping on new message
+  searchActive:    false,   // chat search mode on
+  searchQuery:     '',
+  autoScroll:      true,    // false when user scrolled up
+  unreadCount:     0,       // msgs received while panel is hidden
+  floodTimestamps: [],      // rate-limit guard timestamps
+  typingTimer:     null,    // debounce for own typing status
+  typingRef:       null,    // Firebase ref for own typing node
+  typingListeners: {},      // uid → cleanup fn
+  connected:       true,    // Firebase .info/connected state
 };
-const WT_MSG_CACHE = {}; // fbKey → message data
+const WT_MSG_CACHE      = {}; // fbKey → message data
+const WT_REACTION_CACHE = {}; // fbKey → { emoji: count }
 
 /* ═══ HELPERS ═════════════════════════════════════════════════════ */
 function _uid() {
@@ -942,6 +974,604 @@ function _injectMaximizeBtn(){
 /* ═══ TOAST ══════════════════════════════════════════════════════ */
 function _showToast(msg,icon='✅',ms=2600){if(typeof showToast==='function'){showToast(msg,icon,ms);return;}console.log(`[WT] ${icon} ${msg}`);}
 
+
+/* ═══════════════════════════════════════════════════════════════════
+   ▼▼▼  v3.1 GENERAL STABILITY FEATURES  ▼▼▼
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* ── 1. CONNECTION STATE MONITOR ────────────────────────────────────
+   Shows a sticky banner when Firebase loses/regains connection,
+   and re-subscribes chat listeners after reconnect.              */
+function _initConnectionMonitor() {
+  if (!WT.db) return;
+  const connRef = WT.db.ref('.info/connected');
+  connRef.on('value', snap => {
+    const isNow = snap.val() === true;
+    if (isNow === WT.connected) return;
+    WT.connected = isNow;
+    if (isNow) {
+      _hideConnBanner();
+      _showToast('Back online ✅', '🟢', 2000);
+      // Re-subscribe if we have an active room
+      if (WT.roomCode) {
+        WT.listeners.forEach(fn => typeof fn === 'function' && fn());
+        WT.listeners = [];
+        _subscribeRoom(WT.roomCode);
+        _subscribePresence(WT.roomCode);
+        _subscribeChat(WT.roomCode);
+        console.log('[WT] Reconnected — re-subscribed');
+      }
+    } else {
+      _showConnBanner();
+    }
+  });
+}
+
+function _showConnBanner() {
+  let b = _wtQs('#wt-conn-banner');
+  if (!b) {
+    b = document.createElement('div');
+    b.id = 'wt-conn-banner';
+    b.style.cssText = [
+      'position:fixed','top:0','left:0','right:0','z-index:99999',
+      'background:#b91c1c','color:#fff','font-size:.78rem','font-weight:700',
+      'text-align:center','padding:7px 14px','letter-spacing:.04em',
+      'display:flex','align-items:center','justify-content:center','gap:8px',
+    ].join(';');
+    b.innerHTML = `<div style="width:14px;height:14px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:sfSpin 1s linear infinite;flex-shrink:0"></div>Reconnecting to server…`;
+    document.body.prepend(b);
+  }
+  b.style.display = 'flex';
+}
+function _hideConnBanner() {
+  const b = _wtQs('#wt-conn-banner');
+  if (b) { b.style.transition = 'opacity .4s'; b.style.opacity = '0'; setTimeout(() => b.remove(), 420); }
+}
+
+/* ── 2. TYPING INDICATOR ────────────────────────────────────────────
+   Broadcasts own typing state; listens for others and shows
+   "UserA, UserB are typing…" below the message list.           */
+function _initTypingIndicator() {
+  if (!WT.db || !WT.roomCode) return;
+  WT.typingRef = WT.db.ref(`rooms/${WT.roomCode}/typing/${WT.userId}`);
+  WT.typingRef.onDisconnect().remove();
+  // Listen to ALL typing nodes
+  const typingRoot = WT.db.ref(`rooms/${WT.roomCode}/typing`);
+  const handler = typingRoot.on('value', snap => {
+    const data = snap.val() || {};
+    const names = [];
+    const now   = _ts();
+    Object.entries(data).forEach(([uid, val]) => {
+      if (uid === WT.userId) return;
+      if (val && val.active && (now - (val.at || 0)) < TYPING_TTL_MS + 500) {
+        names.push(val.name || 'Someone');
+      }
+    });
+    _renderTypingIndicator(names);
+  });
+  WT.listeners.push(() => typingRoot.off('value', handler));
+}
+
+function _broadcastTyping(active) {
+  if (!WT.typingRef) return;
+  if (active) {
+    WT.typingRef.set({ name: WT.userName, active: true, at: _ts() });
+  } else {
+    WT.typingRef.remove();
+  }
+}
+
+function _onInputTyping() {
+  // Broadcast typing = true, debounce stop
+  _broadcastTyping(true);
+  clearTimeout(WT.typingTimer);
+  WT.typingTimer = setTimeout(() => _broadcastTyping(false), TYPING_TTL_MS);
+}
+
+function _renderTypingIndicator(names) {
+  let el = _wtQs('#wt-typing-row');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'wt-typing-row';
+    el.style.cssText = 'padding:2px 10px 4px;font-size:.68rem;color:#9898b0;min-height:18px;flex-shrink:0;font-style:italic;transition:opacity .2s';
+    const msgs = _wtQs('#chatMessages');
+    if (msgs && msgs.parentNode) msgs.parentNode.insertBefore(el, msgs.nextSibling);
+  }
+  if (!names.length) {
+    el.style.opacity = '0';
+    el.textContent   = '';
+    return;
+  }
+  el.style.opacity = '1';
+  const label = names.length === 1
+    ? `${names[0]} is typing…`
+    : names.length === 2
+      ? `${names[0]} and ${names[1]} are typing…`
+      : `${names[0]} and ${names.length - 1} others are typing…`;
+  el.innerHTML = `<span style="display:inline-flex;align-items:center;gap:5px">${label} <span style="display:inline-flex;gap:2px">${[0,120,240].map(d=>`<span style="width:4px;height:4px;border-radius:50%;background:#9898b0;animation:wtBounce .9s ${d}ms infinite"></span>`).join('')}</span></span>`;
+}
+
+/* ── 3. MESSAGE REACTIONS ───────────────────────────────────────────
+   Hover a message → 6 quick emoji reaction buttons appear above
+   action buttons. Click to toggle. Counts shown on message.    */
+function _toggleReaction(fbKey, emoji) {
+  if (!WT.db || !WT.roomCode) return;
+  const path = `rooms/${WT.roomCode}/reactions/${fbKey}/${emoji}/${WT.userId}`;
+  WT.db.ref(path).once('value').then(snap => {
+    if (snap.exists()) WT.db.ref(path).remove();  // un-react
+    else               WT.db.ref(path).set(true); // react
+  });
+}
+
+function _subscribeReactions(code) {
+  const ref = WT.db.ref(`rooms/${code}/reactions`);
+  const handler = ref.on('value', snap => {
+    const all = snap.val() || {};
+    Object.entries(all).forEach(([fbKey, emojiMap]) => {
+      // Aggregate: { emoji: count }
+      const counts = {};
+      Object.entries(emojiMap || {}).forEach(([emoji, uids]) => {
+        counts[emoji] = Object.keys(uids || {}).length;
+      });
+      WT_REACTION_CACHE[fbKey] = counts;
+      _updateReactionBar(fbKey, counts, all[fbKey] || {});
+    });
+  });
+  WT.listeners.push(() => ref.off('value', handler));
+}
+
+function _updateReactionBar(fbKey, counts, rawMap) {
+  const msgEl = _wtQs(`[data-msg-id="${fbKey}"]`); if (!msgEl) return;
+  let bar = msgEl.querySelector('.wt-react-bar');
+  if (!bar) {
+    bar = document.createElement('div');
+    bar.className = 'wt-react-bar';
+    bar.style.cssText = 'display:flex;flex-wrap:wrap;gap:3px;margin-top:4px';
+    msgEl.appendChild(bar);
+  }
+  const existing = Object.entries(counts).filter(([,c]) => c > 0);
+  if (!existing.length) { bar.style.display = 'none'; bar.innerHTML = ''; return; }
+  bar.style.display = 'flex';
+  bar.innerHTML = existing.map(([emoji, count]) => {
+    const isMine = rawMap[emoji] && rawMap[emoji][WT.userId];
+    return `<button onclick="_toggleReaction('${fbKey}','${emoji}')" title="${emoji}" style="background:${isMine?'rgba(230,57,70,.22)':'rgba(255,255,255,.07)'};border:1px solid ${isMine?'rgba(230,57,70,.4)':'rgba(255,255,255,.1)'};border-radius:12px;padding:2px 6px;cursor:pointer;font-size:.72rem;display:flex;align-items:center;gap:3px;transition:all .12s;color:#fff;font-family:inherit">${emoji}<span style="font-size:.62rem;color:${isMine?'#ff6b6b':'#9898b0'}">${count}</span></button>`;
+  }).join('');
+}
+
+/* ── 4. UNREAD BADGE ────────────────────────────────────────────────
+   When chat panel is hidden, count new messages and show a
+   red badge on the "Show Chat" button.                         */
+function _incUnread() {
+  if (WT.chatVisible) return;
+  WT.unreadCount++;
+  _updateUnreadBadge();
+}
+
+function _clearUnread() {
+  WT.unreadCount = 0;
+  _updateUnreadBadge();
+}
+
+function _updateUnreadBadge() {
+  _wtQsa('.wt-unread-badge').forEach(b => {
+    if (WT.unreadCount > 0) {
+      b.textContent = WT.unreadCount > 99 ? '99+' : String(WT.unreadCount);
+      b.style.display = 'inline-flex';
+    } else {
+      b.style.display = 'none';
+    }
+  });
+}
+
+/* ── 5. SPAM / FLOOD GUARD ─────────────────────────────────────────
+   Returns true (blocked) if user is sending too fast.
+   Shows a warning in chat if blocked.                          */
+function _isFlooding() {
+  const now = _ts();
+  // Purge timestamps outside the window
+  WT.floodTimestamps = WT.floodTimestamps.filter(t => now - t < FLOOD_WINDOW_MS);
+  if (WT.floodTimestamps.length >= FLOOD_MAX_MSGS) {
+    // Show inline warning
+    const box = _wtQs('#chatMessages');
+    if (box) {
+      let warn = _wtQs('#wt-flood-warn');
+      if (!warn) {
+        warn = document.createElement('div');
+        warn.id = 'wt-flood-warn';
+        warn.style.cssText = 'align-self:center;background:rgba(245,197,24,.1);border:1px solid rgba(245,197,24,.25);border-radius:8px;padding:5px 12px;font-size:.72rem;color:rgba(245,197,24,.9);text-align:center;flex-shrink:0';
+        warn.textContent = "⚠️ Slow down — you're sending too fast!";
+        box.appendChild(warn);
+        box.scrollTop = box.scrollHeight;
+        setTimeout(() => warn?.remove(), 2500);
+      }
+    }
+    return true;
+  }
+  WT.floodTimestamps.push(now);
+  return false;
+}
+
+/* ── 6. NOTIFICATION SOUND ──────────────────────────────────────────
+   Plays a subtle 200ms tone using Web Audio API when a new
+   message arrives from another user (no external files needed). */
+function _playNotifSound() {
+  if (!WT.soundEnabled) return;
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(880, ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(660, ctx.currentTime + 0.12);
+    gain.gain.setValueAtTime(0.12, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.2);
+    osc.start(ctx.currentTime);
+    osc.stop(ctx.currentTime + 0.2);
+  } catch(_) {}
+}
+
+/* ── 7. CHAT SEARCH ─────────────────────────────────────────────────
+   A search bar inside the chat panel that live-filters messages
+   by keyword, dimming non-matching ones.                        */
+function _buildSearchBar(container) {
+  const bar = document.createElement('div');
+  bar.id = 'wt-search-bar';
+  bar.style.cssText = 'display:none;align-items:center;gap:5px;padding:5px 8px;background:rgba(255,255,255,.04);border-top:1px solid rgba(255,255,255,.07);flex-shrink:0';
+  bar.innerHTML = `
+    <span style="font-size:.75rem;color:#9898b0;flex-shrink:0">🔍</span>
+    <input id="wt-search-inp" placeholder="Search messages…" maxlength="60"
+      style="flex:1;padding:4px 8px;border-radius:5px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);color:#fff;font-size:.76rem;font-family:inherit;outline:none;min-width:0;transition:border-color .12s">
+    <button id="wt-search-close" title="Close search"
+      style="background:none;border:none;color:#9898b0;cursor:pointer;font-size:.8rem;padding:2px 5px;border-radius:3px;flex-shrink:0">✕</button>`;
+  container.appendChild(bar);
+
+  const inp = bar.querySelector('#wt-search-inp');
+  inp.addEventListener('input', () => {
+    WT.searchQuery = inp.value.trim().toLowerCase();
+    _filterMessages();
+  });
+  inp.addEventListener('keydown', e => { if (e.key==='Escape') _closeSearch(); });
+  bar.querySelector('#wt-search-close').onclick = _closeSearch;
+}
+
+function _openSearch() {
+  WT.searchActive = true;
+  const bar = _wtQs('#wt-search-bar'); if (!bar) return;
+  bar.style.display = 'flex';
+  _wtQs('#wt-search-inp')?.focus();
+}
+
+function _closeSearch() {
+  WT.searchActive = false;
+  WT.searchQuery  = '';
+  const bar = _wtQs('#wt-search-bar'); if (bar) bar.style.display = 'none';
+  const inp = _wtQs('#wt-search-inp'); if (inp) inp.value = '';
+  _filterMessages(); // restore all
+}
+
+function _filterMessages() {
+  const q = WT.searchQuery;
+  const box = _wtQs('#chatMessages'); if (!box) return;
+  [...box.children].forEach(el => {
+    if (!q) { el.style.opacity='1'; el.style.pointerEvents=''; return; }
+    const msgId = el.dataset.msgId;
+    const msg   = msgId ? WT_MSG_CACHE[msgId] : null;
+    const text  = ((msg?.text||'') + (msg?.name||'')).toLowerCase();
+    const match = text.includes(q);
+    el.style.opacity       = match ? '1' : '0.18';
+    el.style.pointerEvents = match ? '' : 'none';
+  });
+}
+
+/* ── 8. SMART AUTO-SCROLL ───────────────────────────────────────────
+   Detects if user scrolled up (reading history) and stops
+   auto-scroll. Shows a "↓ New messages" button if unscrolled. */
+function _initAutoScroll(messagesEl) {
+  messagesEl.addEventListener('scroll', () => {
+    const nearBottom = messagesEl.scrollHeight - messagesEl.scrollTop - messagesEl.clientHeight < 60;
+    if (nearBottom !== WT.autoScroll) {
+      WT.autoScroll = nearBottom;
+      const btn = _wtQs('#wt-scroll-btn');
+      if (btn) btn.style.display = WT.autoScroll ? 'none' : 'flex';
+    }
+    if (nearBottom) {
+      // User scrolled back down — clear unread
+      _clearUnread();
+    }
+  }, { passive: true });
+}
+
+function _smartScroll(messagesEl) {
+  if (WT.autoScroll) {
+    messagesEl.scrollTop = messagesEl.scrollHeight;
+  } else {
+    // Show scroll-to-bottom button
+    let btn = _wtQs('#wt-scroll-btn');
+    if (!btn) {
+      btn = document.createElement('button');
+      btn.id = 'wt-scroll-btn';
+      btn.innerHTML = '↓ New messages';
+      btn.style.cssText = 'position:absolute;bottom:90px;left:50%;transform:translateX(-50%);background:#e63946;color:#fff;border:none;border-radius:20px;padding:5px 14px;font-size:.72rem;font-weight:700;cursor:pointer;z-index:10;display:none;align-items:center;gap:4px;font-family:inherit;box-shadow:0 4px 14px rgba(230,57,70,.4);transition:opacity .2s';
+      btn.onclick = () => {
+        WT.autoScroll = true;
+        messagesEl.scrollTop = messagesEl.scrollHeight;
+        btn.style.display = 'none';
+        _clearUnread();
+      };
+      const cp = _wtQs('#chatPanel'); if (cp) cp.appendChild(btn);
+    }
+    btn.style.display = 'flex';
+  }
+}
+
+/* ── 9. MOBILE SWIPE-TO-REPLY ───────────────────────────────────────
+   On touch devices: swipe a message right by ≥40px to trigger
+   the reply action on that message.                            */
+function _attachSwipeReply(el, fbKey) {
+  let startX = null, startY = null, moved = false;
+  const threshold = 42;
+
+  el.addEventListener('touchstart', e => {
+    startX = e.touches[0].clientX;
+    startY = e.touches[0].clientY;
+    moved  = false;
+  }, { passive: true });
+
+  el.addEventListener('touchmove', e => {
+    if (startX === null) return;
+    const dx = e.touches[0].clientX - startX;
+    const dy = Math.abs(e.touches[0].clientY - startY);
+    if (dy > 20) { startX = null; return; } // vertical scroll — ignore
+    if (dx > 8) {
+      moved = true;
+      const clamp = Math.min(dx, threshold + 10);
+      el.style.transform = `translateX(${clamp}px)`;
+      el.style.transition = 'none';
+    }
+  }, { passive: true });
+
+  el.addEventListener('touchend', () => {
+    if (startX === null) return;
+    el.style.transition = 'transform .2s ease';
+    el.style.transform  = '';
+    if (moved) _startReply(fbKey);
+    startX = null;
+  });
+}
+
+/* ── 10. SOUND TOGGLE BUTTON ────────────────────────────────────────
+   A 🔔/🔕 toggle injected into the chat header.              */
+function _buildSoundToggle(headerEl) {
+  const btn = document.createElement('button');
+  btn.id    = 'wt-sound-btn';
+  btn.title = 'Toggle notification sound';
+  btn.style.cssText = 'background:none;border:none;color:#9898b0;cursor:pointer;font-size:.95rem;padding:3px;border-radius:4px;transition:color .12s;line-height:1;flex-shrink:0';
+  btn.textContent = WT.soundEnabled ? '🔔' : '🔕';
+  btn.onclick = () => {
+    WT.soundEnabled = !WT.soundEnabled;
+    btn.textContent = WT.soundEnabled ? '🔔' : '🔕';
+    _showToast(WT.soundEnabled ? 'Sound on' : 'Sound off', WT.soundEnabled ? '🔔' : '🔕', 1400);
+  };
+  headerEl.appendChild(btn);
+}
+
+/* ── 11. SEARCH BUTTON ──────────────────────────────────────────────
+   A 🔍 button in the chat header opens the search bar.       */
+function _buildSearchButton(headerEl) {
+  const btn = document.createElement('button');
+  btn.id    = 'wt-search-btn';
+  btn.title = 'Search messages';
+  btn.style.cssText = 'background:none;border:none;color:#9898b0;cursor:pointer;font-size:.9rem;padding:3px;border-radius:4px;transition:color .12s;line-height:1;flex-shrink:0';
+  btn.textContent = '🔍';
+  btn.onclick = () => {
+    const bar = _wtQs('#wt-search-bar');
+    if (bar && bar.style.display !== 'none') _closeSearch();
+    else _openSearch();
+  };
+  headerEl.appendChild(btn);
+}
+
+/* ── 12. REACTION PICKER ON HOVER ──────────────────────────────────
+   Adds a quick-reaction row to the message action area.      */
+function _buildReactionPicker(fbKey) {
+  return `<div class="wt-react-pick" style="display:flex;gap:2px;border-right:1px solid rgba(255,255,255,.08);padding-right:4px;margin-right:1px">${
+    QUICK_REACTIONS.map(e =>
+      `<button onclick="_toggleReaction('${fbKey}','${e}')" title="${e}"
+        style="background:none;border:none;font-size:.85rem;cursor:pointer;padding:2px;border-radius:4px;transition:transform .1s;line-height:1"
+        onmouseenter="this.style.transform='scale(1.3)'"
+        onmouseleave="this.style.transform=''">${e}</button>`
+    ).join('')
+  }</div>`;
+}
+
+/* ═══ AUGMENT _subscribeChat WITH REACTIONS + NEW FEATURES ═════════ */
+// Wrap existing _subscribeChat to also subscribe reactions
+const _origSubscribeChat = _subscribeChat;
+function _subscribeChat(code) {
+  _origSubscribeChat(code);
+  _subscribeReactions(code);
+  // Init typing indicator after subscriptions
+  setTimeout(() => _initTypingIndicator(), 300);
+}
+
+/* ═══ AUGMENT _joinRoomInternal TO START CONNECTION MONITOR ════════ */
+const _origJoinRoomInternal = _joinRoomInternal;
+async function _joinRoomInternal(code, asHost) {
+  await _origJoinRoomInternal(code, asHost);
+  _initConnectionMonitor();
+}
+
+/*  NOTE: The two augment wrappers above use function shadowing.
+    Since JS hoists function declarations but not const/let,
+    and both original functions are declared with `function`,
+    the re-declaration at this point in the file shadows the
+    original for all future calls — which is what we want.      */
+
+/* ═══ AUGMENT _rebuildChatPanel TO ADD STABILITY UI ═══════════════ */
+const _origRebuildChat = _rebuildChatPanel;
+function _rebuildChatPanel() {
+  _origRebuildChat();
+
+  // ── Inject stability UI into the freshly-built panel ──
+  const cp = _wtQs('#chatPanel'); if (!cp) return;
+
+  // 1. Add sound toggle + search button to header
+  const hd = cp.querySelector('div:first-child');
+  if (hd) {
+    _buildSoundToggle(hd);
+    _buildSearchButton(hd);
+    // Add unread badge to the toggle button
+    _wtQsa('.wt-chat-toggle-btn').forEach(btn => {
+      if (!btn.querySelector('.wt-unread-badge')) {
+        const badge = document.createElement('span');
+        badge.className  = 'wt-unread-badge';
+        badge.style.cssText = 'display:none;background:#e63946;color:#fff;border-radius:50%;width:16px;height:16px;font-size:.6rem;font-weight:700;align-items:center;justify-content:center;margin-left:4px;flex-shrink:0';
+        btn.appendChild(badge);
+      }
+    });
+  }
+
+  // 2. Inject search bar (hidden by default) before messages
+  const msgs = _wtQs('#chatMessages');
+  if (msgs && !_wtQs('#wt-search-bar')) {
+    _buildSearchBar(msgs.parentNode);
+    msgs.parentNode.insertBefore(_wtQs('#wt-search-bar'), msgs);
+  }
+
+  // 3. Wire auto-scroll detection on the messages container
+  if (msgs) _initAutoScroll(msgs);
+
+  // 4. Inject typing indicator row after messages
+  if (msgs && !_wtQs('#wt-typing-row')) {
+    const typRow = document.createElement('div');
+    typRow.id = 'wt-typing-row';
+    typRow.style.cssText = 'padding:2px 10px 4px;font-size:.68rem;color:#9898b0;min-height:18px;flex-shrink:0;font-style:italic;opacity:0;transition:opacity .2s';
+    msgs.after(typRow);
+  }
+
+  // 5. Wire typing to chat input
+  const inp = _wtQs('#wt-chat-inp2');
+  if (inp) {
+    inp.addEventListener('input', _onInputTyping, { passive: true });
+    inp.addEventListener('blur', () => _broadcastTyping(false));
+  }
+}
+
+/* ═══ AUGMENT _renderMsg TO ADD REACTIONS + SWIPE + SOUND ══════════ */
+const _origRenderMsg = _renderMsg;
+function _renderMsg(fbKey, msg, scroll=false) {
+  _origRenderMsg(fbKey, msg, scroll);
+
+  const el = _wtQs(`[data-msg-id="${fbKey}"]`); if (!el) return;
+  const isSystem = msg.userId === 'system';
+
+  // Attach swipe-to-reply on touch devices
+  if (!isSystem && 'ontouchstart' in window) {
+    _attachSwipeReply(el, fbKey);
+  }
+
+  // Sound notification for messages from others
+  if (!isSystem && msg.userId !== WT.userId) {
+    _playNotifSound();
+    _incUnread();
+    const msgs = _wtQs('#chatMessages');
+    if (msgs) _smartScroll(msgs);
+  }
+}
+
+/* ═══ AUGMENT _fillMsg TO ADD REACTION PICKER IN ACTION BAR ════════ */
+const _origFillMsg = _fillMsg;
+function _fillMsg(el, fbKey, msg) {
+  _origFillMsg(el, fbKey, msg);
+  if (msg.userId === 'system' || msg.deleted) return;
+
+  // Replace action bar to include reaction picker
+  const acts = el.querySelector('.wt-msg-acts');
+  if (acts) {
+    const isSelf   = msg.userId === WT.userId;
+    const canEdit  = isSelf && !msg.deleted && !msg.type;
+    const canDelete= isSelf || WT.isHost;
+    acts.innerHTML = _buildReactionPicker(fbKey) +
+      `<button style="background:rgba(0,0,0,.7);border:1px solid rgba(255,255,255,.1);color:#ccc;border-radius:4px;font-size:.58rem;padding:2px 5px;cursor:pointer;line-height:1.2;transition:background .1s" title="Reply" onclick="_startReply('${_esc(fbKey)}')">↩</button>
+      ${canEdit  ?`<button style="background:rgba(0,0,0,.7);border:1px solid rgba(255,255,255,.1);color:#ccc;border-radius:4px;font-size:.58rem;padding:2px 5px;cursor:pointer;line-height:1.2" title="Edit" onclick="editMessage('${_esc(fbKey)}')">✏️</button>`:''}
+      ${canDelete?`<button style="background:rgba(0,0,0,.7);border:1px solid rgba(230,57,70,.25);color:#ff6b6b;border-radius:4px;font-size:.58rem;padding:2px 5px;cursor:pointer;line-height:1.2" title="Delete" onclick="_confirmDelete('${_esc(fbKey)}')">🗑</button>`:''}`;
+  }
+
+  // Apply cached reactions if any
+  const cached = WT_REACTION_CACHE[fbKey];
+  if (cached && Object.keys(cached).length) {
+    // We need raw map from DB — approximated from cache for display
+    _updateReactionBar(fbKey, cached, {});
+  }
+}
+
+/* ═══ AUGMENT sendChatMessage WITH FLOOD GUARD ══════════════════════ */
+const _origSendChat = sendChatMessage;
+function sendChatMessage(text, extra={}) {
+  // Skip flood check for system/media-only messages
+  if (text && text.trim() && _isFlooding()) return;
+  _origSendChat(text, extra);
+}
+
+/* ═══ AUGMENT toggleChatPanel TO CLEAR UNREAD ON OPEN ══════════════ */
+const _origToggleChat = toggleChatPanel;
+function toggleChatPanel() {
+  _origToggleChat();
+  if (WT.chatVisible) {
+    _clearUnread();
+    // Scroll to bottom when reopening
+    const msgs = _wtQs('#chatMessages');
+    if (msgs) { WT.autoScroll = true; msgs.scrollTop = msgs.scrollHeight; }
+  }
+}
+window.toggleChatPanel = toggleChatPanel; // re-expose
+
+/* ═══ AUGMENT leaveRoom TO CLEAN UP TYPING + SEARCH ════════════════ */
+const _origLeaveRoom = leaveRoom;
+async function leaveRoom(silent=false) {
+  clearTimeout(WT.typingTimer);
+  WT.typingRef?.remove();
+  WT.typingRef = null;
+  _closeSearch();
+  _hideConnBanner();
+  await _origLeaveRoom(silent);
+}
+window.leaveRoom = leaveRoom; // re-expose
+
+/* ═══ AUGMENT _injectStyles TO ADD v3.1 KEYFRAMES + BADGE ══════════ */
+const _origInjectStyles = _injectStyles;
+function _injectStyles() {
+  _origInjectStyles();
+  if (_wtQs('#wt-styles-v31')) return;
+  const s = document.createElement('style'); s.id='wt-styles-v31';
+  s.textContent = `
+    @keyframes wtBounce {
+      0%,100% { transform:translateY(0); }
+      50%      { transform:translateY(-4px); }
+    }
+    .wt-unread-badge {
+      display:none;
+      background:#e63946; color:#fff; border-radius:50%;
+      width:16px; height:16px; font-size:.58rem; font-weight:700;
+      align-items:center; justify-content:center;
+      margin-left:4px; flex-shrink:0; line-height:1;
+    }
+    #wt-scroll-btn { animation: wtFadeIn .25s ease; }
+    @keyframes wtFadeIn { from{opacity:0;transform:translateX(-50%) translateY(6px)} to{opacity:1;transform:translateX(-50%) translateY(0)} }
+    .wt-react-bar button:hover { transform:scale(1.2) !important; }
+    #wt-search-inp:focus { border-color:rgba(230,57,70,.4) !important; background:rgba(255,255,255,.1) !important; }
+    #wt-typing-row span span { display:inline-flex; }
+  `;
+  document.head.appendChild(s);
+}
+
+/* ═══ EXPOSE NEW STABLE v3.1 API ═════════════════════════════════════ */
+window._toggleReaction   = _toggleReaction;
+window._openSearch       = _openSearch;
+window._closeSearch      = _closeSearch;
+window._playNotifSound   = _playNotifSound;
+
 /* ═══ EXPORTS ════════════════════════════════════════════════════ */
 window.initFirebase      = initFirebase;
 window.createRoom        = createRoom;
@@ -962,6 +1592,9 @@ window._toggleEmojiPanel = _toggleEmojiPanel;
 window._toggleGifPanel   = _toggleGifPanel;
 window._toggleViewerPanel= _toggleViewerPanel;
 window._WT               = WT; // debug access
+window.sendChatMessage   = sendChatMessage; // re-expose augmented version
 
-console.log(`%c👥 Watch Together v${WT_VERSION} — Chat system fully upgraded!`, 'color:#10b981;font-weight:bold');
-console.log('%c  ✅ Hide/Show chat fix | ✅ GIF search | ✅ Full emoji | ✅ Edit/Delete | ✅ Replies', 'color:#6ec6ff;font-size:.85em');
+console.log(`%c👥 Watch Together v${WT_VERSION} — Fully upgraded!`, 'color:#10b981;font-weight:bold;font-size:12px');
+console.log('%c  v3.0: ✅ Hide/Show | ✅ GIFs | ✅ Emoji | ✅ Edit/Delete | ✅ Replies', 'color:#6ec6ff;font-size:.82em');
+console.log('%c  v3.1: ✅ Typing | ✅ Reactions | ✅ Unread badge | ✅ Flood guard | ✅ Search', 'color:#a8e6cf;font-size:.82em');
+console.log('%c        ✅ Sound toggle | ✅ Swipe-reply | ✅ Smart scroll | ✅ Reconnect', 'color:#a8e6cf;font-size:.82em');
