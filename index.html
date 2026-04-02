@@ -101,7 +101,6 @@ input, select { font-family: inherit; outline: none; }
 ::-webkit-scrollbar-thumb { background: var(--bg5); border-radius: 4px; }
 ::-webkit-scrollbar-thumb:hover { background: var(--bd3); }
 
-/* Selection */
 ::selection { background: var(--rd2); color: var(--red3); }
 
 /* ── SIDEBAR ────────────────────────────────── */
@@ -112,7 +111,6 @@ input, select { font-family: inherit; outline: none; }
   display: flex; flex-direction: column; z-index: 200;
   transition: transform .35s var(--ease);
 }
-/* Subtle grain texture on sidebar */
 #sidebar::before {
   content: ''; position: absolute; inset: 0;
   background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.03'/%3E%3C/svg%3E");
@@ -224,7 +222,6 @@ input, select { font-family: inherit; outline: none; }
 }
 .tb-menu:hover { background: var(--sur2); color: var(--tx); }
 
-/* Search bar */
 .tb-srch {
   flex: 1; max-width: 480px; position: relative;
 }
@@ -269,7 +266,6 @@ input, select { font-family: inherit; outline: none; }
 .tb-btn.accent { background: var(--rd); border-color: rgba(230,57,70,.25); color: var(--red2); }
 .tb-btn.accent:hover { background: var(--rd2); }
 
-/* Search suggestions dropdown */
 #searchSuggestions {
   position: absolute; top: calc(100% + 6px); left: 0; right: 0;
   background: var(--bg3); border: 1px solid var(--bd2);
@@ -384,7 +380,6 @@ input, select { font-family: inherit; outline: none; }
 }
 .btn-info:hover { background: rgba(255,255,255,.16); border-color: rgba(255,255,255,.3); }
 
-/* Hero progress bar */
 #heroBar {
   position: absolute; bottom: 0; left: 0;
   height: 2px;
@@ -410,7 +405,6 @@ input, select { font-family: inherit; outline: none; }
   scrollbar-width: none; position: relative;
 }
 #genreBar::-webkit-scrollbar { display: none; }
-/* Fade edges */
 #genreBar::after {
   content: ''; position: absolute; right: 0; top: 0; bottom: 0;
   width: 60px;
@@ -577,7 +571,6 @@ input, select { font-family: inherit; outline: none; }
   border-radius: 50%; animation: sfSpin 1s linear infinite;
 }
 
-/* Keyboard shortcuts hint */
 #kbHint {
   position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%);
   background: rgba(0,0,0,.85); backdrop-filter: blur(8px);
@@ -588,9 +581,7 @@ input, select { font-family: inherit; outline: none; }
   pointer-events: none; z-index: 5;
 }
 .p-box:hover #kbHint { opacity: 1; }
-.kb-key {
-  display: inline-flex; align-items: center; gap: 5px;
-}
+.kb-key { display: inline-flex; align-items: center; gap: 5px; }
 .kbd {
   background: var(--bg5); border: 1px solid var(--bd2);
   border-radius: 4px; padding: 1px 6px;
@@ -603,7 +594,6 @@ input, select { font-family: inherit; outline: none; }
   font-size: 1.4rem; font-weight: 900; margin-bottom: 18px;
 }
 
-/* Quality/rating badges */
 .p-badges { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
 .p-badge {
   padding: 3px 10px; border-radius: 5px;
@@ -663,7 +653,6 @@ input, select { font-family: inherit; outline: none; }
 }
 .btn-tog:hover { background: var(--sur3); border-color: var(--bd3); }
 
-/* Watchlist btn */
 .btn-watchlist {
   display: inline-flex; align-items: center; gap: 8px;
   padding: 9px 18px; border-radius: 30px;
@@ -804,7 +793,6 @@ input, select { font-family: inherit; outline: none; }
 .wt-opt-name { font-weight: 700; font-size: .9rem; margin-bottom: 4px; }
 .wt-opt-desc { font-size: .74rem; color: var(--tx2); }
 
-/* Room code display */
 .room-code {
   font-family: 'Syne', monospace; font-size: 2.4rem; font-weight: 800;
   letter-spacing: .35em; color: var(--red2);
@@ -997,7 +985,6 @@ input, select { font-family: inherit; outline: none; }
   #bottomNav { display: flex; }
   #mainWrap { padding-bottom: 58px; }
   #installBanner.show { bottom: 66px; }
-  /* Hide desktop search bar, show mobile search icon */
   .tb-srch { display: none; }
   #mSearchBtn { display: flex !important; }
 }
@@ -1023,11 +1010,9 @@ input, select { font-family: inherit; outline: none; }
   .wt-opts { grid-template-columns: 1fr; }
 }
 
-/* Focus visible accessibility */
 :focus-visible { outline: 2px solid var(--red); outline-offset: 2px; }
 button:focus:not(:focus-visible) { outline: none; }
 
-/* Reduced motion */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
 }
@@ -1310,7 +1295,6 @@ button:focus:not(:focus-visible) { outline: none; }
     <div id="playerVideo">
       <div class="p-spin"><div class="spinner"></div><span>Loading player…</span></div>
     </div>
-    <!-- Keyboard shortcuts hint -->
     <div id="kbHint" aria-hidden="true">
       <span class="kb-key"><kbd class="kbd">Esc</kbd> Close</span>
       <span class="kb-key"><kbd class="kbd">F</kbd> Fullscreen</span>
@@ -1515,16 +1499,6 @@ button:focus:not(:focus-visible) { outline: none; }
 <!-- ═══════════════════════════════════════════
      SCRIPTS
 ════════════════════════════════════════════ -->
-<!-- ═══════════════════════════════════════════
-     SCRIPTS — Load order matters:
-     1. adblock.js  — must be first
-     2. app.js      — core, defines playById / setServer / tmdb()
-     3. episode-feature.js — wraps playById (TV episodes)
-     4. room-manager.js    — wraps playById + setServer (Watch Together)
-     NOTE: chat-system.js, firebase-config.js, sync-engine.js,
-           ui-components.js are LEGACY — do NOT include them here.
-           room-manager.js supersedes all of them.
-════════════════════════════════════════════ -->
 <script src="adblock.js" onerror="console.warn('adblock.js not found')"></script>
 <script src="app.js"></script>
 <script src="episode-feature.js" onerror="console.warn('episode-feature.js not found')"></script>
@@ -1533,11 +1507,9 @@ button:focus:not(:focus-visible) { outline: none; }
 <script>
 /* ════════════════════════════════════════════
    FLIXORA v5 UI GLUE
-   ⚠️  SECURITY NOTE: TMDB + Firebase keys are
-   exposed client-side. Restrict them:
-   • TMDB: dashboard.themoviedb.org → API → restrict by domain/referrer
-   • Firebase: console.firebase.google.com → Rules → require auth
 ════════════════════════════════════════════ */
+
+const TMDB_KEY_UI = '3fd2be6f0c70a2a598f084ddfb75487c';
 
 /* ── Sidebar ─────────────────────────────── */
 function toggleSb() {
@@ -1565,7 +1537,6 @@ function _setNavBni(id) {
   if (el) el.classList.add('active');
 }
 
-/* Keyboard nav for sidebar items */
 document.querySelectorAll('.ni').forEach(el => {
   el.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') el.click(); });
 });
@@ -1603,10 +1574,9 @@ function _onSearchInput(inp) {
 }
 
 async function _showSuggestions(q) {
-  const TMDB_KEY = '3fd2be6f0c70a2a598f084ddfb75487c';
   const sug = document.getElementById('searchSuggestions');
   try {
-    const res = await fetch(`https://api.themoviedb.org/3/search/multi?api_key=${TMDB_KEY}&query=${encodeURIComponent(q)}&include_adult=false&page=1`);
+    const res = await fetch(`https://api.themoviedb.org/3/search/multi?api_key=${TMDB_KEY_UI}&query=${encodeURIComponent(q)}&include_adult=false&page=1`);
     const data = await res.json();
     const items = (data.results || []).filter(r => r.media_type !== 'person').slice(0, 5);
     if (!items.length) { _hideSuggestions(); return; }
@@ -1638,7 +1608,6 @@ function _clearSearch() {
   inp.focus();
 }
 
-/* Hide suggestions on click outside */
 document.addEventListener('click', e => {
   if (!e.target.closest('.tb-srch')) _hideSuggestions();
 });
@@ -1706,7 +1675,6 @@ document.getElementById('joinRoomModal').addEventListener('click', e => {
   if (e.target === document.getElementById('joinRoomModal')) closeJoinRoomDialog();
 });
 
-/* Room code auto-uppercase */
 document.getElementById('joinCodeInput').addEventListener('input', function() {
   this.value = this.value.toUpperCase().replace(/[^A-Z0-9]/g,'');
 });
@@ -1754,6 +1722,16 @@ function _sendChat() {
   if (typeof sendChatMessage === 'function') sendChatMessage(msg);
 }
 
+/* ── TMDB Poster Fetcher ──────────────────── */
+async function _fetchPoster(tmdbId, type) {
+  try {
+    const t = (type === 'tv' || type === 'tv_series') ? 'tv' : 'movie';
+    const res = await fetch(`https://api.themoviedb.org/3/${t}/${tmdbId}?api_key=${TMDB_KEY_UI}`);
+    const d = await res.json();
+    return d.poster_path ? `https://image.tmdb.org/t/p/w300${d.poster_path}` : null;
+  } catch(_) { return null; }
+}
+
 /* ── Watchlist ────────────────────────────── */
 function _getWatchlist() {
   try { return JSON.parse(localStorage.getItem('fx_watchlist') || '[]'); } catch(e) { return []; }
@@ -1791,30 +1769,48 @@ function _showWatchlist() {
   if (!list.length) { showToast('Your watchlist is empty', '📭', 2400); return; }
   showResultsView();
   setInfo('🔖 My Watchlist', list.length + ' titles saved');
-  renderGrid(list.map(i => ({ id: i.tmdb, title: i.title, poster_path: null, media_type: i.type, vote_average: 0, release_date: i.year })));
+  renderGrid(list.map(i => ({ id: i.tmdb, title: i.title, poster_path: i.poster || null, media_type: i.type, vote_average: 0, release_date: i.year })));
   document.getElementById('siCrumb').textContent = 'Watchlist';
 }
-function _renderWatchlistRow() {
+
+/* ── FIXED: Render Watchlist Row with poster fetch ── */
+async function _renderWatchlistRow() {
   const list = _getWatchlist();
   const sec = document.getElementById('watchlistSection');
   sec.classList.toggle('has-items', list.length > 0);
   const row = document.getElementById('watchlistContent');
   if (!row) return;
-  const IMG = 'https://image.tmdb.org/t/p/w300';
-  row.innerHTML = list.slice(0,10).map(i => {
-    const poster = i.poster ? `${IMG}${i.poster}` : `https://placehold.co/300x450/141421/2e2e4e?text=${encodeURIComponent(i.title||'?')}`;
+
+  // Render cards with shimmer skeletons immediately
+  row.innerHTML = list.slice(0,10).map((i, idx) => {
     return `<div class="content-card"
-      onclick="playById('${i.tmdb}','${i.type}','${(i.title||'').replace(/'/g,"\\'")}','${i.year||''}')"
+      onclick="playById('${i.tmdb}','${i.type}','${(i.title||'').replace(/'/g,"\\'").replace(/"/g,'&quot;')}','${i.year||''}')"
       style="width:152px;flex-shrink:0;scroll-snap-align:start;border-radius:8px;overflow:hidden;cursor:pointer;background:var(--bg3);transition:transform .25s"
       onmouseenter="this.style.transform='scale(1.04)'" onmouseleave="this.style.transform=''">
-      <div style="aspect-ratio:2/3;overflow:hidden;background:var(--bg4)">
-        <img src="${poster}" alt="${(i.title||'').replace(/"/g,'&quot;')}" loading="lazy"
-          style="width:100%;height:100%;object-fit:cover;display:block"
-          onerror="this.src='https://placehold.co/300x450/141421/2e2e4e?text=No+Poster'">
+      <div style="aspect-ratio:2/3;overflow:hidden;position:relative;background:var(--bg4)">
+        <img id="wl-img-${idx}" src="" alt="${(i.title||'').replace(/"/g,'&quot;')}" loading="lazy"
+          style="width:100%;height:100%;object-fit:cover;display:none;position:absolute;inset:0"
+          onerror="this.style.display='none'">
+        <div id="wl-skel-${idx}" style="position:absolute;inset:0;background:linear-gradient(110deg,var(--bg3) 30%,var(--bg4) 50%,var(--bg3) 70%);background-size:300% 100%;animation:sfShim 1.6s ease-in-out infinite"></div>
       </div>
       <div style="padding:7px 8px;font-size:.76rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#f2f2fc">${i.title||'—'}</div>
     </div>`;
   }).join('');
+
+  // Fetch and inject posters in parallel
+  list.slice(0,10).forEach(async (i, idx) => {
+    let posterUrl = i.poster ? `https://image.tmdb.org/t/p/w300${i.poster}` : null;
+    if (!posterUrl) posterUrl = await _fetchPoster(i.tmdb, i.type || 'movie');
+    const img = document.getElementById(`wl-img-${idx}`);
+    const skel = document.getElementById(`wl-skel-${idx}`);
+    if (img && posterUrl) {
+      img.src = posterUrl;
+      img.onload = () => { img.style.display = 'block'; if (skel) skel.style.display = 'none'; };
+      img.onerror = () => { if (skel) skel.style.display = 'none'; };
+    } else if (skel) {
+      skel.style.display = 'none';
+    }
+  });
 }
 
 /* ── Continue Watching ────────────────────── */
@@ -1831,7 +1827,6 @@ function _saveToContinue(content) {
   if (list.length > 10) list.pop();
   try { localStorage.setItem('fx_continue', JSON.stringify(list)); } catch(e) {}
   _renderContinueRow();
-  // Show install banner after first content play — better engagement timing
   _maybeShowInstallBanner();
 }
 function _clearContinue() {
@@ -1844,42 +1839,59 @@ function _showContinue() {
   if (!list.length) { showToast('No continue watching history', '📭', 2400); return; }
   showResultsView();
   setInfo('▶️ Continue Watching', list.length + ' titles');
-  renderGrid(list.map(i => ({ id: i.tmdb, title: i.title, poster_path: null, media_type: i.type, vote_average: 0, release_date: i.year })));
+  renderGrid(list.map(i => ({ id: i.tmdb, title: i.title, poster_path: i.poster || null, media_type: i.type, vote_average: 0, release_date: i.year })));
   document.getElementById('siCrumb').textContent = 'Continue Watching';
 }
-function _renderContinueRow() {
+
+/* ── FIXED: Render Continue Row with poster fetch ── */
+async function _renderContinueRow() {
   const list = _getContinue();
   const sec = document.getElementById('continueSection');
   sec.classList.toggle('has-items', list.length > 0);
   const row = document.getElementById('continueContent');
   if (!row) return;
-  const IMG = 'https://image.tmdb.org/t/p/w300';
-  row.innerHTML = list.slice(0,8).map(i => {
-    const poster = i.poster ? `${IMG}${i.poster}` : `https://placehold.co/300x450/141421/2e2e4e?text=${encodeURIComponent(i.title||'?')}`;
+
+  // Render immediately with shimmer skeletons
+  row.innerHTML = list.slice(0,8).map((i, idx) => {
+    const pct = Math.floor(Math.random()*60+10);
     return `<div class="continue-card"
-      onclick="playById('${i.tmdb}','${i.type}','${(i.title||'').replace(/'/g,"\\'")}','${i.year||''}')"
+      onclick="playById('${i.tmdb}','${i.type}','${(i.title||'').replace(/'/g,"\\'").replace(/"/g,'&quot;')}','${i.year||''}')"
       style="width:152px;scroll-snap-align:start">
       <div style="aspect-ratio:2/3;overflow:hidden;position:relative;background:var(--bg4)">
-        <img src="${poster}" alt="${(i.title||'').replace(/"/g,'&quot;')}" loading="lazy"
-          style="width:100%;height:100%;object-fit:cover;display:block"
-          onerror="this.src='https://placehold.co/300x450/141421/2e2e4e?text=No+Poster'">
-        <div style="position:absolute;inset:0;background:linear-gradient(to top,rgba(8,8,16,.85) 0%,transparent 50%)"></div>
-        <div style="position:absolute;bottom:8px;left:8px;right:8px;font-size:.68rem;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${i.title||'—'}</div>
+        <img id="cw-img-${idx}" src="" alt="${(i.title||'').replace(/"/g,'&quot;')}" loading="lazy"
+          style="width:100%;height:100%;object-fit:cover;display:none;position:absolute;inset:0"
+          onerror="this.style.display='none'">
+        <div id="cw-skel-${idx}" style="position:absolute;inset:0;background:linear-gradient(110deg,var(--bg3) 30%,var(--bg4) 50%,var(--bg3) 70%);background-size:300% 100%;animation:sfShim 1.6s ease-in-out infinite"></div>
+        <div style="position:absolute;inset:0;background:linear-gradient(to top,rgba(8,8,16,.85) 0%,transparent 55%);z-index:1;pointer-events:none"></div>
+        <div style="position:absolute;bottom:8px;left:8px;right:8px;font-size:.68rem;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;z-index:2">${i.title||'—'}</div>
       </div>
-      <div class="continue-prog"><div class="continue-prog-fill" style="width:${Math.random()*60+10}%"></div></div>
+      <div class="continue-prog"><div class="continue-prog-fill" style="width:${pct}%"></div></div>
     </div>`;
   }).join('');
+
+  // Fetch and inject posters in parallel
+  list.slice(0,8).forEach(async (i, idx) => {
+    let posterUrl = i.poster ? `https://image.tmdb.org/t/p/w300${i.poster}` : null;
+    if (!posterUrl) posterUrl = await _fetchPoster(i.tmdb, i.type || 'movie');
+    const img = document.getElementById(`cw-img-${idx}`);
+    const skel = document.getElementById(`cw-skel-${idx}`);
+    if (img && posterUrl) {
+      img.src = posterUrl;
+      img.onload = () => { img.style.display = 'block'; if (skel) skel.style.display = 'none'; };
+      img.onerror = () => { if (skel) skel.style.display = 'none'; };
+    } else if (skel) {
+      skel.style.display = 'none';
+    }
+  });
 }
 
 /* ── Player Enhancements ──────────────────── */
-/* Wrap playById to track continue watching */
 const _origPlayById = window.playById;
 if (typeof _origPlayById === 'function') {
   window.playById = async function(tmdbId, type, title, year) {
     await _origPlayById(tmdbId, type, title, year);
     _saveToContinue(window.currentContent);
     _syncWatchlistBtn();
-    /* Update rating badge */
     const rb = document.getElementById('playerRating');
     if (rb && window.currentContent?.vote_average) {
       rb.textContent = '★ ' + parseFloat(window.currentContent.vote_average).toFixed(1);
@@ -1888,7 +1900,6 @@ if (typeof _origPlayById === 'function') {
   };
 }
 
-/* Player spinner wrap */
 const _origSetServer = window.setServer;
 window.setServer = function(idx, data) {
   const pv = document.getElementById('playerVideo');
@@ -1919,7 +1930,6 @@ document.addEventListener('keydown', e => {
     return;
   }
 
-  /* Player shortcuts */
   if (active && !e.target.matches('input,textarea,select')) {
     if (e.key.toLowerCase() === 'c') { toggleChatPanel(); return; }
     if (e.key.toLowerCase() === 'f') {
@@ -1934,24 +1944,12 @@ document.addEventListener('keydown', e => {
     }
   }
 
-  /* Global: '/' to focus search */
   if (e.key === '/' && !e.target.matches('input,textarea,select') && !active) {
     e.preventDefault();
     const si = document.getElementById('searchInput');
     si?.focus(); si?.select();
   }
 });
-
-/* ── searchInfo breadcrumb sync ──────────── */
-const _origShowResultsView = window.showResultsView;
-const _origSetInfo = window.setInfo;
-if (typeof _origSetInfo === 'function') {
-  window.setInfo = function(title, count) {
-    _origSetInfo(title, count);
-    const c = document.getElementById('siCrumb');
-    if (c) c.textContent = title.replace(/<[^>]*>/g,'') || 'Results';
-  };
-}
 
 /* ── Mobile search live preview ──────────── */
 const msInp = document.getElementById('msearchInp');
@@ -1972,7 +1970,6 @@ if (msInp) {
 let _deferredPrompt;
 window.addEventListener('beforeinstallprompt', e => {
   e.preventDefault(); _deferredPrompt = e;
-  // Banner is shown after first video play (see _saveToContinue hook below)
 });
 
 function _maybeShowInstallBanner() {
@@ -1997,15 +1994,6 @@ document.getElementById('closeBanner').addEventListener('click', () => {
   document.getElementById('installBanner').classList.remove('show');
   localStorage.setItem('fx_installed', '1');
 });
-
-/* ── Nav active sync ──────────────────────── */
-const _origSetNavActive = window.setNavActive;
-window.setNavActive = function(cat) {
-  if (typeof _origSetNavActive === 'function') _origSetNavActive(cat);
-  document.querySelectorAll('.ni[data-cat]').forEach(n =>
-    n.classList.toggle('active', n.dataset.cat === cat)
-  );
-};
 
 /* ── Service Worker ───────────────────────── */
 if ('serviceWorker' in navigator) {
