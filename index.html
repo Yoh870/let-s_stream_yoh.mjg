@@ -1800,16 +1800,21 @@ function _renderWatchlistRow() {
   sec.classList.toggle('has-items', list.length > 0);
   const row = document.getElementById('watchlistContent');
   if (!row) return;
-  row.innerHTML = list.slice(0,10).map(i =>
-    `<div class="content-card" onclick="playById('${i.tmdb}','${i.type}','${(i.title||'').replace(/'/g,"\\'")}','${i.year||''}')"
-      style="position:relative;border-radius:8px;overflow:hidden;cursor:pointer;background:var(--bg3);transition:transform .25s;width:152px;flex-shrink:0;scroll-snap-align:start"
+  const IMG = 'https://image.tmdb.org/t/p/w300';
+  row.innerHTML = list.slice(0,10).map(i => {
+    const poster = i.poster ? `${IMG}${i.poster}` : `https://placehold.co/300x450/141421/2e2e4e?text=${encodeURIComponent(i.title||'?')}`;
+    return `<div class="content-card"
+      onclick="playById('${i.tmdb}','${i.type}','${(i.title||'').replace(/'/g,"\\'")}','${i.year||''}')"
+      style="width:152px;flex-shrink:0;scroll-snap-align:start;border-radius:8px;overflow:hidden;cursor:pointer;background:var(--bg3);transition:transform .25s"
       onmouseenter="this.style.transform='scale(1.04)'" onmouseleave="this.style.transform=''">
-      <div style="aspect-ratio:2/3;overflow:hidden;background:var(--bg4);display:flex;align-items:center;justify-content:center">
-        <span style="font-size:2rem;opacity:.3">🎬</span>
+      <div style="aspect-ratio:2/3;overflow:hidden;background:var(--bg4)">
+        <img src="${poster}" alt="${(i.title||'').replace(/"/g,'&quot;')}" loading="lazy"
+          style="width:100%;height:100%;object-fit:cover;display:block"
+          onerror="this.src='https://placehold.co/300x450/141421/2e2e4e?text=No+Poster'">
       </div>
-      <div style="padding:9px 8px;font-size:.78rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${i.title||'—'}</div>
-    </div>`
-  ).join('');
+      <div style="padding:7px 8px;font-size:.76rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#f2f2fc">${i.title||'—'}</div>
+    </div>`;
+  }).join('');
 }
 
 /* ── Continue Watching ────────────────────── */
@@ -1848,17 +1853,22 @@ function _renderContinueRow() {
   sec.classList.toggle('has-items', list.length > 0);
   const row = document.getElementById('continueContent');
   if (!row) return;
-  row.innerHTML = list.slice(0,8).map(i =>
-    `<div class="continue-card" onclick="playById('${i.tmdb}','${i.type}','${(i.title||'').replace(/'/g,"\\'")}','${i.year||''}')"
+  const IMG = 'https://image.tmdb.org/t/p/w300';
+  row.innerHTML = list.slice(0,8).map(i => {
+    const poster = i.poster ? `${IMG}${i.poster}` : `https://placehold.co/300x450/141421/2e2e4e?text=${encodeURIComponent(i.title||'?')}`;
+    return `<div class="continue-card"
+      onclick="playById('${i.tmdb}','${i.type}','${(i.title||'').replace(/'/g,"\\'")}','${i.year||''}')"
       style="width:152px;scroll-snap-align:start">
-      <div style="aspect-ratio:2/3;background:var(--bg4);display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden">
-        <span style="font-size:2.5rem;opacity:.25">▶</span>
-        <div style="position:absolute;inset:0;background:linear-gradient(to top,rgba(8,8,16,.9) 0%,transparent 50%)"></div>
-        <div style="position:absolute;bottom:8px;left:8px;font-size:.7rem;font-weight:700;color:#fff">${i.title||'—'}</div>
+      <div style="aspect-ratio:2/3;overflow:hidden;position:relative;background:var(--bg4)">
+        <img src="${poster}" alt="${(i.title||'').replace(/"/g,'&quot;')}" loading="lazy"
+          style="width:100%;height:100%;object-fit:cover;display:block"
+          onerror="this.src='https://placehold.co/300x450/141421/2e2e4e?text=No+Poster'">
+        <div style="position:absolute;inset:0;background:linear-gradient(to top,rgba(8,8,16,.85) 0%,transparent 50%)"></div>
+        <div style="position:absolute;bottom:8px;left:8px;right:8px;font-size:.68rem;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${i.title||'—'}</div>
       </div>
       <div class="continue-prog"><div class="continue-prog-fill" style="width:${Math.random()*60+10}%"></div></div>
-    </div>`
-  ).join('');
+    </div>`;
+  }).join('');
 }
 
 /* ── Player Enhancements ──────────────────── */
