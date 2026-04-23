@@ -1,327 +1,157 @@
 /* ═══════════════════════════════════════════════════════════════════
-   FLIXORA — fullscreen-fix.js  v1.0
+   FLIXORA — fullscreen-fix.js  v2.0
    ─────────────────────────────────────────────────────────────────
    Drop this LAST in index.html (after all other scripts):
      <script src="fullscreen-fix.js"></script>
 
-   FIXES:
-     ✅ Iframe sandbox blocks fullscreen → patched
-     ✅ Fullscreen button targets wrong element → fixed
-     ✅ Mobile fullscreen (iOS Safari + Android) → handled
-     ✅ Keyboard shortcut F → works
-     ✅ ESC to exit → works
-     ✅ Fullscreen state icon updates correctly
-     ✅ Removes conflicting fullscreen handlers from adblock.js
+   ROOT CAUSE FIX:
+     The video was NOT filling the screen because there were no
+     :fullscreen CSS rules — #playerVideo kept its padding-top:56.25%
+     and .p-box kept its max-width:920px even in fullscreen mode.
+
+   ALL FIXES:
+     ✅ :fullscreen CSS rules — video now fills the entire screen
+     ✅ Conflicting F-key in index.html — neutralized via capture
+     ✅ Sandbox iframe attributes — always includes allow-fullscreen
+     ✅ Native fullscreen targets playerVideo directly (best approach)
+     ✅ Manual CSS fallback for iOS Safari
+     ✅ Double-tap on video = fullscreen on mobile
+     ✅ Button icon syncs correctly on enter/exit
 ═══════════════════════════════════════════════════════════════════ */
 
 (function () {
   'use strict';
 
-  /* ── STEP 1: Fix sandbox on all iframes (current + future) ──────
-     The sandbox attribute from adblock.js sometimes strips fullscreen.
-     We override it to always include allow-fullscreen.
-  ─────────────────────────────────────────────────────────────────*/
-  const SAFE_SANDBOX = [
-    'allow-scripts',
-    'allow-same-origin',
-    'allow-presentation',
-    'allow-forms',
-    'allow-pointer-lock',
-    'allow-fullscreen',
-    'allow-popups',
-  ].join(' ');
-
-  function _fixIframe(iframe) {
-    if (!iframe || iframe._fxFixed) return;
-    iframe._fxFixed = true;
-    try {
-      iframe.setAttribute('sandbox', SAFE_SANDBOX);
-      iframe.setAttribute('allowfullscreen', '');
-      iframe.setAttribute('webkitallowfullscreen', '');
-      iframe.setAttribute('mozallowfullscreen', '');
-      iframe.setAttribute('allow',
-        'autoplay; fullscreen; picture-in-picture; encrypted-media; gyroscope; accelerometer');
-    } catch (e) {
-      console.warn('[FS-Fix] Could not patch iframe:', e.message);
-    }
-  }
-
-  // Fix all existing iframes
-  document.querySelectorAll('iframe').forEach(_fixIframe);
-
-  // Fix future iframes as they're injected
-  new MutationObserver(mutations => {
-    mutations.forEach(m => m.addedNodes.forEach(node => {
-      if (node.nodeName === 'IFRAME') _fixIframe(node);
-      if (node.querySelectorAll) node.querySelectorAll('iframe').forEach(_fixIframe);
-    }));
-  }).observe(document.documentElement, { childList: true, subtree: true });
-
-  // Also re-fix after setServer (servers inject new iframes)
-  const _origSS = window.setServer;
-  if (typeof _origSS === 'function' && !_origSS._fsFix) {
-    window.setServer = function (...args) {
-      _origSS(...args);
-      setTimeout(() => document.querySelectorAll('#playerVideo iframe').forEach(_fixIframe), 400);
-    };
-    window.setServer._fsFix = true;
-    window.loadServer = window.setServer;
-  }
-
-  /* ── STEP 2: Fullscreen engine ───────────────────────────────────
-     Priority order:
-       1. Native browser fullscreen on the player modal  ← best
-       2. Native on playerVideo wrapper
-       3. Native on the iframe itself
-       4. CSS "manual fullscreen" fallback (for iOS Safari)
-  ─────────────────────────────────────────────────────────────────*/
-  let _manualFS   = false;
-  let _manualPrev = {};  // saved styles for restore
-
-  function _getTargets() {
-    return {
-      modal:   document.getElementById('playerModal'),
-      pbox:    document.querySelector('.p-box'),
-      pvideo:  document.getElementById('playerVideo'),
-      iframe:  document.querySelector('#playerVideo iframe'),
-    };
-  }
-
-  function _requestFS(el) {
-    const fn = el.requestFullscreen
-            || el.webkitRequestFullscreen
-            || el.mozRequestFullScreen
-            || el.msRequestFullscreen;
-    if (fn) return fn.call(el).catch(() => null);
-    return Promise.reject(new Error('no requestFullscreen'));
-  }
-
-  function _exitFS() {
-    const fn = document.exitFullscreen
-            || document.webkitExitFullscreen
-            || document.mozCancelFullScreen
-            || document.msExitFullscreen;
-    if (fn) fn.call(document);
-  }
-
-  function _isFS() {
-    return !!(document.fullscreenElement
-           || document.webkitFullscreenElement
-           || document.mozFullScreenElement
-           || document.msFullscreenElement);
-  }
-
-  // Manual CSS fullscreen (iOS / fallback)
-  function _manualEnter() {
-    const t = _getTargets();
-    const target = t.pbox || t.pvideo || t.modal;
-    if (!target) return;
-    _manualPrev = {
-      el:     target,
-      cssText: target.style.cssText,
-      bodyOF: document.body.style.overflow,
-    };
-    target.style.cssText = [
-      'position:fixed',
-      'inset:0',
-      'width:100vw',
-      'height:100vh',
-      'max-width:100vw',
-      'max-height:100vh',
-      'border-radius:0',
-      'z-index:99999',
-      'background:#000',
-      'overflow:hidden',
-    ].join('!important;') + '!important';
-    document.body.style.overflow = 'hidden';
-    _manualFS = true;
-    _updateBtn(true);
-
-    // Scroll player into view on mobile
-    target.scrollIntoView({ behavior: 'instant' });
-  }
-
-  function _manualExit() {
-    if (!_manualFS) return;
-    const { el, cssText, bodyOF } = _manualPrev;
-    if (el) el.style.cssText = cssText || '';
-    document.body.style.overflow = bodyOF || '';
-    _manualFS = false;
-    _updateBtn(false);
-    _manualPrev = {};
-  }
-
-  // Main toggle — tries native first, falls back to CSS
-  async function toggleFullscreen() {
-    const t = _getTargets();
-
-    if (_isFS() || _manualFS) {
-      if (_manualFS)  _manualExit();
-      else            _exitFS();
-      return;
-    }
-
-    // Try: modal → pbox → playerVideo → iframe
-    const candidates = [t.modal, t.pbox, t.pvideo, t.iframe].filter(Boolean);
-    let succeeded = false;
-    for (const el of candidates) {
-      try {
-        await _requestFS(el);
-        succeeded = true;
-        break;
-      } catch (_) { /* try next */ }
-    }
-
-    if (!succeeded) {
-      // Fallback for iOS Safari / restricted environments
-      _manualEnter();
-    }
-  }
-  window.toggleFullscreen = toggleFullscreen;
-
-  /* ── STEP 3: Inject the fullscreen button ───────────────────────
-     Replaces any existing broken ⛶ button with a reliable one.
-  ─────────────────────────────────────────────────────────────────*/
-  function _removeOldBtn() {
-    // Remove buttons from features-patch & room-manager
-    document.querySelectorAll('#wt-max-btn, #fx-fs-btn').forEach(b => b.remove());
-  }
-
-  function _injectFSBtn() {
-    _removeOldBtn();
-    const pv = document.getElementById('playerVideo');
-    if (!pv || document.getElementById('fx-fs-btn')) return;
-
-    const btn = document.createElement('button');
-    btn.id = 'fx-fs-btn';
-    btn.title = 'Toggle Fullscreen (F)';
-    btn.setAttribute('aria-label', 'Toggle fullscreen');
-    btn.innerHTML = _fsIcon(false);
-    btn.style.cssText = [
-      'position:absolute',
-      'bottom:10px',
-      'right:10px',
-      'z-index:50',
-      'width:38px',
-      'height:38px',
-      'border-radius:8px',
-      'background:rgba(0,0,0,.82)',
-      'border:1px solid rgba(255,255,255,.2)',
-      'color:#fff',
-      'font-size:1.05rem',
-      'cursor:pointer',
-      'display:flex',
-      'align-items:center',
-      'justify-content:center',
-      'transition:background .15s, transform .15s',
-      'backdrop-filter:blur(8px)',
-      '-webkit-backdrop-filter:blur(8px)',
-    ].join(';');
-
-    btn.addEventListener('mouseenter', () => btn.style.background = 'rgba(230,57,70,.85)');
-    btn.addEventListener('mouseleave', () => btn.style.background = 'rgba(0,0,0,.82)');
-    btn.addEventListener('click', e => { e.stopPropagation(); toggleFullscreen(); });
-
-    pv.style.position = 'relative';
-    pv.appendChild(btn);
-  }
-
-  function _fsIcon(isOn) {
-    return isOn
-      ? `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-           <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/>
-         </svg>`
-      : `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-           <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/>
-           <line x1="9" y1="15" x2="3" y2="21"/><line x1="15" y1="9" x2="21" y2="3"/>
-         </svg>`;
-  }
-
-  function _updateBtn(isOn) {
-    const btn = document.getElementById('fx-fs-btn');
-    if (btn) btn.innerHTML = _fsIcon(isOn);
-  }
-
-  /* ── STEP 4: Sync button icon with browser fullscreen state ─────*/
-  document.addEventListener('fullscreenchange',       () => _updateBtn(_isFS()));
-  document.addEventListener('webkitfullscreenchange', () => _updateBtn(_isFS()));
-  document.addEventListener('mozfullscreenchange',    () => _updateBtn(_isFS()));
-  document.addEventListener('MSFullscreenChange',     () => _updateBtn(_isFS()));
-
-  /* ── STEP 5: Keyboard shortcut — F key ──────────────────────────*/
-  document.addEventListener('keydown', e => {
-    const modal = document.getElementById('playerModal');
-    if (!modal?.classList.contains('active')) return;
-    if (e.target.matches('input, textarea, select')) return;
-
-    if (e.key.toLowerCase() === 'f') {
-      e.preventDefault();
-      toggleFullscreen();
-    }
-    if (e.key === 'Escape' && _manualFS) {
-      _manualExit();
-    }
-  });
-
-  /* ── STEP 6: Double-tap on video = fullscreen (mobile UX) ───────*/
-  let _lastTap = 0;
-  const _pv = document.getElementById('playerVideo');
-  if (_pv) {
-    _pv.addEventListener('touchend', e => {
-      const now = Date.now();
-      if (now - _lastTap < 320) {
-        e.preventDefault();
-        toggleFullscreen();
-      }
-      _lastTap = now;
-    }, { passive: false });
-  }
-
-  /* ── STEP 7: Hook into playById to re-inject button ────────────*/
-  function _patchPlay() {
-    const orig = window.playById;
-    if (!orig || orig._fsPatched) return;
-    window.playById = async function (...args) {
-      await orig(...args);
-      setTimeout(() => {
-        document.querySelectorAll('#playerVideo iframe').forEach(_fixIframe);
-        _injectFSBtn();
-      }, 350);
-      setTimeout(() => {
-        document.querySelectorAll('#playerVideo iframe').forEach(_fixIframe);
-      }, 1200);
-    };
-    window.playById._fsPatched = true;
-    window.playContentById = window.playById;
-  }
-
-  /* ── STEP 8: CSS — hide the broken old buttons ──────────────────*/
+  /* ─────────────────────────────────────────────────────────────
+     STEP 1 — :fullscreen CSS  (THIS was the root cause)
+     Without these rules, the browser enters fullscreen but the
+     #playerVideo still has padding-top:56.25% and max-width:920px
+     so the video appears small / background disappears only.
+  ───────────────────────────────────────────────────────────── */
   function _injectCSS() {
     if (document.getElementById('fx-fs-css')) return;
     const s = document.createElement('style');
     s.id = 'fx-fs-css';
     s.textContent = `
-      /* Hide old broken fullscreen buttons from other scripts */
+
+      /* ── playerVideo as fullscreen root ─────────────── */
+      #playerVideo:-webkit-full-screen,
+      #playerVideo:fullscreen {
+        position: fixed !important;
+        inset: 0 !important;
+        width: 100vw !important;
+        height: 100vh !important;
+        padding-top: 0 !important;
+        max-width: none !important;
+        max-height: none !important;
+        z-index: 99999 !important;
+        background: #000 !important;
+      }
+      #playerVideo:-webkit-full-screen iframe,
+      #playerVideo:fullscreen iframe {
+        position: absolute !important;
+        inset: 0 !important;
+        width: 100% !important;
+        height: 100% !important;
+      }
+
+      /* ── playerModal as fullscreen root ─────────────── */
+      #playerModal:-webkit-full-screen,
+      #playerModal:fullscreen {
+        padding: 0 !important;
+        background: #000 !important;
+        align-items: stretch !important;
+        justify-content: stretch !important;
+      }
+      #playerModal:-webkit-full-screen .p-box,
+      #playerModal:fullscreen .p-box {
+        max-width: 100vw !important;
+        max-height: 100vh !important;
+        width: 100vw !important;
+        height: 100vh !important;
+        border-radius: 0 !important;
+        overflow: hidden !important;
+        transform: none !important;
+      }
+      #playerModal:-webkit-full-screen #playerVideo,
+      #playerModal:fullscreen #playerVideo {
+        padding-top: 0 !important;
+        position: absolute !important;
+        inset: 0 !important;
+        width: 100% !important;
+        height: 100% !important;
+      }
+      #playerModal:-webkit-full-screen #playerVideo iframe,
+      #playerModal:fullscreen #playerVideo iframe {
+        position: absolute !important;
+        inset: 0 !important;
+        width: 100% !important;
+        height: 100% !important;
+      }
+
+      /* ── .p-box as fullscreen root ───────────────────── */
+      .p-box:-webkit-full-screen,
+      .p-box:fullscreen {
+        max-width: 100vw !important;
+        max-height: 100vh !important;
+        width: 100vw !important;
+        height: 100vh !important;
+        border-radius: 0 !important;
+        overflow: hidden !important;
+      }
+      .p-box:-webkit-full-screen #playerVideo,
+      .p-box:fullscreen #playerVideo {
+        padding-top: 0 !important;
+        position: absolute !important;
+        inset: 0 !important;
+        width: 100% !important;
+        height: 100% !important;
+      }
+      .p-box:-webkit-full-screen #playerVideo iframe,
+      .p-box:fullscreen #playerVideo iframe {
+        position: absolute !important;
+        inset: 0 !important;
+        width: 100% !important;
+        height: 100% !important;
+      }
+
+      /* ── Hide the old broken fullscreen button ───────── */
       #wt-max-btn { display: none !important; }
 
-      /* Fullscreen button hover area — show on player hover */
-      #playerVideo #fx-fs-btn {
+      /* ── Our FS button hover reveal ──────────────────── */
+      #fx-fs-btn {
         opacity: 0;
         transition: opacity .25s, background .15s !important;
       }
       #playerVideo:hover #fx-fs-btn,
+      #fx-fs-btn:hover,
       #fx-fs-btn:focus {
-        opacity: 1;
+        opacity: 1 !important;
       }
 
-      /* When in manual fullscreen, make sure iframe fills 100% */
-      body.fx-manual-fs #playerVideo {
+      /* ── Manual CSS fullscreen (iOS Safari fallback) ─── */
+      .fx-manual-fs {
+        position: fixed !important;
+        inset: 0 !important;
+        width: 100vw !important;
+        height: 100vh !important;
+        max-width: 100vw !important;
+        max-height: 100vh !important;
+        border-radius: 0 !important;
+        z-index: 99999 !important;
+        background: #000 !important;
+        overflow: hidden !important;
+        padding: 0 !important;
+        transform: none !important;
+      }
+      .fx-manual-fs #playerVideo {
         position: absolute !important;
         inset: 0 !important;
-        padding-top: 0 !important;
+        width: 100% !important;
         height: 100% !important;
+        padding-top: 0 !important;
       }
-      body.fx-manual-fs #playerVideo iframe {
+      .fx-manual-fs #playerVideo iframe {
         position: absolute !important;
         inset: 0 !important;
         width: 100% !important;
@@ -331,32 +161,247 @@
     document.head.appendChild(s);
   }
 
-  /* ── BOOT ───────────────────────────────────────────────────────*/
-  function _boot() {
-    _injectCSS();
-    _patchPlay();
+  /* ─────────────────────────────────────────────────────────────
+     STEP 2 — Fix iframe sandbox
+     adblock.js sets sandbox but sometimes the _hs flag prevents
+     re-running. We force it here as final authority.
+  ───────────────────────────────────────────────────────────── */
+  const SANDBOX = [
+    'allow-scripts', 'allow-same-origin', 'allow-presentation',
+    'allow-forms', 'allow-pointer-lock', 'allow-fullscreen', 'allow-popups',
+  ].join(' ');
 
-    // Inject button if player is already open
-    if (document.getElementById('playerModal')?.classList.contains('active')) {
-      _injectFSBtn();
+  const ALLOW = 'autoplay; fullscreen; picture-in-picture; encrypted-media; gyroscope; accelerometer';
+
+  function _fixIframe(iframe) {
+    if (!iframe) return;
+    // Force-reset even if adblock.js already tagged it
+    delete iframe._hs;
+    delete iframe._fxFixed;
+    try {
+      iframe.setAttribute('sandbox', SANDBOX);
+      iframe.setAttribute('allowfullscreen', '');
+      iframe.setAttribute('webkitallowfullscreen', '');
+      iframe.setAttribute('mozallowfullscreen', '');
+      iframe.setAttribute('allow', ALLOW);
+      iframe._fxFixed = true;
+    } catch (_) {}
+  }
+
+  document.querySelectorAll('iframe').forEach(_fixIframe);
+
+  new MutationObserver(muts => {
+    muts.forEach(m => m.addedNodes.forEach(n => {
+      if (n.nodeName === 'IFRAME') setTimeout(() => _fixIframe(n), 50);
+      n.querySelectorAll?.('iframe').forEach(f => setTimeout(() => _fixIframe(f), 50));
+    }));
+  }).observe(document.documentElement, { childList: true, subtree: true });
+
+  /* ─────────────────────────────────────────────────────────────
+     STEP 3 — Fullscreen engine
+     Best target = #playerVideo (direct), then fallbacks.
+  ───────────────────────────────────────────────────────────── */
+  let _manualTarget = null;
+
+  function _isNativeFS() {
+    return !!(document.fullscreenElement || document.webkitFullscreenElement ||
+              document.mozFullScreenElement || document.msFullscreenElement);
+  }
+
+  function _req(el) {
+    const fn = el.requestFullscreen || el.webkitRequestFullscreen ||
+               el.mozRequestFullScreen || el.msRequestFullscreen;
+    return fn ? fn.call(el) : Promise.reject('no api');
+  }
+
+  function _exit() {
+    const fn = document.exitFullscreen || document.webkitExitFullscreen ||
+               document.mozCancelFullScreen || document.msExitFullscreen;
+    if (fn) fn.call(document);
+  }
+
+  function _manualEnter() {
+    const target = document.querySelector('.p-box') ||
+                   document.getElementById('playerVideo');
+    if (!target || _manualTarget) return;
+    _manualTarget = target;
+    target.classList.add('fx-manual-fs');
+    document.body.style.overflow = 'hidden';
+    _updateBtn(true);
+  }
+
+  function _manualExit() {
+    if (!_manualTarget) return;
+    _manualTarget.classList.remove('fx-manual-fs');
+    document.body.style.overflow = '';
+    _manualTarget = null;
+    _updateBtn(false);
+  }
+
+  async function toggleFullscreen() {
+    if (_isNativeFS()) { _exit(); return; }
+    if (_manualTarget) { _manualExit(); return; }
+
+    const pvideo = document.getElementById('playerVideo');
+    const pbox   = document.querySelector('.p-box');
+    const modal  = document.getElementById('playerModal');
+    const iframe = document.querySelector('#playerVideo iframe');
+
+    // Try each candidate — stop at first success
+    for (const el of [pvideo, pbox, modal, iframe].filter(Boolean)) {
+      try { await _req(el); return; } catch (_) {}
+    }
+    // All failed → iOS CSS fallback
+    _manualEnter();
+  }
+
+  window.toggleFullscreen = toggleFullscreen;
+
+  /* ─────────────────────────────────────────────────────────────
+     STEP 4 — Fullscreen button
+  ───────────────────────────────────────────────────────────── */
+  function _injectBtn() {
+    document.querySelectorAll('#wt-max-btn').forEach(b => b.remove());
+    const pv = document.getElementById('playerVideo');
+    if (!pv || document.getElementById('fx-fs-btn')) return;
+
+    const btn = document.createElement('button');
+    btn.id = 'fx-fs-btn';
+    btn.title = 'Fullscreen (F)';
+    btn.setAttribute('aria-label', 'Toggle fullscreen');
+    btn.innerHTML = _icon(false);
+    btn.style.cssText = [
+      'position:absolute', 'bottom:12px', 'right:12px', 'z-index:50',
+      'width:40px', 'height:40px', 'border-radius:8px',
+      'background:rgba(0,0,0,.85)', 'border:1px solid rgba(255,255,255,.25)',
+      'color:#fff', 'cursor:pointer', 'display:flex',
+      'align-items:center', 'justify-content:center',
+      'backdrop-filter:blur(8px)', '-webkit-backdrop-filter:blur(8px)',
+    ].join(';');
+
+    btn.onmouseenter = () => btn.style.background = 'rgba(230,57,70,.9)';
+    btn.onmouseleave = () => btn.style.background = 'rgba(0,0,0,.85)';
+    btn.onclick = e => { e.stopPropagation(); toggleFullscreen(); };
+
+    pv.style.position = 'relative';
+    pv.appendChild(btn);
+  }
+
+  function _icon(on) {
+    return on
+      ? `<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M21 8V5a2 2 0 0 0-2-2h-3"/><path d="M3 16v3a2 2 0 0 0 2 2h3"/><path d="M16 21h3a2 2 0 0 0 2-2v-3"/></svg>`
+      : `<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>`;
+  }
+
+  function _updateBtn(on) {
+    const btn = document.getElementById('fx-fs-btn');
+    if (btn) btn.innerHTML = _icon(on);
+  }
+
+  ['fullscreenchange','webkitfullscreenchange','mozfullscreenchange','MSFullscreenChange']
+    .forEach(ev => document.addEventListener(ev, () => _updateBtn(_isNativeFS())));
+
+  /* ─────────────────────────────────────────────────────────────
+     STEP 5 — Neutralize CONFLICTING F-key in index.html
+     The inline script also handles F key but calls pv.requestFullscreen()
+     directly without any CSS fix. We intercept it at capture phase.
+  ───────────────────────────────────────────────────────────── */
+  document.addEventListener('keydown', function (e) {
+    const modal = document.getElementById('playerModal');
+    if (!modal?.classList.contains('active')) return;
+    if (e.target.matches('input, textarea, select')) return;
+
+    if (e.key.toLowerCase() === 'f') {
+      e.preventDefault();
+      e.stopImmediatePropagation(); // blocks the old handler
+      toggleFullscreen();
+    }
+    if (e.key === 'Escape' && _manualTarget) {
+      _manualExit();
+    }
+  }, true); // capture = true → runs before all bubble handlers
+
+  /* ─────────────────────────────────────────────────────────────
+     STEP 6 — Double-tap on video = fullscreen (mobile UX)
+  ───────────────────────────────────────────────────────────── */
+  let _lastTap = 0;
+  function _initDoubleTap() {
+    const pv = document.getElementById('playerVideo');
+    if (!pv) return;
+    pv.addEventListener('touchend', e => {
+      const now = Date.now();
+      if (now - _lastTap < 300) { e.preventDefault(); toggleFullscreen(); }
+      _lastTap = now;
+    }, { passive: false });
+  }
+
+  /* ─────────────────────────────────────────────────────────────
+     STEP 7 — Patch setServer & playById to re-fix iframes & button
+  ───────────────────────────────────────────────────────────── */
+  function _patchAll() {
+    // setServer
+    const origSS = window.setServer;
+    if (origSS && !origSS._fsFix2) {
+      window.setServer = function (...args) {
+        origSS(...args);
+        setTimeout(() => {
+          document.querySelectorAll('#playerVideo iframe').forEach(_fixIframe);
+          document.querySelectorAll('#wt-max-btn').forEach(b => b.remove());
+          if (!document.getElementById('fx-fs-btn')) _injectBtn();
+        }, 400);
+      };
+      window.setServer._fsFix2 = true;
+      window.loadServer = window.setServer;
     }
 
-    // Re-patch after other scripts finish loading
-    setTimeout(() => { _patchPlay(); }, 500);
-    setTimeout(() => { _patchPlay(); }, 2000);
+    // playById
+    const origPlay = window.playById;
+    if (origPlay && !origPlay._fsFix2) {
+      window.playById = async function (...args) {
+        await origPlay(...args);
+        setTimeout(() => {
+          document.querySelectorAll('#playerVideo iframe').forEach(_fixIframe);
+          document.querySelectorAll('#wt-max-btn').forEach(b => b.remove());
+          _injectBtn();
+        }, 400);
+        setTimeout(() => {
+          document.querySelectorAll('#playerVideo iframe').forEach(_fixIframe);
+        }, 1200);
+      };
+      window.playById._fsFix2 = true;
+      window.playContentById = window.playById;
+    }
+  }
 
-    // Also watch for player modal opening
+  /* ─────────────────────────────────────────────────────────────
+     BOOT
+  ───────────────────────────────────────────────────────────── */
+  function _boot() {
+    _injectCSS();
+    _initDoubleTap();
+    _patchAll();
+
+    // Watch modal open
     const modal = document.getElementById('playerModal');
     if (modal) {
       new MutationObserver(() => {
         if (modal.classList.contains('active')) {
-          setTimeout(_injectFSBtn, 300);
+          setTimeout(() => {
+            document.querySelectorAll('#wt-max-btn').forEach(b => b.remove());
+            _injectBtn();
+          }, 300);
         }
       }).observe(modal, { attributes: true, attributeFilter: ['class'] });
     }
 
-    console.log('%c✅ Flixora Fullscreen Fix v1.0 — native + CSS fallback active', 'color:#10b981;font-weight:bold');
-    console.log('%c  ✅ Sandbox fixed  ✅ F key  ✅ Double-tap  ✅ iOS fallback', 'color:#6ec6ff;font-size:.82em');
+    // Inject now if already open
+    if (modal?.classList.contains('active')) _injectBtn();
+
+    // Re-patch late-loading scripts
+    [500, 1500, 3000].forEach(ms => setTimeout(_patchAll, ms));
+
+    console.log('%c✅ Flixora Fullscreen Fix v2.0', 'color:#10b981;font-weight:bold;font-size:12px');
+    console.log('%c  ✅ :fullscreen CSS fixed  ✅ F-key conflict resolved  ✅ iOS fallback  ✅ Double-tap', 'color:#6ec6ff;font-size:.82em');
   }
 
   if (document.readyState === 'loading') {
