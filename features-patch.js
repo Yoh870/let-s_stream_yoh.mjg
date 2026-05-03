@@ -172,15 +172,7 @@
     #fx-float-ov{position:absolute;inset:0;pointer-events:none;z-index:15;overflow:hidden}
     .fx-fe{position:absolute;bottom:55px;font-size:2rem;pointer-events:none;
       animation:fxFloat var(--dur,2.8s) ease-out forwards;user-select:none;filter:drop-shadow(0 2px 6px rgba(0,0,0,.4))}
-    #fx-react-bar{position:absolute;bottom:46px;left:50%;transform:translateX(-50%);
-      display:flex;gap:5px;z-index:16;background:rgba(0,0,0,.7);backdrop-filter:blur(16px);
-      border:1px solid rgba(255,255,255,.1);border-radius:30px;padding:6px 11px;
-      opacity:0;transition:opacity .3s;pointer-events:auto}
-    #playerVideo:hover #fx-react-bar,
-    #fx-react-bar:hover{opacity:1}
-    .fx-rb{background:none;border:none;font-size:1.25rem;cursor:pointer;
-      transition:transform .15s;line-height:1;padding:2px;border-radius:4px}
-    .fx-rb:hover{transform:scale(1.4)}
+    /* reaction bar removed */
 
     /* ─── KEYFRAMES ─── */
     @keyframes fxFloat{
@@ -307,6 +299,12 @@
     const runtime = t === 'movie'
       ? (details.runtime ? `${Math.floor(details.runtime / 60)}h ${details.runtime % 60}m` : '')
       : (details.episode_run_time?.[0] ? `~${details.episode_run_time[0]}m/ep` : '');
+
+    // Expose runtime in minutes for the time-progress-bar
+    const _rtMins = t === 'movie'
+      ? (details.runtime || 0)
+      : (details.episode_run_time?.[0] || 0);
+    if (typeof window._fxSetRuntime === 'function') window._fxSetRuntime(_rtMins);
     const genres = (details.genres || []).slice(0, 3).map(g => g.name).join(', ');
     const score  = details.vote_average ? `★ ${parseFloat(details.vote_average).toFixed(1)}` : '';
     const year   = (details.release_date || details.first_air_date || '').slice(0, 4);
@@ -735,17 +733,10 @@
   const REACT_EMOJIS = ['❤️','🔥','😂','😮','👏','🎬','⭐','💯','😍','🤩','🥳','🫶'];
 
   function _injectFloatReactions() {
+    // Reaction bar removed — floating emoji overlay kept for remote reactions only
     const pv = document.getElementById('playerVideo');
     if (!pv || document.getElementById('fx-float-ov')) return;
-
     const ov = document.createElement('div'); ov.id = 'fx-float-ov'; pv.appendChild(ov);
-
-    const bar = document.createElement('div'); bar.id = 'fx-react-bar';
-    bar.setAttribute('aria-label', 'Send a reaction');
-    bar.innerHTML = REACT_EMOJIS.map(e =>
-      `<button class="fx-rb" onclick="FX.floatEmoji('${e}')" title="${e}">${e}</button>`
-    ).join('');
-    pv.appendChild(bar);
   }
 
   function floatEmoji(emoji, fromRemote) {
