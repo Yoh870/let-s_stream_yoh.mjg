@@ -1045,21 +1045,42 @@ button:focus:not(:focus-visible) { outline: none; }
   font-weight: 800;
   font-size: clamp(90px, 22vw, 260px);
   letter-spacing: -.02em;
-  color: var(--red);
   opacity: 0;
   transform: scale(.16) scaleY(1.04);
-  text-shadow: 0 0 6px rgba(230,57,70,.4);
-  animation: fxZoomPush 1.85s cubic-bezier(.55,0,.85,.35) forwards;
-  will-change: transform, filter, opacity;
+  background-image: repeating-linear-gradient(90deg,
+    #8a0f14 0%, #e63946 4%, #ff8a3b 8%, #ffdd6b 11%, #ff5561 15%,
+    #b3123f 19%, #ff3b8f 23%, #7b3bff 27%, #3b6cff 31%, #3bd0ff 35%,
+    #8a0f14 40%, #e63946 45%, #ff8a3b 49%, #ff5561 54%, #ffdd6b 58%,
+    #b3123f 63%, #ff3b8f 67%, #7b3bff 71%, #3b6cff 76%, #3bd0ff 80%,
+    #8a0f14 85%, #e63946 90%, #ff8a3b 95%, #ff5561 100%);
+  background-size: 60% 100%;
+  background-position: 0% 0%;
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+  -webkit-text-fill-color: transparent;
+  filter: brightness(1) blur(0px);
+  text-shadow: none;
+  animation: fxZoomPush 1.85s cubic-bezier(.55,0,.85,.35) forwards,
+             fxStripeShift 1.85s linear forwards;
+  will-change: transform, filter, opacity, background-position;
 }
 /* Slow small glowing letter that accelerates into a huge, blown-out
-   close-up — same push-in energy as the Netflix "N" boom. */
+   close-up — same push-in energy as the Netflix "N" boom, but the
+   strokes resolve into vertical color streaks as it zooms, like light
+   splitting through the letterform. */
 @keyframes fxZoomPush {
-  0%   { opacity: .85; transform: scale(.16) scaleY(1.04); filter: brightness(1) blur(0px); text-shadow: 0 0 6px rgba(230,57,70,.4); }
-  55%  { opacity: 1;   transform: scale(.6) scaleY(1.05);  filter: brightness(1.15) blur(0px); text-shadow: 0 0 30px rgba(230,57,70,.7); }
-  78%  { opacity: 1;   transform: scale(2.1) scaleY(1.06); filter: brightness(1.5) blur(.5px); text-shadow: 0 0 70px rgba(230,57,70,.9); }
-  92%  { opacity: 1;   transform: scale(6.5) scaleY(1.08); filter: brightness(2.2) blur(1px); text-shadow: 0 0 120px #fff; }
-  100% { opacity: 1;   transform: scale(15) scaleY(1.1);   filter: brightness(4) blur(2px); text-shadow: 0 0 160px #fff; }
+  0%   { opacity: .85; transform: scale(.16) scaleY(1.04); filter: brightness(1) blur(0px); }
+  55%  { opacity: 1;   transform: scale(.6) scaleY(1.05);  filter: brightness(1.1) blur(0px); }
+  78%  { opacity: 1;   transform: scale(2.1) scaleY(1.06); filter: brightness(1.35) blur(.5px); }
+  92%  { opacity: 1;   transform: scale(6.5) scaleY(1.08); filter: brightness(1.9) blur(1.5px); }
+  100% { opacity: 1;   transform: scale(15) scaleY(1.1);   filter: brightness(3.2) blur(3px); }
+}
+/* Streaks race sideways and compress as the zoom accelerates */
+@keyframes fxStripeShift {
+  0%   { background-size: 60% 100%;  background-position: 0% 0%; }
+  55%  { background-size: 45% 100%;  background-position: -40% 0%; }
+  78%  { background-size: 22% 100%;  background-position: -140% 0%; }
+  92%  { background-size: 10% 100%;  background-position: -320% 0%; }
+  100% { background-size: 4% 100%;   background-position: -700% 0%; }
 }
 /* Screen-wide flash that peaks right as the letter blows out full-frame */
 .fx-intro-glow {
