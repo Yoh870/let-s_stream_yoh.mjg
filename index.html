@@ -1025,23 +1025,19 @@ button:focus:not(:focus-visible) { outline: none; }
   overflow: hidden;
 }
 #fxIntro.fx-out {
-  animation: fxIntroOut .6s ease forwards;
+  animation: fxIntroOut .35s ease forwards;
   pointer-events: none;
 }
 @keyframes fxIntroOut {
   0%   { opacity: 1; }
   100% { opacity: 0; }
 }
-#fxIntro { perspective: 900px; }
+#fxIntro {
+  background: #000;
+}
 .fx-intro-stage {
   position: relative;
   display: inline-block;
-  animation: fxStageTilt 1.9s cubic-bezier(.22,.68,.16,1) forwards;
-}
-@keyframes fxStageTilt {
-  0%   { transform: rotateY(-22deg) scale(.7); }
-  55%  { transform: rotateY(-22deg) scale(.7); }
-  100% { transform: rotateY(0deg) scale(1); }
 }
 .fx-intro-m {
   position: relative;
@@ -1049,54 +1045,38 @@ button:focus:not(:focus-visible) { outline: none; }
   font-weight: 800;
   font-size: clamp(90px, 22vw, 260px);
   letter-spacing: -.02em;
-  color: #3a0d10;
+  color: var(--red);
   opacity: 0;
-  text-shadow: 0 0 2px rgba(230,57,70,.2);
-  animation: fxLetterFlicker 1.9s steps(1,end) forwards;
+  transform: scale(.16) scaleY(1.04);
+  text-shadow: 0 0 6px rgba(230,57,70,.4);
+  animation: fxZoomPush 1.85s cubic-bezier(.55,0,.85,.35) forwards;
+  will-change: transform, filter, opacity;
 }
-/* Flicker in like uneven neon power-up, then settle to full red glow */
-@keyframes fxLetterFlicker {
-  0%   { opacity: 0; color: #1a0608; text-shadow: none; }
-  6%   { opacity: 1; color: #4a1013; text-shadow: 0 0 6px rgba(230,57,70,.25); }
-  11%  { opacity: .2; color: #1a0608; text-shadow: none; }
-  16%  { opacity: 1; color: #6e181c; text-shadow: 0 0 10px rgba(230,57,70,.35); }
-  22%  { opacity: .35; color: #3a0d10; text-shadow: 0 0 4px rgba(230,57,70,.2); }
-  30%  { opacity: 1; color: #9a2229; text-shadow: 0 0 18px rgba(230,57,70,.45); }
-  40%  { opacity: 1; color: #c22c34; text-shadow: 0 0 28px rgba(230,57,70,.55); }
-  55%  { opacity: 1; color: var(--red2); text-shadow: 0 0 45px rgba(230,57,70,.75), 0 0 100px rgba(230,57,70,.4); }
-  100% { opacity: 1; color: var(--red); text-shadow: 0 0 55px rgba(230,57,70,.8), 0 0 120px rgba(230,57,70,.45); }
+/* Slow small glowing letter that accelerates into a huge, blown-out
+   close-up — same push-in energy as the Netflix "N" boom. */
+@keyframes fxZoomPush {
+  0%   { opacity: .85; transform: scale(.16) scaleY(1.04); filter: brightness(1) blur(0px); text-shadow: 0 0 6px rgba(230,57,70,.4); }
+  55%  { opacity: 1;   transform: scale(.6) scaleY(1.05);  filter: brightness(1.15) blur(0px); text-shadow: 0 0 30px rgba(230,57,70,.7); }
+  78%  { opacity: 1;   transform: scale(2.1) scaleY(1.06); filter: brightness(1.5) blur(.5px); text-shadow: 0 0 70px rgba(230,57,70,.9); }
+  92%  { opacity: 1;   transform: scale(6.5) scaleY(1.08); filter: brightness(2.2) blur(1px); text-shadow: 0 0 120px #fff; }
+  100% { opacity: 1;   transform: scale(15) scaleY(1.1);   filter: brightness(4) blur(2px); text-shadow: 0 0 160px #fff; }
 }
-/* Diagonal light sweep across the letter, like a shine pass */
-.fx-intro-sweep {
-  position: absolute; inset: -20% -60%;
-  background: linear-gradient(75deg, transparent 40%, rgba(255,255,255,.55) 50%, transparent 60%);
-  mix-blend-mode: screen;
-  transform: translateX(-140%);
-  animation: fxSweep 1.9s cubic-bezier(.22,.68,.16,1) forwards;
-  animation-delay: .55s;
-  pointer-events: none;
-}
-@keyframes fxSweep {
-  0%   { transform: translateX(-140%); opacity: 0; }
-  8%   { opacity: 1; }
-  35%  { transform: translateX(140%); opacity: 1; }
-  40%  { opacity: 0; }
-  100% { transform: translateX(140%); opacity: 0; }
-}
+/* Screen-wide flash that peaks right as the letter blows out full-frame */
 .fx-intro-glow {
   position: absolute; inset: 0;
-  background: radial-gradient(circle at center, rgba(230,57,70,.28), transparent 62%);
+  background: radial-gradient(circle at center, rgba(230,57,70,.35), transparent 60%);
   opacity: 0;
-  animation: fxGlowPulse 1.9s ease forwards;
+  animation: fxFlash 1.85s cubic-bezier(.55,0,.85,.35) forwards;
 }
-@keyframes fxGlowPulse {
-  0%   { opacity: 0; }
-  30%  { opacity: .15; }
-  55%  { opacity: .6; }
-  100% { opacity: .35; }
+@keyframes fxFlash {
+  0%   { opacity: 0; background: radial-gradient(circle at center, rgba(230,57,70,.2), transparent 60%); }
+  60%  { opacity: .5; background: radial-gradient(circle at center, rgba(230,57,70,.5), transparent 65%); }
+  85%  { opacity: .85; background: radial-gradient(circle at center, rgba(230,57,70,.85), rgba(230,57,70,.2) 70%); }
+  96%  { opacity: 1; background: #fff; }
+  100% { opacity: 1; background: #fff; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .fx-intro-m, .fx-intro-glow, .fx-intro-stage, .fx-intro-sweep { animation: none; opacity: 1; transform: none; color: var(--red); }
+  .fx-intro-m, .fx-intro-glow, .fx-intro-stage { animation: none; opacity: 1; transform: none; color: var(--red); }
 }
 </style>
 </head>
@@ -1109,7 +1089,6 @@ button:focus:not(:focus-visible) { outline: none; }
   <div class="fx-intro-glow"></div>
   <div class="fx-intro-stage">
     <div class="fx-intro-m">M</div>
-    <div class="fx-intro-sweep"></div>
   </div>
 </div>
 
@@ -2099,27 +2078,41 @@ if ('serviceWorker' in navigator) {
   });
 }
 
-/* ── Intro Splash: "dum dum" boom + letter M ── */
+/* ── Intro Splash: rising swell + "dum DUM" boom synced to the zoom-push ── */
 function _fxPlayBoom() {
   try {
     const Ctx = window.AudioContext || window.webkitAudioContext;
     const ctx = new Ctx();
+    const now = ctx.currentTime;
+
+    // Low rising drone that swells as the letter zooms toward the screen
+    const swell = ctx.createOscillator();
+    const swellGain = ctx.createGain();
+    swell.type = 'sine';
+    swell.frequency.setValueAtTime(55, now);
+    swell.frequency.exponentialRampToValueAtTime(70, now + 1.55);
+    swellGain.gain.setValueAtTime(0.0001, now);
+    swellGain.gain.exponentialRampToValueAtTime(0.22, now + 1.5);
+    swellGain.gain.exponentialRampToValueAtTime(0.0001, now + 1.75);
+    swell.connect(swellGain).connect(ctx.destination);
+    swell.start(now);
+    swell.stop(now + 1.8);
+
     const playHit = (time, freq, vol) => {
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
       osc.type = 'sine';
       osc.frequency.setValueAtTime(freq, time);
-      osc.frequency.exponentialRampToValueAtTime(freq * 0.4, time + 0.35);
+      osc.frequency.exponentialRampToValueAtTime(freq * 0.35, time + 0.4);
       gain.gain.setValueAtTime(0, time);
-      gain.gain.linearRampToValueAtTime(vol, time + 0.02);
-      gain.gain.exponentialRampToValueAtTime(0.001, time + 0.45);
+      gain.gain.linearRampToValueAtTime(vol, time + 0.015);
+      gain.gain.exponentialRampToValueAtTime(0.001, time + 0.55);
       osc.connect(gain).connect(ctx.destination);
       osc.start(time);
-      osc.stop(time + 0.5);
+      osc.stop(time + 0.6);
     };
-    const now = ctx.currentTime;
-    playHit(now + 0.30, 95, 0.5);    // dum (small flicker-in)
-    playHit(now + 0.95, 85, 0.65);   // DUM (letter fully lands + sweep)
+    playHit(now + 0.10, 90, 0.4);    // dum — small letter appears
+    playHit(now + 1.62, 80, 0.75);   // DUM — hits right as it blows out full-screen white
   } catch (e) { /* audio blocked, fail silently */ }
 }
 function _fxRunIntro() {
@@ -2132,8 +2125,8 @@ function _fxRunIntro() {
   setTimeout(() => {
     el.classList.add('fx-out');
     document.body.style.overflow = '';
-    setTimeout(() => el.remove(), 700);
-  }, 2200);
+    setTimeout(() => el.remove(), 400);
+  }, 1950);
 }
 // Some browsers block audio until first user gesture; try immediately,
 // and also retry on first interaction if it was blocked.
