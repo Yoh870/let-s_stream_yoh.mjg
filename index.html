@@ -1111,6 +1111,7 @@ button:focus:not(:focus-visible) { outline: none; }
   <div class="fx-intro-stage">
     <div class="fx-intro-m">M</div>
   </div>
+  <audio id="fxIntroAudio" src="intro-sound.mp3" preload="auto"></audio>
 </div>
 
 <div id="sbOv"></div>
@@ -2099,41 +2100,35 @@ if ('serviceWorker' in navigator) {
   });
 }
 
-/* ── Intro Splash: rising swell + "dum DUM" boom synced to the zoom-push ── */
+/* ── Intro Splash: real intro-sound.mp3, synced to the zoom-push, faded out at the end ── */
 function _fxPlayBoom() {
+  const audio = document.getElementById('fxIntroAudio');
+  if (!audio) return;
   try {
-    const Ctx = window.AudioContext || window.webkitAudioContext;
-    const ctx = new Ctx();
-    const now = ctx.currentTime;
+    audio.currentTime = 0;
+    audio.volume = 1;
+    const p = audio.play();
+    if (p && p.catch) p.catch(() => { /* autoplay blocked, will retry on first gesture */ });
 
-    // Low rising drone that swells as the letter zooms toward the screen
-    const swell = ctx.createOscillator();
-    const swellGain = ctx.createGain();
-    swell.type = 'sine';
-    swell.frequency.setValueAtTime(55, now);
-    swell.frequency.exponentialRampToValueAtTime(70, now + 1.55);
-    swellGain.gain.setValueAtTime(0.0001, now);
-    swellGain.gain.exponentialRampToValueAtTime(0.22, now + 1.5);
-    swellGain.gain.exponentialRampToValueAtTime(0.0001, now + 1.75);
-    swell.connect(swellGain).connect(ctx.destination);
-    swell.start(now);
-    swell.stop(now + 1.8);
-
-    const playHit = (time, freq, vol) => {
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(freq, time);
-      osc.frequency.exponentialRampToValueAtTime(freq * 0.35, time + 0.4);
-      gain.gain.setValueAtTime(0, time);
-      gain.gain.linearRampToValueAtTime(vol, time + 0.015);
-      gain.gain.exponentialRampToValueAtTime(0.001, time + 0.55);
-      osc.connect(gain).connect(ctx.destination);
-      osc.start(time);
-      osc.stop(time + 0.6);
-    };
-    playHit(now + 0.10, 90, 0.4);    // dum — small letter appears
-    playHit(now + 1.62, 80, 0.75);   // DUM — hits right as it blows out full-screen white
+    // Fade the track out over the last ~250ms of the intro so it doesn't
+    // just cut off mid-note, then pause it (it's a 2+ min track; we only
+    // ever want the opening hit that syncs with the zoom).
+    const fadeStart = 1700; // ms into the intro
+    const fadeDuration = 250;
+    const fadeStep = 25;
+    let elapsed = 0;
+    setTimeout(() => {
+      const fadeTimer = setInterval(() => {
+        elapsed += fadeStep;
+        const t = Math.min(elapsed / fadeDuration, 1);
+        audio.volume = Math.max(0, 1 - t);
+        if (t >= 1) {
+          clearInterval(fadeTimer);
+          audio.pause();
+          audio.currentTime = 0;
+        }
+      }, fadeStep);
+    }, fadeStart);
   } catch (e) { /* audio blocked, fail silently */ }
 }
 function _fxRunIntro() {
@@ -2155,8 +2150,11 @@ document.addEventListener('DOMContentLoaded', _fxRunIntro, { once: true });
 ['click','keydown','touchstart'].forEach(evt => {
   window.addEventListener(evt, () => {
     const el = document.getElementById('fxIntro');
-    if (el && !el.classList.contains('fx-out') && !sessionStorage.getItem('fx_intro_sound_done')) {
+    const audio = document.getElementById('fxIntroAudio');
+    if (el && !el.classList.contains('fx-out') && audio && audio.paused && !sessionStorage.getItem('fx_intro_sound_done')) {
       sessionStorage.setItem('fx_intro_sound_done', '1');
+      audio.volume = 1;
+      audio.play().catch(() => {});
     }
   }, { once: true });
 });
