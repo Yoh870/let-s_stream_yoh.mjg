@@ -2134,7 +2134,8 @@ function _fxPlayBoom() {
 function _fxRunIntro() {
   const el = document.getElementById('fxIntro');
   if (!el) return;
-  if (sessionStorage.getItem('fx_intro_played')) { el.remove(); return; }
+  const forceIntro = new URLSearchParams(location.search).get('intro') === 'force';
+  if (!forceIntro && sessionStorage.getItem('fx_intro_played')) { el.remove(); return; }
   sessionStorage.setItem('fx_intro_played', '1');
   document.body.style.overflow = 'hidden';
   _fxPlayBoom();
