@@ -1548,8 +1548,13 @@ button:focus:not(:focus-visible) { outline: none; }
       <div class="amt" data-a="500">₱500</div>
     </div>
     <div class="sp-cta">
-      <a href="https://ko-fi.com" target="_blank" rel="noopener noreferrer">☕ Support on Ko-fi</a>
-      <button onclick="closeSupport()">Maybe later</button>
+        <a href="https://ko-fi.com/mariogangan" target="_blank" rel="noopener noreferrer">☕ Support on Ko-fi</a>
+        <button onclick="document.getElementById('gcashQrBox').style.display = document.getElementById('gcashQrBox').style.display === 'block' ? 'none' : 'block'" style="background:rgba(0,102,255,.12);border:1px solid rgba(0,102,255,.25);color:#4d94ff">📱 Pay via GCash</button>
+        <div id="gcashQrBox" style="display:none;margin-top:14px;text-align:center;padding-top:14px;border-top:1px solid var(--bd)">
+          <img src="gcash-qr.png" alt="GCash QR Code" style="width:100%;max-width:220px;border-radius:12px;margin-bottom:10px">
+          <p style="font-size:.78rem;color:var(--tx2);line-height:1.6">Scan this QR code using your GCash app to send a tip directly. Thank you! 🙏</p>
+        </div>
+        <button onclick="closeSupport()" style="margin-top:10px">Maybe later</button>
     </div>
   </div>
 </div>
