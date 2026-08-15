@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Flixora Admin</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  :root {
+    --bg: #080810; --bg2: #0e0e18; --bg3: #141421; --bg4: #1c1c2e;
+    --tx: #f2f2fc; --tx2: #9494b8; --tx3: #4e4e70;
+    --red: #e63946; --red2: #ff5561;
+    --green: #10b981; --gold: #f5c518;
+    --bd: rgba(255,255,255,.08);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--tx);
+    min-height: 100vh;
+  }
+  h1, h2, .brand { font-family: 'Syne', sans-serif; }
+
+  #loginScreen {
+    min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px;
+  }
+  .login-box {
+    background: var(--bg3); border: 1px solid var(--bd); border-radius: 18px;
+    padding: 36px 32px; max-width: 380px; width: 100%;
+  }
+  .login-box .brand { font-size: 1.3rem; font-weight: 800; margin-bottom: 4px; }
+  .login-box p { color: var(--tx2); font-size: .85rem; margin-bottom: 24px; }
+  .field { margin-bottom: 14px; }
+  .field label { display: block; font-size: .72rem; font-weight: 700; color: var(--tx3); text-transform: uppercase; letter-spacing: .08em; margin-bottom: 6px; }
+  .field input {
+    width: 100%; padding: 11px 14px; border-radius: 10px; background: var(--bg4);
+    border: 1px solid var(--bd); color: var(--tx); font-size: .9rem; font-family: inherit;
+  }
+  .field input:focus { border-color: var(--red); outline: none; }
+  .btn {
+    width: 100%; padding: 12px; border-radius: 10px; border: none;
+    background: var(--red); color: #fff; font-weight: 700; font-size: .9rem;
+    cursor: pointer; font-family: inherit; transition: background .15s;
+  }
+  .btn:hover { background: var(--red2); }
+  #loginError { color: var(--red2); font-size: .8rem; margin-top: 10px; min-height: 18px; }
+
+  #dashboard { display: none; }
+  header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 16px 24px; border-bottom: 1px solid var(--bd); background: var(--bg2);
+  }
+  header .brand { font-size: 1.1rem; font-weight: 800; }
+  #logoutBtn {
+    padding: 8px 16px; border-radius: 8px; background: var(--bg4); border: 1px solid var(--bd);
+    color: var(--tx2); font-size: .8rem; cursor: pointer; font-family: inherit;
+  }
+  #logoutBtn:hover { color: var(--tx); }
+
+  main { max-width: 1100px; margin: 0 auto; padding: 24px; display: flex; flex-direction: column; gap: 24px; }
+
+  .card {
+    background: var(--bg3); border: 1px solid var(--bd); border-radius: 16px; padding: 20px 22px;
+  }
+  .card h2 { font-size: 1rem; margin-bottom: 14px; }
+
+  .stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px,1fr)); gap: 12px; }
+  .stat { background: var(--bg4); border-radius: 12px; padding: 14px; }
+  .stat .num { font-size: 1.6rem; font-weight: 800; font-family: 'Syne', sans-serif; }
+  .stat .lbl { font-size: .7rem; color: var(--tx2); margin-top: 2px; }
+
+  .maint-row { display: flex; align-items: center; gap: 14px; margin-bottom: 14px; flex-wrap: wrap; }
+  .switch { position: relative; width: 46px; height: 26px; flex-shrink: 0; }
+  .switch input { opacity: 0; width: 0; height: 0; }
+  .slider { position: absolute; inset: 0; background: var(--bg4); border: 1px solid var(--bd); border-radius: 30px; cursor: pointer; transition: .2s; }
+  .slider::before { content:''; position: absolute; width: 18px; height: 18px; left: 3px; top: 3px; background: var(--tx2); border-radius: 50%; transition: .2s; }
+  input:checked + .slider { background: var(--red); border-color: transparent; }
+  input:checked + .slider::before { transform: translateX(20px); background: #fff; }
+  .maint-status { font-size: .85rem; font-weight: 700; }
+  .maint-status.on { color: var(--gold); }
+  .maint-status.off { color: var(--green); }
+  textarea#maintMsg {
+    width: 100%; padding: 10px 12px; border-radius: 10px; background: var(--bg4);
+    border: 1px solid var(--bd); color: var(--tx); font-size: .85rem; font-family: inherit;
+    resize: vertical; min-height: 60px; margin-bottom: 10px;
+  }
+  .saveBtn {
+    padding: 9px 18px; border-radius: 8px; background: var(--red); color: #fff;
+    border: none; font-weight: 700; font-size: .82rem; cursor: pointer; font-family: inherit;
+  }
+  .saveBtn:hover { background: var(--red2); }
+  #maintSaveMsg { font-size: .78rem; color: var(--green); margin-left: 10px; }
+
+  table { width: 100%; border-collapse: collapse; font-size: .8rem; }
+  th { text-align: left; padding: 8px 10px; color: var(--tx3); font-weight: 700; text-transform: uppercase; font-size: .66rem; letter-spacing: .06em; border-bottom: 1px solid var(--bd); }
+  td { padding: 9px 10px; border-bottom: 1px solid var(--bd); color: var(--tx2); vertical-align: top; }
+  tr:last-child td { border-bottom: none; }
+  .mono { font-family: monospace; font-size: .74rem; color: var(--tx3); }
+  .table-wrap { overflow-x: auto; }
+
+  .pill { display: inline-block; padding: 2px 9px; border-radius: 20px; font-size: .68rem; font-weight: 700; }
+  .pill.block { background: rgba(230,57,70,.15); color: var(--red2); border: 1px solid rgba(230,57,70,.25); }
+
+  .row-btn {
+    padding: 5px 12px; border-radius: 6px; border: none; font-size: .72rem; font-weight: 700;
+    cursor: pointer; font-family: inherit;
+  }
+  .row-btn.block { background: rgba(230,57,70,.15); color: var(--red2); }
+  .row-btn.block:hover { background: rgba(230,57,70,.28); }
+  .row-btn.unblock { background: rgba(16,185,129,.15); color: var(--green); }
+  .row-btn.unblock:hover { background: rgba(16,185,129,.28); }
+
+  .empty { color: var(--tx3); font-size: .82rem; padding: 20px; text-align: center; }
+  #refreshBtn {
+    padding: 6px 14px; border-radius: 8px; background: var(--bg4); border: 1px solid var(--bd);
+    color: var(--tx2); font-size: .76rem; cursor: pointer; font-family: inherit;
+  }
+  .card-hd { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+  .card-hd h2 { margin-bottom: 0; }
+</style>
+</head>
+<body>
+
+<div id="loginScreen">
+  <div class="login-box">
+    <div class="brand">🎬 Flixora Admin</div>
+    <p>Sign in to manage visitors and site status.</p>
+    <div class="field">
+      <label>Email</label>
+      <input type="email" id="loginEmail" autocomplete="username">
+    </div>
+    <div class="field">
+      <label>Password</label>
+      <input type="password" id="loginPass" autocomplete="current-password">
+    </div>
+    <button class="btn" id="loginBtn">Sign In</button>
+    <div id="loginError"></div>
+  </div>
+</div>
+
+<div id="dashboard">
+  <header>
+    <div class="brand">🎬 Flixora Admin</div>
+    <button id="logoutBtn">Sign Out</button>
+  </header>
+
+  <main>
+    <div class="card">
+      <h2>Overview</h2>
+      <div class="stats-row" id="statsRow">
+        <div class="stat"><div class="num" id="statTotal">—</div><div class="lbl">Total Visits</div></div>
+        <div class="stat"><div class="num" id="statUnique">—</div><div class="lbl">Unique Visitors</div></div>
+        <div class="stat"><div class="num" id="statToday">—</div><div class="lbl">Visits Today</div></div>
+        <div class="stat"><div class="num" id="statBlocked">—</div><div class="lbl">Blocked</div></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Maintenance Mode</h2>
+      <div class="maint-row">
+        <label class="switch">
+          <input type="checkbox" id="maintToggle">
+          <span class="slider"></span>
+        </label>
+        <span id="maintStatusLabel" class="maint-status off">OFF — Site is live</span>
+      </div>
+      <label style="font-size:.72rem;color:var(--tx3);text-transform:uppercase;letter-spacing:.06em;display:block;margin-bottom:6px">Message shown to visitors</label>
+      <textarea id="maintMsg" placeholder="Flixora is under maintenance. Please check back soon!"></textarea>
+      <button class="saveBtn" id="maintSaveBtn">Save Changes</button>
+      <span id="maintSaveMsg"></span>
+    </div>
+
+    <div class="card">
+      <div class="card-hd">
+        <h2>Recent Visitors</h2>
+        <button id="refreshBtn">↻ Refresh</button>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>Time</th><th>Location</th><th>Browser</th><th>Fingerprint</th><th>Action</th></tr>
+          </thead>
+          <tbody id="visitorRows"></tbody>
+        </table>
+      </div>
+      <div id="visitorEmpty" class="empty" style="display:none">No visitor logs yet.</div>
+    </div>
+
+    <div class="card">
+      <h2>Blocked Visitors</h2>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>Fingerprint</th><th>Reason</th><th>Blocked At</th><th>Action</th></tr>
+          </thead>
+          <tbody id="blockedRows"></tbody>
+        </table>
+      </div>
+      <div id="blockedEmpty" class="empty" style="display:none">No blocked visitors.</div>
+    </div>
+  </main>
+</div>
+
+<script>
+const SUPABASE_URL = 'https://xzksgjhdxaxwxnomifac.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh6a3NnamhkeGF4d3hub21pZmFjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY3MzAyMjksImV4cCI6MjEwMjMwNjIyOX0.K_BQ2EK5LVrjHDNdRzPoS9QF-WBRA15MKIOw3L53vbY';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+const loginScreen = document.getElementById('loginScreen');
+const dashboard = document.getElementById('dashboard');
+
+document.getElementById('loginBtn').addEventListener('click', async () => {
+  const email = document.getElementById('loginEmail').value.trim();
+  const pass = document.getElementById('loginPass').value;
+  const errEl = document.getElementById('loginError');
+  errEl.textContent = '';
+  if (!email || !pass) { errEl.textContent = 'Enter email and password.'; return; }
+
+  const { error } = await sb.auth.signInWithPassword({ email, password: pass });
+  if (error) { errEl.textContent = 'Login failed: ' + error.message; return; }
+  await enterDashboard();
+});
+
+['loginEmail','loginPass'].forEach(id => {
+  document.getElementById(id).addEventListener('keydown', e => {
+    if (e.key === 'Enter') document.getElementById('loginBtn').click();
+  });
+});
+
+document.getElementById('logoutBtn').addEventListener('click', async () => {
+  await sb.auth.signOut();
+  location.reload();
+});
+
+async function checkSession() {
+  const { data: { session } } = await sb.auth.getSession();
+  if (session) await enterDashboard();
+}
+
+async function enterDashboard() {
+  loginScreen.style.display = 'none';
+  dashboard.style.display = 'block';
+  await Promise.all([loadStats(), loadMaintenance(), loadVisitors(), loadBlocked()]);
+}
+
+async function loadStats() {
+  const { data: logs } = await sb.from('visitor_logs').select('fingerprint, visited_at');
+  const { data: blocked } = await sb.from('blocked_visitors').select('id');
+
+  const total = logs?.length || 0;
+  const unique = new Set((logs || []).map(l => l.fingerprint)).size;
+  const todayStr = new Date().toDateString();
+  const today = (logs || []).filter(l => new Date(l.visited_at).toDateString() === todayStr).length;
+
+  document.getElementById('statTotal').textContent = total;
+  document.getElementById('statUnique').textContent = unique;
+  document.getElementById('statToday').textContent = today;
+  document.getElementById('statBlocked').textContent = blocked?.length || 0;
+}
+
+async function loadMaintenance() {
+  const { data } = await sb.from('site_settings').select('*').eq('id', 1).single();
+  if (!data) return;
+  document.getElementById('maintToggle').checked = !!data.maintenance_mode;
+  document.getElementById('maintMsg').value = data.maintenance_message || '';
+  _updateMaintLabel(data.maintenance_mode);
+}
+
+function _updateMaintLabel(on) {
+  const lbl = document.getElementById('maintStatusLabel');
+  lbl.textContent = on ? 'ON — Visitors are blocked' : 'OFF — Site is live';
+  lbl.className = 'maint-status ' + (on ? 'on' : 'off');
+}
+
+document.getElementById('maintToggle').addEventListener('change', e => {
+  _updateMaintLabel(e.target.checked);
+});
+
+document.getElementById('maintSaveBtn').addEventListener('click', async () => {
+  const on = document.getElementById('maintToggle').checked;
+  const msg = document.getElementById('maintMsg').value.trim();
+  const { error } = await sb.from('site_settings')
+    .update({ maintenance_mode: on, maintenance_message: msg || 'Flixora is under maintenance. Please check back soon!' })
+    .eq('id', 1);
+  const el = document.getElementById('maintSaveMsg');
+  el.textContent = error ? 'Failed to save.' : 'Saved!';
+  el.style.color = error ? '#ff5561' : '#10b981';
+  setTimeout(() => el.textContent = '', 2500);
+});
+
+function _parseBrowser(ua) {
+  if (!ua) return 'Unknown';
+  let browser = 'Other';
+  if (ua.includes('Edg/')) browser = 'Edge';
+  else if (ua.includes('Chrome/') && !ua.includes('Chromium')) browser = 'Chrome';
+  else if (ua.includes('Firefox/')) browser = 'Firefox';
+  else if (ua.includes('Safari/') && !ua.includes('Chrome')) browser = 'Safari';
+  else if (ua.includes('OPR/') || ua.includes('Opera')) browser = 'Opera';
+  else if (ua.includes('Brave')) browser = 'Brave';
+
+  let os = 'Unknown OS';
+  if (ua.includes('Windows')) os = 'Windows';
+  else if (ua.includes('Mac OS')) os = 'macOS';
+  else if (ua.includes('Android')) os = 'Android';
+  else if (ua.includes('iPhone') || ua.includes('iPad')) os = 'iOS';
+  else if (ua.includes('Linux')) os = 'Linux';
+
+  return `${browser} · ${os}`;
+}
+
+async function loadVisitors() {
+  const { data } = await sb.from('visitor_logs').select('*').order('visited_at', { ascending: false }).limit(50);
+  const tbody = document.getElementById('visitorRows');
+  const empty = document.getElementById('visitorEmpty');
+
+  if (!data || !data.length) {
+    tbody.innerHTML = '';
+    empty.style.display = 'block';
+    return;
+  }
+  empty.style.display = 'none';
+
+  const { data: blockedList } = await sb.from('blocked_visitors').select('fingerprint');
+  const blockedSet = new Set((blockedList || []).map(b => b.fingerprint));
+
+  tbody.innerHTML = data.map(v => {
+    const time = new Date(v.visited_at).toLocaleString();
+    const loc = [v.city, v.country].filter(Boolean).join(', ') || '—';
+    const isBlocked = blockedSet.has(v.fingerprint);
+    return `<tr>
+      <td>${time}</td>
+      <td>${loc}</td>
+      <td>${_parseBrowser(v.user_agent)}</td>
+      <td class="mono">${v.fingerprint.slice(0, 18)}…</td>
+      <td>${isBlocked
+        ? `<span class="pill block">Blocked</span>`
+        : `<button class="row-btn block" onclick="blockVisitor('${v.fingerprint}')">Block</button>`}
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+window.blockVisitor = async function (fp) {
+  const reason = prompt('Reason for blocking (optional):') || 'No reason given';
+  const { error } = await sb.from('blocked_visitors').insert({ fingerprint: fp, reason });
+  if (error) { alert('Failed to block: ' + error.message); return; }
+  await Promise.all([loadVisitors(), loadBlocked(), loadStats()]);
+};
+
+async function loadBlocked() {
+  const { data } = await sb.from('blocked_visitors').select('*').order('blocked_at', { ascending: false });
+  const tbody = document.getElementById('blockedRows');
+  const empty = document.getElementById('blockedEmpty');
+
+  if (!data || !data.length) {
+    tbody.innerHTML = '';
+    empty.style.display = 'block';
+    return;
+  }
+  empty.style.display = 'none';
+
+  tbody.innerHTML = data.map(b => `
+    <tr>
+      <td class="mono">${b.fingerprint.slice(0, 22)}…</td>
+      <td>${b.reason || '—'}</td>
+      <td>${new Date(b.blocked_at).toLocaleString()}</td>
+      <td><button class="row-btn unblock" onclick="unblockVisitor('${b.id}')">Unblock</button></td>
+    </tr>`).join('');
+}
+
+window.unblockVisitor = async function (id) {
+  const { error } = await sb.from('blocked_visitors').delete().eq('id', id);
+  if (error) { alert('Failed to unblock: ' + error.message); return; }
+  await Promise.all([loadVisitors(), loadBlocked(), loadStats()]);
+};
+
+document.getElementById('refreshBtn').addEventListener('click', () => {
+  loadStats(); loadVisitors(); loadBlocked();
+});
+
+checkSession();
+</script>
+</body>
+</html>
