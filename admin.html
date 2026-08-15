@@ -158,6 +158,26 @@
     </div>
 
     <div class="card">
+      <h2>Support Goal</h2>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:14px">
+        <div>
+          <label style="font-size:.72rem;color:var(--tx3);text-transform:uppercase;letter-spacing:.06em;display:block;margin-bottom:6px">Goal Label</label>
+          <input type="text" id="goalLabel" placeholder="This Month's Goal" style="width:100%;padding:9px 12px;border-radius:8px;background:var(--bg4);border:1px solid var(--bd);color:var(--tx);font-size:.85rem;font-family:inherit">
+        </div>
+        <div>
+          <label style="font-size:.72rem;color:var(--tx3);text-transform:uppercase;letter-spacing:.06em;display:block;margin-bottom:6px">Goal Amount (₱)</label>
+          <input type="number" id="goalAmount" placeholder="5000" style="width:100%;padding:9px 12px;border-radius:8px;background:var(--bg4);border:1px solid var(--bd);color:var(--tx);font-size:.85rem;font-family:inherit">
+        </div>
+        <div>
+          <label style="font-size:.72rem;color:var(--tx3);text-transform:uppercase;letter-spacing:.06em;display:block;margin-bottom:6px">Current Amount (₱)</label>
+          <input type="number" id="currentAmount" placeholder="0" style="width:100%;padding:9px 12px;border-radius:8px;background:var(--bg4);border:1px solid var(--bd);color:var(--tx);font-size:.85rem;font-family:inherit">
+        </div>
+      </div>
+      <button class="saveBtn" id="goalSaveBtn">Save Goal</button>
+      <span id="goalSaveMsg"></span>
+    </div>
+
+    <div class="card">
       <h2>Maintenance Mode</h2>
       <div class="maint-row">
         <label class="switch">
@@ -242,8 +262,29 @@ async function checkSession() {
 async function enterDashboard() {
   loginScreen.style.display = 'none';
   dashboard.style.display = 'block';
-  await Promise.all([loadStats(), loadMaintenance(), loadVisitors(), loadBlocked()]);
+  await Promise.all([loadStats(), loadMaintenance(), loadVisitors(), loadBlocked(), loadGoal()]);
 }
+
+async function loadGoal() {
+  const { data } = await sb.from('site_settings').select('goal_label, goal_amount, current_amount').eq('id', 1).single();
+  if (!data) return;
+  document.getElementById('goalLabel').value = data.goal_label || "This Month's Goal";
+  document.getElementById('goalAmount').value = data.goal_amount ?? 5000;
+  document.getElementById('currentAmount').value = data.current_amount ?? 0;
+}
+
+document.getElementById('goalSaveBtn').addEventListener('click', async () => {
+  const goal_label = document.getElementById('goalLabel').value.trim() || "This Month's Goal";
+  const goal_amount = parseFloat(document.getElementById('goalAmount').value) || 0;
+  const current_amount = parseFloat(document.getElementById('currentAmount').value) || 0;
+  const { error } = await sb.from('site_settings')
+    .update({ goal_label, goal_amount, current_amount })
+    .eq('id', 1);
+  const el = document.getElementById('goalSaveMsg');
+  el.textContent = error ? 'Failed to save.' : 'Saved!';
+  el.style.color = error ? '#ff5561' : '#10b981';
+  setTimeout(() => el.textContent = '', 2500);
+});
 
 async function loadStats() {
   const { data: logs } = await sb.from('visitor_logs').select('fingerprint, visited_at');
