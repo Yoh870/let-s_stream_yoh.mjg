@@ -175,7 +175,17 @@
 
   function _fixIframe(iframe) {
     if (!iframe) return;
-    // Force-reset even if adblock.js already tagged it
+    // Player iframes must NOT be sandboxed — some embed providers (esp. on iOS Safari)
+    // refuse to load entirely when sandboxed, even with correct flags.
+    if (iframe.closest('#playerVideo')) {
+      iframe.removeAttribute('sandbox');
+      iframe.setAttribute('allowfullscreen', '');
+      iframe.setAttribute('webkitallowfullscreen', '');
+      iframe.setAttribute('mozallowfullscreen', '');
+      iframe.setAttribute('allow', ALLOW);
+      iframe._fxFixed = true;
+      return;
+    }
     delete iframe._hs;
     delete iframe._fxFixed;
     try {
