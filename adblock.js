@@ -99,8 +99,12 @@
   new MutationObserver(mutations => {
     mutations.forEach(m => {
       m.addedNodes.forEach(node => {
-        if (node.nodeName === 'IFRAME') hardSandbox(node);
-        node.querySelectorAll && node.querySelectorAll('iframe').forEach(hardSandbox);
+        if (node.nodeName === 'IFRAME') {
+          if (!node.closest('#playerVideo')) hardSandbox(node);
+        }
+        node.querySelectorAll && node.querySelectorAll('iframe').forEach(f => {
+          if (!f.closest('#playerVideo')) hardSandbox(f);
+        });
       });
     });
   }).observe(document.documentElement, { childList: true, subtree: true });
@@ -150,8 +154,7 @@
     window.setServer = function (idx, data) {
       _orig(idx, data);
       setTimeout(() => {
-        document.querySelectorAll('#playerVideo iframe').forEach(hardSandbox);
-        watchPlayer();
+        watchPlayer(); // hindi na natin sina-sandbox yung player iframe — sinisira nito sa iOS
       }, 300);
     };
     window.setServer._patched = true;
