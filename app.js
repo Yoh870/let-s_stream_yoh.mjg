@@ -749,24 +749,25 @@ async function sha256(str) {
 function openMSearch()  { qs('#msearch,#mobileSearchOverlay')?.classList.add('on', 'open'); (qs('#msearchInp') || qs('#mobileSearchInput'))?.focus(); }
 function closeMSearch() { qs('#msearch,#mobileSearchOverlay')?.classList.remove('on', 'open'); }
 
+/* ── MOBILE SEARCH ────────────────────────────────────────────── */
 function initMobileSearch() {
-  const inp = qs('#msearchInp') || qs('#mobileSearchInput'); if (!inp) return;
-  let t;
-  inp.addEventListener('input', () => {
-    clearTimeout(t);
-    t = setTimeout(() => {
-      if (inp.value.trim().length > 1) {
-        const si = qs('#searchInput'); if (si) si.value = inp.value.trim();
-        doSearch(1);
-      }
-    }, 500);
-  });
+  const inp = qs('#msearchInp') || qs('#mobileSearchInput');
+  if (!inp) return;
+
+  function runSearch() {
+    const val = inp.value.trim();
+    if (!val) return;
+    const si = qs('#searchInput');
+    if (si) si.value = val;
+    doSearch(1);
+  }
+
+  // Search only on Enter key or explicit button click
   inp.addEventListener('keydown', e => {
-    if (e.key === 'Enter' && inp.value.trim()) {
-      const si = qs('#searchInput'); if (si) si.value = inp.value.trim();
-      doSearch(1);
-    }
+    if (e.key === 'Enter') runSearch();
   });
+
+  qs('#mobileSearchBtn')?.addEventListener('click', runSearch);
 }
 
 /* ── MISC ─────────────────────────────────────────────────────── */
