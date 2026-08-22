@@ -932,7 +932,6 @@ input, select { font-family: inherit; outline: none; }
   padding-top: calc(var(--top) + 16px);
 }
 #msearch.on { display: flex; }
-.ms-inner { display: flex; gap: 10px; padding: 0 16px 16px; }
 .ms-inp {
   flex: 1; padding: 12px 18px;
   background: var(--bg3); border: 1px solid var(--bd2);
@@ -941,6 +940,66 @@ input, select { font-family: inherit; outline: none; }
 .ms-inp:focus { border-color: rgba(230,57,70,.5); }
 .ms-results { flex: 1; overflow-y: auto; padding: 0 16px; }
 
+   .ms-inner {
+  display: flex;
+  gap: 10px;
+  padding: 0 16px 16px;
+  align-items: center;
+}
+
+.ms-inp-wrap {
+  flex: 1;
+  position: relative;
+}
+.ms-inp-ico {
+  position: absolute;
+  left: 16px; top: 50%;
+  transform: translateY(-50%);
+  color: var(--tx3);
+  font-size: .85rem;
+  pointer-events: none;
+}
+.ms-inp {
+  width: 100%;
+  padding: 12px 18px 12px 40px;
+  background: var(--bg3);
+  border: 1px solid var(--bd2);
+  border-radius: 30px;
+  color: var(--tx);
+  font-size: .92rem;
+  transition: border-color .2s, box-shadow .2s;
+}
+.ms-inp:focus {
+  border-color: rgba(230,57,70,.5);
+  box-shadow: 0 0 0 3px var(--rd);
+}
+
+.ms-search-btn {
+  flex-shrink: 0;
+  padding: 12px 20px;
+  border-radius: 30px;
+  background: var(--red);
+  color: #fff;
+  font-weight: 700;
+  font-size: .86rem;
+  transition: all 160ms;
+  box-shadow: 0 4px 16px rgba(230,57,70,.3);
+}
+.ms-search-btn:hover { background: var(--red2); transform: translateY(-1px); }
+.ms-search-btn:active { transform: translateY(0); }
+
+.ms-cancel-btn {
+  flex-shrink: 0;
+  padding: 12px 16px;
+  border-radius: 30px;
+  background: var(--sur2);
+  border: 1px solid var(--bd2);
+  color: var(--tx2);
+  font-weight: 600;
+  font-size: .86rem;
+  transition: all 150ms;
+}
+.ms-cancel-btn:hover { background: var(--sur3); color: var(--tx); }
 /* ── WATCHLIST SECTION ────────────────────── */
 #watchlistSection { display: none; }
 #watchlistSection.has-items { display: block; }
@@ -1564,13 +1623,16 @@ button:focus:not(:focus-visible) { outline: none; }
 ════════════════════════════════════════════ -->
 <div id="msearch" aria-label="Mobile search" role="search">
   <div class="ms-inner">
-    <input class="ms-inp" id="msearchInp" type="search"
-      placeholder="Search movies, shows, anime…"
-      autocomplete="off" autocorrect="off"
-      aria-label="Search"
-      onkeydown="if(event.key==='Enter'&&this.value.trim()){document.getElementById('searchInput').value=this.value.trim();doSearch(1);}if(event.key==='Escape')closeMSearch()">
-    <button id="mobileSearchBtn" class="btn-ghost" style="flex-shrink:0;padding:8px 14px;background:var(--red);border-color:transparent;color:#fff" onclick="if(document.getElementById('msearchInp').value.trim()){document.getElementById('searchInput').value=document.getElementById('msearchInp').value.trim();doSearch(1);}">Search</button>
-    <button class="btn-ghost" onclick="closeMSearch()" style="flex-shrink:0;padding:8px 14px">Cancel</button>
+    <div class="ms-inp-wrap">
+      <span class="ms-inp-ico" aria-hidden="true">🔍</span>
+      <input class="ms-inp" id="msearchInp" type="search"
+        placeholder="Search movies, shows, anime…"
+        autocomplete="off" autocorrect="off"
+        aria-label="Search"
+        onkeydown="if(event.key==='Enter'&&this.value.trim()){document.getElementById('searchInput').value=this.value.trim();doSearch(1);}if(event.key==='Escape')closeMSearch()">
+    </div>
+    <button id="mobileSearchBtn" class="ms-search-btn" onclick="if(document.getElementById('msearchInp').value.trim()){document.getElementById('searchInput').value=document.getElementById('msearchInp').value.trim();doSearch(1);}">Search</button>
+    <button class="ms-cancel-btn" onclick="closeMSearch()">Cancel</button>
   </div>
   <div class="ms-results" id="msResults"></div>
 </div>
