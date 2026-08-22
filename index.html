@@ -1569,6 +1569,7 @@ button:focus:not(:focus-visible) { outline: none; }
       autocomplete="off" autocorrect="off"
       aria-label="Search"
       onkeydown="if(event.key==='Enter'&&this.value.trim()){document.getElementById('searchInput').value=this.value.trim();doSearch(1);}if(event.key==='Escape')closeMSearch()">
+    <button id="mobileSearchBtn" class="btn-ghost" style="flex-shrink:0;padding:8px 14px;background:var(--red);border-color:transparent;color:#fff" onclick="if(document.getElementById('msearchInp').value.trim()){document.getElementById('searchInput').value=document.getElementById('msearchInp').value.trim();doSearch(1);}">Search</button>
     <button class="btn-ghost" onclick="closeMSearch()" style="flex-shrink:0;padding:8px 14px">Cancel</button>
   </div>
   <div class="ms-results" id="msResults"></div>
