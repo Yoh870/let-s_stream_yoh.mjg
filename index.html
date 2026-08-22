@@ -117,7 +117,17 @@ input, select { font-family: inherit; outline: none; }
   background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.03'/%3E%3C/svg%3E");
   pointer-events: none; border-radius: inherit; opacity: .4;
 }
-
+/* Desktop sidebar collapse (burger toggle works everywhere now) */
+#sidebar.collapsed-desktop {
+  transform: translateX(-100%);
+}
+#topbar.sidebar-collapsed,
+#mainWrap.sidebar-collapsed {
+  margin-left: 0 !important;
+}
+#topbar.sidebar-collapsed {
+  left: 0 !important;
+}
 .sb-logo {
   display: flex; align-items: center; gap: 12px;
   padding: 22px 20px 20px;
@@ -1688,9 +1698,19 @@ const TMDB_KEY_UI = '3fd2be6f0c70a2a598f084ddfb75487c';
 function toggleSb() {
   const sb = document.getElementById('sidebar');
   const ov = document.getElementById('sbOv');
-  sb.classList.toggle('open');
-  ov.classList.toggle('on');
-  document.body.style.overflow = sb.classList.contains('open') ? 'hidden' : '';
+  const topbar = document.getElementById('topbar');
+  const mainWrap = document.getElementById('mainWrap');
+  const isMobile = window.innerWidth <= 960;
+
+  if (isMobile) {
+    sb.classList.toggle('open');
+    ov.classList.toggle('on');
+    document.body.style.overflow = sb.classList.contains('open') ? 'hidden' : '';
+  } else {
+    sb.classList.toggle('collapsed-desktop');
+    topbar.classList.toggle('sidebar-collapsed');
+    mainWrap.classList.toggle('sidebar-collapsed');
+  }
 }
 function closeSb() {
   document.getElementById('sidebar').classList.remove('open');
