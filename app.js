@@ -53,6 +53,7 @@ const SERVERS = [
   { name:'Server 7 ★',   sub:true, url: d => `https://www.2embed.cc/embed/${d.imdb||'tt'+d.tmdb}` },
   { name:'Server 8 ★',   sub:true, url: d => `https://multiembed.mov/?video_id=${d.imdb||'tt'+d.tmdb}&tmdb=1` },
 ];
+window.SERVERS = SERVERS;
 
 /* ── GENRE MAP ───────────────────────────────────────────────── */
 const GENRE_ID_MAP = {
